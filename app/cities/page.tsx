@@ -3,6 +3,9 @@ import Link from 'next/link'
 import { supabase, type Cafe } from '@/lib/supabase'
 import BetaNotice from '@/components/BetaNotice'
 
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 export const metadata: Metadata = {
   title: 'Cities - Laptop Friendly Cafés in Germany | Café Directory',
   description: 'Browse laptop-friendly cafés by city in Germany. Find the perfect workspace in Berlin, Hamburg, Munich, Cologne, Frankfurt, Leipzig and more.',
@@ -16,6 +19,11 @@ export const metadata: Metadata = {
 async function getCities(): Promise<Array<{ city: string; count: number }>> {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    console.log("🔐 SUPABASE_URL:", process.env.NEXT_PUBLIC_SUPABASE_URL)
+    console.log(
+      "🔐 SUPABASE_ANON_KEY exists?",
+      !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    )
     console.log("🔥 getCities running. SUPABASE_URL exists?", !!supabaseUrl)
     console.log("🔎 SUPABASE_URL:", supabaseUrl)
 
