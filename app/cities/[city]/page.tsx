@@ -19,6 +19,12 @@ const majorCities = ['Berlin', 'Hamburg', 'Munich', 'Cologne', 'Frankfurt', 'Lei
 
 async function getCafesByCity(cityName: string): Promise<Cafe[]> {
   try {
+    // Check if Supabase is configured - skip if using placeholder
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    if (!supabaseUrl || supabaseUrl.includes('placeholder')) {
+      return []
+    }
+
     // Fetch all active cafes
     const { data, error } = await supabase
       .from('cafes')

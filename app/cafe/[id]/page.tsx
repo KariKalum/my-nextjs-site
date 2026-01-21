@@ -5,6 +5,12 @@ import CafeDetailSEO from '@/components/CafeDetailSEO'
 
 async function getCafe(id: string): Promise<Cafe | null> {
   try {
+    // Check if Supabase is configured - skip if using placeholder
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    if (!supabaseUrl || supabaseUrl.includes('placeholder')) {
+      return null
+    }
+
     // Try to fetch by id first
     let { data, error } = await supabase
       .from('cafes')
@@ -40,6 +46,12 @@ async function getCafe(id: string): Promise<Cafe | null> {
 
 async function getNearbyCafes(cafe: Cafe, limit: number = 3): Promise<Cafe[]> {
   try {
+    // Check if Supabase is configured - skip if using placeholder
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    if (!supabaseUrl || supabaseUrl.includes('placeholder')) {
+      return []
+    }
+
     if (!cafe.latitude || !cafe.longitude || !cafe.city) {
       return []
     }

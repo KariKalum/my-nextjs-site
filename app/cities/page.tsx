@@ -15,6 +15,12 @@ export const metadata: Metadata = {
 
 async function getCities(): Promise<Array<{ city: string; count: number }>> {
   try {
+    // Check if Supabase is configured - skip if using placeholder
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    if (!supabaseUrl || supabaseUrl.includes('placeholder')) {
+      return []
+    }
+
     const { data, error } = await supabase
       .from('cafes')
       .select('city')

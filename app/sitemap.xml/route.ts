@@ -55,23 +55,30 @@ export async function GET() {
   const citiesSet = new Set<string>()
   
   try {
-    // Fetch cafes with id, city, and timestamps (limit 5000)
-    const { data, error } = await supabase
-      .from('cafes')
-      .select('id, city, updated_at, created_at')
-      .eq('is_active', true)
-      .order('updated_at', { ascending: false })
-      .limit(5000)
-    
-    if (!error && data) {
-      cafes = data
+    // Check if Supabase is configured - skip if using placeholder
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    if (!supabaseUrl || supabaseUrl.includes('placeholder')) {
+      // Use fallback cities only
+      cafes = []
+    } else {
+      // Fetch cafes with id, city, and timestamps (limit 5000)
+      const { data, error } = await supabase
+        .from('cafes')
+        .select('id, city, updated_at, created_at')
+        .eq('is_active', true)
+        .order('updated_at', { ascending: false })
+        .limit(5000)
       
-      // Collect unique cities from database
-      data.forEach((cafe) => {
-        if (cafe.city) {
-          citiesSet.add(cafe.city.toLowerCase())
-        }
-      })
+      if (!error && data) {
+        cafes = data
+        
+        // Collect unique cities from database
+        data.forEach((cafe) => {
+          if (cafe.city) {
+            citiesSet.add(cafe.city.toLowerCase())
+          }
+        })
+      }
     }
   } catch (error) {
     console.error('Error fetching cafes for sitemap:', error)
