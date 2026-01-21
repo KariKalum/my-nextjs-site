@@ -43,7 +43,14 @@ export async function POST(request: NextRequest) {
     // Validate website URL format if provided
     if (website && website.trim()) {
       try {
-        new URL(website)
+        const url = new URL(website)
+        // Reject localhost/127.0.0.1 URLs
+        if (url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname.startsWith('127.')) {
+          return NextResponse.json(
+            { error: 'Localhost URLs are not allowed. Please provide a public website URL.' },
+            { status: 400 }
+          )
+        }
       } catch {
         return NextResponse.json(
           { error: 'Please provide a valid website URL' },

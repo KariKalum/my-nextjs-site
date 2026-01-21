@@ -77,9 +77,20 @@ export default function AdminSubmissionsPage() {
         is_verified: false, // Can be verified later
       }
 
-      // Add website if available
+      // Add website if available (validate it's not localhost)
       if (submission.website) {
-        cafeData.website = submission.website
+        try {
+          const url = new URL(submission.website)
+          if (url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname.startsWith('127.')) {
+            // Skip localhost URLs - don't add website field
+            console.warn(`Skipping localhost website URL for cafe: ${submission.name}`)
+          } else {
+            cafeData.website = submission.website
+          }
+        } catch {
+          // Invalid URL format - skip it
+          console.warn(`Skipping invalid website URL for cafe: ${submission.name}`)
+        }
       }
 
       // Add description from notes

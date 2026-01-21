@@ -5,6 +5,7 @@ import BetaNotice from '@/components/BetaNotice'
 import Hero from '@/components/home/Hero'
 import ValueProps from '@/components/home/ValueProps'
 import FeaturedCities from '@/components/home/FeaturedCities'
+import NearbySection from '@/components/home/NearbySection'
 import HomepageData from '@/components/home/HomepageData'
 import CommunityCTA from '@/components/home/CommunityCTA'
 import CafeListing from '@/components/CafeListing'
@@ -84,6 +85,9 @@ export default function Home({
 
       {/* Hero Section */}
       <Hero />
+
+      {/* Cafés near you */}
+      <NearbySection />
 
       {/* Value Props */}
       <ValueProps />

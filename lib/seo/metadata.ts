@@ -169,7 +169,12 @@ export async function getCafeOgImage(cafeId: string): Promise<string> {
     // If no error and we have data, use the photo
     if (!error && data && (data.url || data.thumbnail_url)) {
       // Use thumbnail if available, otherwise full URL
-      return data.thumbnail_url || data.url
+      const imageUrl = data.thumbnail_url || data.url
+      // Reject localhost URLs - return default instead
+      if (imageUrl && (imageUrl.includes('127.0.0.1') || imageUrl.includes('localhost'))) {
+        return getAbsoluteUrl('/og-default.jpg')
+      }
+      return imageUrl
     }
   } catch (error: any) {
     // Handle table not found or other errors gracefully

@@ -97,6 +97,35 @@ export default function CafeForm({ cafe, mode }: CafeFormProps) {
         numericFields[field] = (value && typeof value === 'string') ? parseFloat(value) : null
       })
 
+      // Validate lat/lng ranges (required for now, until geocoding is added)
+      const lat = numericFields.latitude
+      const lng = numericFields.longitude
+
+      if (lat == null || lng == null || Number.isNaN(lat) || Number.isNaN(lng)) {
+        throw new Error('Please enter both latitude and longitude for the café location.')
+      }
+      if (lat < -90 || lat > 90) {
+        throw new Error('Latitude must be between -90 and 90.')
+      }
+      if (lng < -180 || lng > 180) {
+        throw new Error('Longitude must be between -180 and 180.')
+      }
+
+      // Validate website URL - reject localhost URLs
+      if (formData.website && formData.website.trim()) {
+        try {
+          const url = new URL(formData.website)
+          if (url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname.startsWith('127.')) {
+            throw new Error('Localhost URLs are not allowed. Please provide a public website URL.')
+          }
+        } catch (err: any) {
+          if (err.message.includes('Localhost')) {
+            throw err
+          }
+          throw new Error('Please provide a valid website URL.')
+        }
+      }
+
       // Parse hours JSON
       let hours = {}
       try {

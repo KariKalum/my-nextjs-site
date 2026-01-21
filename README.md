@@ -77,6 +77,45 @@ If PostGIS is not automatically enabled, run this in the SQL Editor:
 CREATE EXTENSION IF NOT EXISTS "postgis";
 ```
 
+## Environment Variables: Google Maps Keys
+
+This project uses **two different Google Maps API keys** with strict separation:
+
+- **Key A – Browser maps key (`NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`)**
+  - Used only in client-side code to load the Google Maps JavaScript API.
+  - Safe to expose to the browser (subject to domain/IP restrictions in Google Cloud).
+  - Currently used exclusively in `NearbyCafesMap` for the homepage “Cafés near you” map.
+
+- **Key B – Server-only maps key (`GOOGLE_MAPS_SERVER_KEY`)**
+  - Must **never** be referenced in any client bundle or `NEXT_PUBLIC_` environment variable.
+  - Intended for backend tasks only (e.g., n8n workflows, server-side geocoding jobs).
+  - If you use this key, keep it in server-only config (e.g., n8n env, backend env) and do **not** import it anywhere in React components or other client code.
+
+### Leak check for `GOOGLE_MAPS_SERVER_KEY`
+
+To ensure the server key never leaks into the browser build, run a production build and scan the output for the key name or value:
+
+1. Build the app:
+   ```bash
+   npm run build
+   ```
+
+2. Grep the `.next` output for the server key identifier (should return **no results**):
+   ```bash
+   # On macOS/Linux
+   grep -R \"GOOGLE_MAPS_SERVER_KEY\" .next || echo \"OK: not found\"
+
+   # On Windows PowerShell
+   Get-ChildItem -Recurse .next | Select-String \"GOOGLE_MAPS_SERVER_KEY\" || Write-Host \"OK: not found\"
+   ```
+
+3. If you ever suspect the actual key value might have leaked, you can also search for the value itself (or a distinctive prefix) the same way:
+   ```bash
+   grep -R \"YOUR_SERVER_KEY_PREFIX\" .next || echo \"OK: not found\"
+   ```
+
+If any match is found in `.next`, remove the offending reference from client-side code, rebuild, and re-run the leak check.
+
 ## Key Attributes for Laptop-Friendliness
 
 ### WiFi
