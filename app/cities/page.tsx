@@ -28,6 +28,10 @@ async function getCities(): Promise<Array<{ city: string; count: number }>> {
 
     if (error) throw error
 
+    if (!data || data.length === 0) {
+      throw new Error("No cities returned from Supabase")
+    }
+
     // Count cafes per city
     const cityCounts = new Map<string, number>()
     if (data) {
