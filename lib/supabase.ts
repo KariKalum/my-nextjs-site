@@ -23,6 +23,7 @@ export const supabase = createClient(url, key)
 // Types for our database
 export interface Cafe {
   id: string
+  place_id?: string | null
   name: string
   description: string | null
   address: string
@@ -35,6 +36,7 @@ export interface Cafe {
   website: string | null
   latitude: number | null
   longitude: number | null
+  google_maps_url?: string | null
   wifi_available: boolean
   wifi_speed_rating: number | null
   wifi_password_required: boolean
@@ -59,9 +61,18 @@ export interface Cafe {
   accessible: boolean
   pet_friendly: boolean
   outdoor_seating: boolean
+  work_score?: number | null
+  work_signals?: any | null
+  is_work_friendly?: boolean | null
   overall_laptop_rating: number | null
   total_reviews: number
   total_visits: number
+  google_rating?: number | null
+  google_ratings_total?: number | null
+  price_level?: number | null
+  business_status?: string | null
+  google_reviews?: any[] | null
+  google_reviews_fetched_at?: string | null
   is_active: boolean
   is_verified: boolean
   created_at: string

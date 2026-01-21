@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { supabase, type Cafe } from '@/lib/supabase'
+import BetaNotice from '@/components/BetaNotice'
 import CafeCard from '@/components/CafeCard'
 
 // SEO intro paragraphs for major German cities
@@ -164,6 +165,9 @@ export default async function CityPage({
           </p>
         </div>
       </header>
+
+      {/* Beta Notice */}
+      <BetaNotice />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* SEO Intro Paragraph */}

@@ -16,12 +16,46 @@ npm install
 ```
 
 2. Set up environment variables:
-   - Create a `.env.local` file in the root directory
+   - Create a `.env.local` file in the root directory (this file is gitignored)
    - Add your Supabase credentials (optional):
      ```
-     NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-     NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+     NEXT_PUBLIC_SUPABASE_URL=your-project-url-here.supabase.co
+     NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
      ```
+   
+   - Add SERVICE_ROLE_KEY (server-only, optional but recommended for admin operations):
+     ```
+     SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+     ```
+     
+     ⚠️ **CRITICAL SECURITY**: The SERVICE_ROLE_KEY must NEVER be exposed to the browser!
+     - Only use in API routes and server components
+     - Never use in client components ('use client')
+     - Never commit to git (already in .gitignore)
+     - Get from: Supabase Dashboard → Settings → API → service_role key
+     - This key has ADMIN privileges and bypasses all RLS policies
+   
+   **Where to find your Supabase credentials:**
+   
+   1. Go to [https://app.supabase.com](https://app.supabase.com) and sign in
+   2. Select your project (or create a new one)
+   3. Click on **Settings** (gear icon) in the left sidebar
+   4. Click on **API** in the settings menu
+   5. You'll find two values you need:
+      - **Project URL**: This is your `NEXT_PUBLIC_SUPABASE_URL`
+        - It looks like: `https://abcdefghijklmnop.supabase.co`
+        - Copy the full URL including `https://`
+      - **anon public** key: This is your `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+        - It's a long string that starts with `eyJ...`
+        - Located under "Project API keys" → "anon" / "public"
+        - Click the eye icon to reveal it, then copy the entire key
+   
+   **Example `.env.local` file:**
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=https://abcdefghijklmnop.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFiY2RlZmdoaWprbG1ub3AiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MDAwMDAwMCwiZXhwIjoxOTU1NTczNjAwfQ.example_key_here
+   ```
+   
    - Add Google Maps API key (optional, for enhanced map embeds):
      ```
      NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_api_key

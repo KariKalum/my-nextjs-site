@@ -7,3 +7,34 @@
     @apply bg-gray-50 text-gray-900;
   }
 }
+
+@layer utilities {
+  /* Enhanced focus styles for accessibility */
+  *:focus-visible {
+    outline: 2px solid theme('colors.primary.500');
+    outline-offset: 2px;
+  }
+  
+  /* Ensure links and buttons are keyboard accessible */
+  a:focus-visible,
+  button:focus-visible {
+    outline: 2px solid theme('colors.primary.500');
+    outline-offset: 2px;
+  }
+
+  /* Mobile optimization: improve tap targets and prevent iOS zoom */
+  /* Note: text-base (16px) is already applied to inputs to prevent iOS zoom */
+  input,
+  textarea,
+  select {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  }
+
+  /* Improve tap responsiveness */
+  button,
+  a {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  }
+}

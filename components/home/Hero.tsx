@@ -36,7 +36,7 @@ export default function Hero({ onSearchChange }: HeroProps) {
             Find laptop-friendly cafés in Germany
           </h1>
           <p className="text-lg md:text-xl text-gray-600 mb-8">
-            Discover cafés with fast Wi-Fi, power outlets (Steckdosen), quiet workspaces, 
+            Discover cafés with fast Wi-Fi, power outlets, quiet workspaces, 
             and no time limits. Perfect for remote workers, freelancers, and digital nomads.
           </p>
 

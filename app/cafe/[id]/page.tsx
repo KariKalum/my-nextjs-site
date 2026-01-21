@@ -1,16 +1,31 @@
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 import { supabase, type Cafe } from '@/lib/supabase'
-import CafeDetail from '@/components/CafeDetail'
+import CafeDetailSEO from '@/components/CafeDetailSEO'
 
 async function getCafe(id: string): Promise<Cafe | null> {
   try {
-    const { data, error } = await supabase
+    // Try to fetch by id first
+    let { data, error } = await supabase
       .from('cafes')
       .select('*')
       .eq('id', id)
       .eq('is_active', true)
       .single()
+
+    // If not found, try to fetch by place_id
+    if (error || !data) {
+      const { data: placeData, error: placeError } = await supabase
+        .from('cafes')
+        .select('*')
+        .eq('place_id', id)
+        .eq('is_active', true)
+        .single()
+      
+      if (!placeError && placeData) {
+        return placeData as Cafe
+      }
+    }
 
     if (error || !data) {
       return null
@@ -20,6 +35,33 @@ async function getCafe(id: string): Promise<Cafe | null> {
   } catch (error) {
     console.error('Error fetching cafe:', error)
     return null
+  }
+}
+
+async function getNearbyCafes(cafe: Cafe, limit: number = 3): Promise<Cafe[]> {
+  try {
+    if (!cafe.latitude || !cafe.longitude || !cafe.city) {
+      return []
+    }
+
+    // Fetch cafes in the same city (excluding current cafe)
+    const { data, error } = await supabase
+      .from('cafes')
+      .select('id, name, city, address, overall_laptop_rating')
+      .eq('city', cafe.city)
+      .eq('is_active', true)
+      .neq('id', cafe.id)
+      .order('overall_laptop_rating', { ascending: false })
+      .limit(limit)
+
+    if (error || !data) {
+      return []
+    }
+
+    return data as Cafe[]
+  } catch (error) {
+    console.error('Error fetching nearby cafes:', error)
+    return []
   }
 }
 
@@ -39,7 +81,10 @@ export default async function CafeDetailPage({
     notFound()
   }
 
-  return <CafeDetail cafe={cafe} />
+  // Fetch nearby cafes for internal linking
+  const nearbyCafes = await getNearbyCafes(cafe)
+
+  return <CafeDetailSEO cafe={cafe} nearbyCafes={nearbyCafes} />
 }
 
 // Mock data for development/demo
@@ -276,44 +321,53 @@ export async function generateMetadata({
   const { 
     siteName, 
     getAbsoluteUrl, 
-    buildCafeDescription, 
     getCafeOgImage 
   } = await import('@/lib/seo/metadata')
   
-  // Build title: "<Cafe Name> – Laptop-friendly café in <City> | <SiteName>"
-  const city = cafe.city || 'Germany'
-  const title = `${cafe.name} – Laptop-friendly café in ${city} | ${siteName}`
+  const {
+    buildCafeTitle,
+    buildCafeMetaDescription,
+  } = await import('@/lib/seo/cafe-seo')
+  
+  // Build SEO-optimized title
+  const title = buildCafeTitle(cafe)
+  const fullTitle = `${title} | ${siteName}`
   
   // Build description (140-160 chars)
-  const description = buildCafeDescription(cafe)
+  const description = buildCafeMetaDescription(cafe)
   
-  // Get canonical URL
-  const canonicalUrl = getAbsoluteUrl(`/cafe/${params.id}`)
+  // Get canonical URL (use place_id if available, otherwise id)
+  const canonicalId = cafe.place_id || params.id
+  const canonicalUrl = getAbsoluteUrl(`/cafe/${canonicalId}`)
   
   // Get OG image
   const ogImage = await getCafeOgImage(cafe.id)
   
+  // Determine locale (default to 'en' but can be enhanced)
+  const locale = 'en_US'
+  
   return {
-    title,
+    title: fullTitle,
     description,
     openGraph: {
-      title,
+      title: fullTitle,
       description,
-      type: 'article',
+      type: 'website',
       url: canonicalUrl,
       siteName,
-      images: [
+      locale,
+      images: ogImage ? [
         {
           url: ogImage,
-          alt: `${cafe.name} - Laptop-friendly café in ${city}`,
+          alt: `${cafe.name} - ${cafe.city ? `Laptop-friendly café in ${cafe.city}` : 'Cafe'}`,
         },
-      ],
+      ] : undefined,
     },
     twitter: {
       card: 'summary_large_image',
-      title,
+      title: fullTitle,
       description,
-      images: [ogImage],
+      images: ogImage ? [ogImage] : undefined,
     },
     alternates: {
       canonical: canonicalUrl,

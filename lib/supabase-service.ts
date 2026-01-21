@@ -1,0 +1,110 @@
+/**
+ * Server-only Supabase client using SERVICE_ROLE_KEY
+ * 
+ * ⚠️ SECURITY WARNING ⚠️
+ * This client uses the SERVICE_ROLE_KEY which has ADMIN privileges.
+ * 
+ * DO NOT:
+ * - Import this in client components ('use client')
+ * - Expose this key to the browser
+ * - Use this in any client-side code
+ * - Commit the SERVICE_ROLE_KEY to git
+ * 
+ * ONLY USE IN:
+ * - API routes (app/api/*/route.ts)
+ * - Server Components (app/**/page.tsx without 'use client')
+ * - Server Actions
+ * - Middleware (with caution)
+ * 
+ * The SERVICE_ROLE_KEY bypasses ALL Row Level Security (RLS) policies
+ * and has full database access. Treat it like a database password.
+ */
+
+import { createClient } from '@supabase/supabase-js'
+
+/**
+ * Get Supabase service role configuration
+ * @throws {Error} If SERVICE_ROLE_KEY is missing
+ */
+function getServiceRoleConfig(): { url: string; serviceRoleKey: string } {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!url) {
+    throw new Error(
+      'Missing NEXT_PUBLIC_SUPABASE_URL environment variable. ' +
+        'Please add it to your .env.local file.'
+    )
+  }
+
+  if (!serviceRoleKey) {
+    throw new Error(
+      'Missing SUPABASE_SERVICE_ROLE_KEY environment variable. ' +
+        'This key is required for server-side operations. ' +
+        'Get it from: Supabase Dashboard → Settings → API → service_role key. ' +
+        '⚠️ NEVER expose this key to the browser or client-side code!'
+    )
+  }
+
+  // Validate URL format
+  try {
+    new URL(url)
+  } catch {
+    throw new Error(
+      `Invalid NEXT_PUBLIC_SUPABASE_URL format: "${url}". ` +
+        'Expected a valid URL (e.g., https://your-project.supabase.co)'
+    )
+  }
+
+  return { url, serviceRoleKey }
+}
+
+/**
+ * Supabase client with SERVICE_ROLE_KEY (server-only)
+ * 
+ * This client has ADMIN privileges and bypasses all RLS policies.
+ * Use only in API routes and server components.
+ * 
+ * @example
+ * ```ts
+ * // In app/api/admin/route.ts
+ * import { supabaseService } from '@/lib/supabase-service'
+ * 
+ * export async function POST() {
+ *   // This bypasses RLS - use with caution!
+ *   const { data, error } = await supabaseService
+ *     .from('products')
+ *     .select('*')
+ * }
+ * ```
+ */
+let supabaseServiceInstance: ReturnType<typeof createClient> | null = null
+
+/**
+ * Initialize and return the Supabase service role client instance
+ * Uses singleton pattern to ensure only one instance is created
+ */
+function createSupabaseServiceInstance() {
+  if (supabaseServiceInstance) {
+    return supabaseServiceInstance
+  }
+
+  const { url, serviceRoleKey } = getServiceRoleConfig()
+
+  supabaseServiceInstance = createClient(url, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  })
+
+  return supabaseServiceInstance
+}
+
+// Export the client instance
+export const supabaseService = createSupabaseServiceInstance()
+
+// Export a function to get a fresh client (useful for testing)
+export function getSupabaseService() {
+  return createSupabaseServiceInstance()
+}
