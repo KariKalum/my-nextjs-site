@@ -196,7 +196,7 @@ export default function NearbyMapClient() {
       map.setCenter(markersRef.current[0].getPosition() as google.maps.LatLng)
       map.setZoom(15)
     } else {
-      map.fitBounds(bounds, { padding: 50 })
+      map.fitBounds(bounds, 50)
     }
   }
 

@@ -180,7 +180,7 @@ export default function NearbyCafesMap({ center, cafes, className = '' }: Nearby
       map.setZoom(15)
     } else if (markers.length > 1) {
       // Multiple markers: fit bounds with padding
-      map.fitBounds(bounds, { padding: 50 })
+      map.fitBounds(bounds, 50)
     }
   }, [isLoaded, cafes])
 
