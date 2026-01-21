@@ -101,6 +101,12 @@ function getMockCafes(): Cafe[] {
 
 async function getRecentlyAddedCafes(): Promise<Cafe[]> {
   try {
+    // Check if Supabase is configured - skip if using placeholder
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    if (!supabaseUrl || supabaseUrl.includes('placeholder') || supabaseUrl.trim() === '') {
+      return getMockCafes()
+    }
+
     const { data, error } = await supabase
       .from('cafes')
       .select('*')
@@ -110,10 +116,10 @@ async function getRecentlyAddedCafes(): Promise<Cafe[]> {
 
     if (error) {
       // Check if it's a connection/config error
-      if (error.message?.includes('placeholder') || 
-          error.code === 'PGRST116' ||
+      if (error.code === 'PGRST116' ||
           error.message?.toLowerCase().includes('invalid') ||
-          error.message?.toLowerCase().includes('failed to fetch')) {
+          error.message?.toLowerCase().includes('failed to fetch') ||
+          error.message?.toLowerCase().includes('enotfound')) {
         // Use mock data for demo
         return getMockCafes()
       }
@@ -129,6 +135,12 @@ async function getRecentlyAddedCafes(): Promise<Cafe[]> {
 
 async function getTopRatedCafes(): Promise<Cafe[]> {
   try {
+    // Check if Supabase is configured - skip if using placeholder
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    if (!supabaseUrl || supabaseUrl.includes('placeholder') || supabaseUrl.trim() === '') {
+      return getMockCafes()
+    }
+
     const { data, error } = await supabase
       .from('cafes')
       .select('*')
@@ -138,10 +150,10 @@ async function getTopRatedCafes(): Promise<Cafe[]> {
 
     if (error) {
       // Check if it's a connection/config error
-      if (error.message?.includes('placeholder') || 
-          error.code === 'PGRST116' ||
+      if (error.code === 'PGRST116' ||
           error.message?.toLowerCase().includes('invalid') ||
-          error.message?.toLowerCase().includes('failed to fetch')) {
+          error.message?.toLowerCase().includes('failed to fetch') ||
+          error.message?.toLowerCase().includes('enotfound')) {
         // Use mock data for demo
         return getMockCafes()
       }

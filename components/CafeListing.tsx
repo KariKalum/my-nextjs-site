@@ -24,6 +24,18 @@ export default function CafeListing() {
     try {
       setLoading(true)
       
+      // Check if Supabase is configured by checking environment variable
+      // In client components, NEXT_PUBLIC_ variables are available
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      if (!supabaseUrl || supabaseUrl.includes('placeholder') || supabaseUrl.trim() === '') {
+        console.warn('Supabase not configured. Using mock data.')
+        setCafes(getMockCafes())
+        setError(null)
+        setUsingMockData(true)
+        setLoading(false)
+        return
+      }
+      
       const { data, error: fetchError } = await supabase
         .from('cafes')
         .select('*')
@@ -34,11 +46,11 @@ export default function CafeListing() {
       if (fetchError) {
         console.error('Supabase query error:', fetchError)
         // Check if error is due to missing Supabase configuration or invalid credentials
-        if (fetchError.message?.includes('placeholder') || 
-            fetchError.code === 'PGRST116' || // Table not found
+        if (fetchError.code === 'PGRST116' || // Table not found
             fetchError.message?.toLowerCase().includes('invalid') ||
-            fetchError.message?.toLowerCase().includes('failed to fetch')) {
-          // Supabase not properly configured, use mock data
+            fetchError.message?.toLowerCase().includes('failed to fetch') ||
+            fetchError.message?.toLowerCase().includes('getaddrinfo enotfound')) {
+          // Supabase not properly configured or network error, use mock data
           setCafes(getMockCafes())
           setError(null)
           setUsingMockData(true)
@@ -61,13 +73,21 @@ export default function CafeListing() {
     } catch (err: any) {
       console.error('Error fetching cafes:', err)
       // Check if it's a connection/config error
-      if (err?.message?.includes('placeholder') || 
-          err?.message?.toLowerCase().includes('fetch') ||
-          err?.code === 'ECONNREFUSED') {
-        // Connection error - use mock data
-        setCafes(getMockCafes())
-        setError(null)
-        setUsingMockData(true)
+      if (err?.message?.toLowerCase().includes('fetch') ||
+          err?.code === 'ECONNREFUSED' ||
+          err?.message?.toLowerCase().includes('enotfound')) {
+        // Connection error - check if Supabase is configured
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+        if (!supabaseUrl || supabaseUrl.includes('placeholder')) {
+          setCafes(getMockCafes())
+          setError(null)
+          setUsingMockData(true)
+        } else {
+          // Supabase is configured but connection failed
+          setCafes([])
+          setError('Failed to connect to database. Please check your Supabase configuration.')
+          setUsingMockData(false)
+        }
       } else {
         // Other error - show empty state
         setCafes([])
