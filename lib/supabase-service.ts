@@ -1,8 +1,7 @@
 /**
  * Server-only Supabase client using SERVICE_ROLE_KEY
  * 
- * ⚠️ SECURITY WARNING ⚠️
- * This client uses the SERVICE_ROLE_KEY which has ADMIN privileges.
+ * SECURITY WARNING: This client uses the SERVICE_ROLE_KEY which has ADMIN privileges.
  * 
  * DO NOT:
  * - Import this in client components ('use client')
@@ -11,8 +10,8 @@
  * - Commit the SERVICE_ROLE_KEY to git
  * 
  * ONLY USE IN:
- * - API routes (app/api/*/route.ts)
- * - Server Components (app/**/page.tsx without 'use client')
+ * - API routes (app/api routes)
+ * - Server Components (app pages without 'use client')
  * - Server Actions
  * - Middleware (with caution)
  * 
@@ -41,8 +40,8 @@ function getServiceRoleConfig(): { url: string; serviceRoleKey: string } {
     throw new Error(
       'Missing SUPABASE_SERVICE_ROLE_KEY environment variable. ' +
         'This key is required for server-side operations. ' +
-        'Get it from: Supabase Dashboard → Settings → API → service_role key. ' +
-        '⚠️ NEVER expose this key to the browser or client-side code!'
+        'Get it from: Supabase Dashboard -> Settings -> API -> service_role key. ' +
+        'NEVER expose this key to the browser or client-side code!'
     )
   }
 
@@ -83,6 +82,7 @@ let supabaseServiceInstance: ReturnType<typeof createClient> | null = null
 /**
  * Initialize and return the Supabase service role client instance
  * Uses singleton pattern to ensure only one instance is created
+ * Lazy initialization - only creates client when first accessed
  */
 function createSupabaseServiceInstance() {
   if (supabaseServiceInstance) {
@@ -101,10 +101,17 @@ function createSupabaseServiceInstance() {
   return supabaseServiceInstance
 }
 
-// Export the client instance
-export const supabaseService = createSupabaseServiceInstance()
-
-// Export a function to get a fresh client (useful for testing)
+// Export a getter function instead of creating instance at module load
+// This allows the build to succeed even if SERVICE_ROLE_KEY is not set
 export function getSupabaseService() {
   return createSupabaseServiceInstance()
 }
+
+// Export the client instance getter (lazy initialization)
+export const supabaseService = new Proxy({} as ReturnType<typeof createClient>, {
+  get(target, prop) {
+    const instance = createSupabaseServiceInstance()
+    const value = instance[prop as keyof typeof instance]
+    return typeof value === 'function' ? value.bind(instance) : value
+  },
+})

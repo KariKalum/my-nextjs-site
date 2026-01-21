@@ -219,7 +219,7 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [] }: CafeDetailSEOP
                       {cafe.work_score !== null && (
                         <p className="text-gray-700">
                           {cafe.name} has a work score of <strong>{cafe.work_score}/10</strong>, 
-                          {' '}indicating {cafe.work_score >= 7 ? 'excellent' : cafe.work_score >= 5 ? 'good' : 'moderate'} 
+                          {' '}indicating {cafe.work_score && cafe.work_score >= 7 ? 'excellent' : cafe.work_score && cafe.work_score >= 5 ? 'good' : 'moderate'} 
                           {' '}suitability for remote work.
                         </p>
                       )}

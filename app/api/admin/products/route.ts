@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await supabaseService
       .from('products')
-      .insert([body])
+      .insert([body] as any)
       .select()
 
     if (error) {
