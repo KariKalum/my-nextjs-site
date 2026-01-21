@@ -15,34 +15,36 @@ export const metadata: Metadata = {
 
 async function getCities(): Promise<Array<{ city: string; count: number }>> {
   try {
-    // Check if Supabase is configured - skip if using placeholder
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    console.log("🔥 getCities running. SUPABASE_URL exists?", !!supabaseUrl)
+    console.log("🔎 SUPABASE_URL:", supabaseUrl)
+
     if (!supabaseUrl || supabaseUrl.includes('placeholder')) {
+      console.log("⚠️ Supabase URL missing/placeholder. Returning []")
       return []
     }
 
+    console.log("🚀 Querying Supabase cafes...")
     const { data, error } = await supabase
       .from('cafes')
       .select('city')
       .eq('is_active', true)
 
-    if (error) throw error
+    console.log("✅ Supabase responded. rows:", data?.length, "error:", error)
 
+    if (error) throw error
     if (!data || data.length === 0) {
       throw new Error("No cities returned from Supabase")
     }
 
     // Count cafes per city
     const cityCounts = new Map<string, number>()
-    if (data) {
-      data.forEach((cafe) => {
-        if (cafe.city) {
-          cityCounts.set(cafe.city, (cityCounts.get(cafe.city) || 0) + 1)
-        }
-      })
-    }
+    data.forEach((cafe) => {
+      if (cafe.city) {
+        cityCounts.set(cafe.city, (cityCounts.get(cafe.city) || 0) + 1)
+      }
+    })
 
-    // Sort by count (descending), then by city name
     return Array.from(cityCounts.entries())
       .map(([city, count]) => ({ city, count }))
       .sort((a, b) => {
@@ -50,11 +52,11 @@ async function getCities(): Promise<Array<{ city: string; count: number }>> {
         return a.city.localeCompare(b.city)
       })
   } catch (error) {
-    console.error('Error fetching cities:', error)
-    // Return empty array or mock data if needed
-    return []
+    console.error("❌ Error fetching cities:", error)
+    throw error // IMPORTANT: do NOT swallow during debugging
   }
 }
+
 
 export default async function CitiesIndexPage() {
   const cities = await getCities()
