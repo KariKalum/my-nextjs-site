@@ -8,11 +8,10 @@ import FeaturedCities from '@/components/home/FeaturedCities'
 import NearbySection from '@/components/home/NearbySection'
 import HomepageData from '@/components/home/HomepageData'
 import CommunityCTA from '@/components/home/CommunityCTA'
-import CafeListing from '@/components/CafeListing'
 
 export const metadata: Metadata = {
-  title: 'Laptop Friendly Cafés in Germany | Find Your Perfect Workspace',
-  description: 'Discover the best laptop-friendly cafés in Germany. Find cafés with fast WiFi, power outlets, quiet workspaces, and comfortable seating. Perfect for remote workers, freelancers, and digital nomads.',
+  title: 'Laptop-Friendly Cafés in Germany | Fast Wi-Fi, Power Outlets & Quiet Workspaces',
+  description: 'Discover the best laptop-friendly cafés in Germany with fast Wi-Fi, power outlets, quiet spaces, and time-limit friendly seating—perfect for remote work and studying.',
   keywords: [
     'laptop friendly cafes Germany',
     'wifi cafes Germany',
@@ -100,16 +99,6 @@ export default function Home({
 
       {/* Community CTA */}
       <CommunityCTA />
-
-      {/* All Cafés Listing Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8 text-center">
-            Browse All Cafés
-          </h2>
-          <CafeListing />
-        </div>
-      </section>
     </main>
   )
 }

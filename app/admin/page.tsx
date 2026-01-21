@@ -352,6 +352,7 @@ function getMockCafes(): Cafe[] {
       pet_friendly: false,
       outdoor_seating: true,
       overall_laptop_rating: 4.8,
+      coffee_quality: 'high',
       total_reviews: 127,
       total_visits: 450,
       is_active: true,

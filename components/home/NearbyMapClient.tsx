@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 type NearbyApiResponse = {
@@ -17,6 +18,8 @@ type NearbyApiResponse = {
     noise: string | null
     timeLimit: number | null
     rating: number | null
+    coffeeQuality?: 'unknown' | 'low' | 'medium' | 'high'
+    createdAt: string | null
     slug: string
   }>
 }
@@ -32,8 +35,10 @@ type CafeForMap = {
   noise?: string | null
   timeLimit?: number | null
   rating?: number | null
+  coffeeQuality?: 'unknown' | 'low' | 'medium' | 'high'
   distance?: number
   city?: string | null
+  createdAt?: string | null
 }
 
 type MapStatus = 'idle' | 'loading' | 'ready' | 'error'
@@ -45,6 +50,8 @@ const USER_LOCATION_RADIUS = 2000 // meters
 
 export default function NearbyMapClient() {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<google.maps.Map | null>(null)
@@ -55,8 +62,41 @@ export default function NearbyMapClient() {
   const [dataStatus, setDataStatus] = useState<DataStatus>('idle')
   const [error, setError] = useState<string | null>(null)
   const [cafes, setCafes] = useState<CafeForMap[]>([])
+  const [filteredCafes, setFilteredCafes] = useState<CafeForMap[]>([])
   const [center, setCenter] = useState<{ lat: number; lng: number }>(BERLIN_CENTER)
   const [isUserLocation, setIsUserLocation] = useState(false)
+  const [isUpdatingResults, setIsUpdatingResults] = useState(false)
+  const [autoUpdate, setAutoUpdate] = useState(true)
+  const [hasMapMoved, setHasMapMoved] = useState(false)
+  const [pendingBounds, setPendingBounds] = useState<google.maps.LatLngBounds | null>(null)
+  const [filters, setFilters] = useState({
+    outlets: false,
+    quiet: false,
+    noTimeLimit: false,
+    minRating: 0,
+    coffeeQuality: false,
+  })
+  const [sortBy, setSortBy] = useState<'distance' | 'rating' | 'laptopFriendly' | 'recentlyAdded'>('distance')
+  const boundsUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const isUpdatingFromBoundsRef = useRef(false)
+
+  // Initialize filters from URL params on mount
+  useEffect(() => {
+    const outlets = searchParams.get('power') === '1'
+    const quiet = searchParams.get('quiet') === '1'
+    const noTimeLimit = searchParams.get('noTimeLimit') === '1'
+    const minRatingStr = searchParams.get('minRating')
+    const minRating = minRatingStr ? parseFloat(minRatingStr) : 0
+    const coffeeQuality = searchParams.get('coffee') === '1'
+
+    setFilters({
+      outlets,
+      quiet,
+      noTimeLimit,
+      minRating: minRating >= 0 && minRating <= 5 ? minRating : 0,
+      coffeeQuality,
+    })
+  }, [searchParams]) // Re-run if searchParams change
 
   // --- Script loader ---
   const loadGoogleMaps = useCallback(async () => {
@@ -192,11 +232,14 @@ export default function NearbyMapClient() {
       infoWindowsRef.current.push(infoWindow)
     })
 
-    if (markersRef.current.length === 1) {
-      map.setCenter(markersRef.current[0].getPosition() as google.maps.LatLng)
-      map.setZoom(15)
-    } else {
-      map.fitBounds(bounds, 50)
+    // Only auto-fit bounds if not updating from user interaction (avoid loop)
+    if (!isUpdatingFromBoundsRef.current) {
+      if (markersRef.current.length === 1) {
+        map.setCenter(markersRef.current[0].getPosition() as google.maps.LatLng)
+        map.setZoom(15)
+      } else {
+        map.fitBounds(bounds, 50)
+      }
     }
   }
 
@@ -223,7 +266,9 @@ export default function NearbyMapClient() {
             noise: c.noise,
             timeLimit: c.timeLimit,
             rating: c.rating,
+            coffeeQuality: c.coffeeQuality,
             distance: c.distance,
+            createdAt: c.createdAt,
           }))
 
         setCafes(mapped)
@@ -239,6 +284,58 @@ export default function NearbyMapClient() {
         setDataStatus('error')
         setError(err?.message || 'Something went wrong while fetching nearby cafés.')
         setCafes([])
+      }
+    },
+    []
+  )
+
+  const fetchByBounds = useCallback(
+    async (bounds: google.maps.LatLngBounds) => {
+      setIsUpdatingResults(true)
+      setError(null)
+      try {
+        const ne = bounds.getNorthEast()
+        const sw = bounds.getSouthWest()
+
+        const res = await fetch(
+          `/api/cafes/nearby?neLat=${ne.lat()}&neLng=${ne.lng()}&swLat=${sw.lat()}&swLng=${sw.lng()}`
+        )
+        if (!res.ok) {
+          throw new Error('Failed to load cafés')
+        }
+        const data = (await res.json()) as NearbyApiResponse
+        const mapped: CafeForMap[] = data.cafes
+          .filter((c) => c.lat != null && c.lng != null)
+          .map((c) => ({
+            id: c.id,
+            name: c.name,
+            lat: c.lat!,
+            lng: c.lng!,
+            slug: c.slug,
+            wifi: c.wifi,
+            outlets: c.outlets,
+            noise: c.noise,
+            timeLimit: c.timeLimit,
+            rating: c.rating,
+            coffeeQuality: c.coffeeQuality,
+            distance: c.distance,
+            createdAt: c.createdAt,
+          }))
+
+        setCafes(mapped)
+        const map = mapInstanceRef.current
+        if (map) {
+          isUpdatingFromBoundsRef.current = true
+          placeMarkers(map, mapped)
+          // Reset flag after a short delay
+          setTimeout(() => {
+            isUpdatingFromBoundsRef.current = false
+          }, 100)
+        }
+      } catch (err: any) {
+        setError(err?.message || 'Something went wrong while fetching cafés.')
+      } finally {
+        setIsUpdatingResults(false)
       }
     },
     []
@@ -275,17 +372,79 @@ export default function NearbyMapClient() {
     }
   }, [apiKey, loadGoogleMaps, initMap])
 
-  // After map is ready, fetch Berlin cafes
+  // After map is ready, fetch Berlin cafes (initial load)
   useEffect(() => {
     if (mapStatus === 'ready' && mapInstanceRef.current) {
-      fetchNearby(BERLIN_CENTER.lat, BERLIN_CENTER.lng, BERLIN_RADIUS)
+      // Temporarily disable bounds updates during initial load
+      isUpdatingFromBoundsRef.current = true
+      setHasMapMoved(false)
+      fetchNearby(BERLIN_CENTER.lat, BERLIN_CENTER.lng, BERLIN_RADIUS).finally(() => {
+        // Re-enable bounds updates after initial load completes
+        setTimeout(() => {
+          isUpdatingFromBoundsRef.current = false
+        }, 1000)
+      })
       setIsUserLocation(false)
     }
   }, [mapStatus, fetchNearby])
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (boundsUpdateTimeoutRef.current) {
+        clearTimeout(boundsUpdateTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  // Setup bounds listener after map and fetchByBounds are ready
+  useEffect(() => {
+    const map = mapInstanceRef.current
+    if (!map || !window.google?.maps || mapStatus !== 'ready') return
+
+    // Remove any existing listeners
+    google.maps.event.clearListeners(map, 'bounds_changed')
+
+    // Add bounds listener
+    map.addListener('bounds_changed', () => {
+      // Don't trigger if we're programmatically updating
+      if (isUpdatingFromBoundsRef.current) return
+
+      const bounds = map.getBounds()
+      if (!bounds) return
+
+      // Clear existing timeout
+      if (boundsUpdateTimeoutRef.current) {
+        clearTimeout(boundsUpdateTimeoutRef.current)
+      }
+
+      if (autoUpdate) {
+        // Automatic mode: debounce and update
+        boundsUpdateTimeoutRef.current = setTimeout(() => {
+          fetchByBounds(bounds)
+          setHasMapMoved(false)
+        }, 500)
+      } else {
+        // Manual mode: show button and store bounds
+        boundsUpdateTimeoutRef.current = setTimeout(() => {
+          setHasMapMoved(true)
+          setPendingBounds(bounds)
+        }, 300)
+      }
+    })
+
+    // Cleanup listener on unmount or dependency change
+    return () => {
+      if (map && window.google?.maps) {
+        google.maps.event.clearListeners(map, 'bounds_changed')
+      }
+    }
+  }, [mapStatus, autoUpdate, fetchByBounds])
+
   const handleUseLocation = () => {
     setError(null)
     setDataStatus('loading')
+    setHasMapMoved(false)
     if (!navigator.geolocation) {
       setDataStatus('error')
       setError('Geolocation is not supported by your browser.')
@@ -295,8 +454,14 @@ export default function NearbyMapClient() {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords
+        // Disable bounds updates during user location fetch
+        isUpdatingFromBoundsRef.current = true
         await fetchNearby(latitude, longitude, USER_LOCATION_RADIUS)
         setIsUserLocation(true)
+        // Re-enable after a short delay
+        setTimeout(() => {
+          isUpdatingFromBoundsRef.current = false
+        }, 1000)
       },
       () => {
         setDataStatus('error')
@@ -306,6 +471,204 @@ export default function NearbyMapClient() {
       { enableHighAccuracy: true, timeout: 10000 }
     )
   }
+
+  const handleSearchThisArea = () => {
+    if (pendingBounds) {
+      fetchByBounds(pendingBounds)
+      setHasMapMoved(false)
+      setPendingBounds(null)
+    }
+  }
+
+  // Update URL params when filters change
+  const updateURLParams = useCallback((newFilters: typeof filters) => {
+    const params = new URLSearchParams(searchParams.toString())
+    
+    if (newFilters.outlets) {
+      params.set('power', '1')
+    } else {
+      params.delete('power')
+    }
+
+    if (newFilters.quiet) {
+      params.set('quiet', '1')
+    } else {
+      params.delete('quiet')
+    }
+
+    if (newFilters.noTimeLimit) {
+      params.set('noTimeLimit', '1')
+    } else {
+      params.delete('noTimeLimit')
+    }
+
+    if (newFilters.minRating > 0) {
+      params.set('minRating', newFilters.minRating.toString())
+    } else {
+      params.delete('minRating')
+    }
+
+    if (newFilters.coffeeQuality) {
+      params.set('coffee', '1')
+    } else {
+      params.delete('coffee')
+    }
+
+    // Update URL without page reload
+    const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname
+    router.replace(newUrl, { scroll: false })
+  }, [searchParams, router])
+
+  // Compute laptop-friendly score
+  const computeLaptopFriendlyScore = useCallback((cafe: CafeForMap): number => {
+    let score = 0
+
+    // Wi-Fi availability and speed (max 25 points)
+    if (cafe.wifi?.available) {
+      score += 10
+      if (cafe.wifi.speedRating) {
+        score += (cafe.wifi.speedRating / 5) * 15 // Up to 15 more points based on speed
+      }
+    }
+
+    // Power outlets availability and rating (max 25 points)
+    if (cafe.outlets?.available) {
+      score += 10
+      if (cafe.outlets.rating) {
+        score += (cafe.outlets.rating / 5) * 15 // Up to 15 more points based on rating
+      }
+    }
+
+    // Noise level (max 25 points)
+    if (cafe.noise === 'quiet') {
+      score += 25
+    } else if (cafe.noise === 'moderate') {
+      score += 15
+    } else if (cafe.noise === 'loud') {
+      score += 5
+    }
+
+    // Time limit (max 25 points)
+    if (!cafe.timeLimit || cafe.timeLimit === null) {
+      score += 25 // No time limit is best
+    } else if (cafe.timeLimit >= 180) {
+      score += 20 // 3+ hours is good
+    } else if (cafe.timeLimit >= 120) {
+      score += 15 // 2+ hours is acceptable
+    } else if (cafe.timeLimit >= 60) {
+      score += 10 // 1+ hour is okay
+    } else {
+      score += 5 // Less than 1 hour
+    }
+
+    return score
+  }, [])
+
+  // Apply filters and sorting
+  const applyFiltersAndSort = useCallback((cafesList: CafeForMap[]) => {
+    let filtered = [...cafesList]
+
+    // Apply filters
+    if (filters.outlets) {
+      filtered = filtered.filter((c) => c.outlets?.available)
+    }
+    if (filters.noTimeLimit) {
+      filtered = filtered.filter((c) => !c.timeLimit || c.timeLimit === null)
+    }
+    if (filters.quiet) {
+      filtered = filtered.filter((c) => c.noise === 'quiet')
+    }
+    if (filters.minRating > 0) {
+      filtered = filtered.filter((c) => (c.rating || 0) >= filters.minRating)
+    }
+    if (filters.coffeeQuality) {
+      // Filter by coffee quality: only show high or medium quality cafes
+      filtered = filtered.filter((c) => c.coffeeQuality === 'high' || c.coffeeQuality === 'medium')
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'distance':
+          return (a.distance || 0) - (b.distance || 0)
+        case 'rating':
+          return (b.rating || 0) - (a.rating || 0)
+        case 'laptopFriendly':
+          return computeLaptopFriendlyScore(b) - computeLaptopFriendlyScore(a)
+        case 'recentlyAdded':
+          if (!a.createdAt && !b.createdAt) return 0
+          if (!a.createdAt) return 1
+          if (!b.createdAt) return -1
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        default:
+          return 0
+      }
+    })
+
+    setFilteredCafes(filtered)
+  }, [filters, sortBy, computeLaptopFriendlyScore])
+
+  // Count active filters
+  const activeFilterCount = useMemo(() => {
+    let count = 0
+    if (filters.outlets) count++
+    if (filters.quiet) count++
+    if (filters.noTimeLimit) count++
+    if (filters.minRating > 0) count++
+    if (filters.coffeeQuality) count++
+    return count
+  }, [filters])
+
+  const hasActiveFilters = activeFilterCount > 0
+
+  // Clear all filters
+  const clearFilters = useCallback(() => {
+    const clearedFilters = {
+      outlets: false,
+      quiet: false,
+      noTimeLimit: false,
+      minRating: 0,
+      coffeeQuality: false,
+    }
+    setFilters(clearedFilters)
+    updateURLParams(clearedFilters)
+  }, [updateURLParams])
+
+  // Apply filters when cafes or filter/sort changes
+  useEffect(() => {
+    if (cafes.length > 0) {
+      applyFiltersAndSort(cafes)
+    } else {
+      setFilteredCafes([])
+    }
+  }, [cafes, filters, sortBy, applyFiltersAndSort])
+
+  // Track if filters were initialized from URL to avoid circular updates
+  const filtersInitializedRef = useRef(false)
+
+  // Update URL when filters change (but not on initial mount)
+  useEffect(() => {
+    // Only update URL if filters have been initialized (either from URL or default)
+    if (filtersInitializedRef.current) {
+      updateURLParams(filters)
+    } else {
+      filtersInitializedRef.current = true
+    }
+  }, [filters, updateURLParams])
+
+  // Update markers when filtered cafes change
+  useEffect(() => {
+    const map = mapInstanceRef.current
+    if (map && filteredCafes.length > 0) {
+      isUpdatingFromBoundsRef.current = true
+      placeMarkers(map, filteredCafes)
+      setTimeout(() => {
+        isUpdatingFromBoundsRef.current = false
+      }, 100)
+    } else if (map && cafes.length === 0) {
+      clearMarkers()
+    }
+  }, [filteredCafes])
 
   // --- UI States ---
   if (!apiKey) {
@@ -319,81 +682,253 @@ export default function NearbyMapClient() {
 
   return (
     <div className="space-y-4">
-      {/* Controls */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={handleUseLocation}
-          disabled={dataStatus === 'loading' || mapStatus === 'loading'}
-          className="px-5 py-3 rounded-lg bg-primary-600 text-white font-semibold shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {dataStatus === 'loading' || mapStatus === 'loading' ? 'Loading…' : 'Use my location'}
-        </button>
-        <Link
-          href="/cities"
-          className="text-sm text-primary-600 hover:text-primary-700"
-        >
-          Browse all cities →
-        </Link>
+      {/* Controls - constrained width */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleUseLocation}
+            disabled={dataStatus === 'loading' || mapStatus === 'loading'}
+            className="px-5 py-3 rounded-lg bg-primary-600 text-white font-semibold shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {dataStatus === 'loading' || mapStatus === 'loading' ? 'Loading…' : 'Use my location'}
+          </button>
+          <Link
+            href="/cities"
+            className="text-sm text-primary-600 hover:text-primary-700"
+          >
+            Browse all cities →
+          </Link>
+        </div>
       </div>
 
-      {/* Map container */}
-      <div className="w-full h-96 rounded-lg overflow-hidden border border-gray-200 shadow-sm bg-gray-50">
-        {mapStatus === 'error' ? (
-          <div className="h-full flex flex-col items-center justify-center text-center px-4">
-            <p className="text-red-800 font-semibold mb-2">Failed to load map</p>
-            <p className="text-sm text-red-700 mb-3">{error || 'Could not load Google Maps.'}</p>
-            <button
-              onClick={() => {
-                setError(null)
-                setMapStatus('idle')
-                // retry load
-                loadGoogleMaps()
-                  .then(() => {
-                    initMap()
-                    setMapStatus('ready')
-                  })
-                  .catch((err) => {
-                    setMapStatus('error')
-                    setError(err?.message || 'Failed to load Google Maps.')
-                  })
-              }}
-              className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
-            >
-              Retry
-            </button>
+      {/* Map + Results Layout */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Sticky Filter Bar */}
+        <div className="sticky top-0 z-20 mb-4">
+          <div className="bg-white border border-gray-200 rounded-md px-4 py-2.5 shadow-sm">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Active filters indicator */}
+              {hasActiveFilters && (
+                <div className="text-xs text-gray-600 font-medium">
+                  Active filters: <span className="font-semibold text-primary-700">{activeFilterCount}</span>
+                </div>
+              )}
+
+              {/* Filter Pills */}
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => setFilters({ ...filters, outlets: !filters.outlets })}
+                  aria-pressed={filters.outlets}
+                  aria-label={`Filter by power outlets. ${filters.outlets ? 'Active' : 'Inactive'}`}
+                  className={`px-3 py-1 text-xs font-medium rounded-full border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 ${
+                    filters.outlets
+                      ? 'bg-primary-600 border-primary-600 text-white hover:bg-primary-700'
+                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+                  }`}
+                >
+                  Power outlets
+                </button>
+                <button
+                  onClick={() => setFilters({ ...filters, quiet: !filters.quiet })}
+                  aria-pressed={filters.quiet}
+                  aria-label={`Filter by quiet cafes. ${filters.quiet ? 'Active' : 'Inactive'}`}
+                  className={`px-3 py-1 text-xs font-medium rounded-full border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 ${
+                    filters.quiet
+                      ? 'bg-primary-600 border-primary-600 text-white hover:bg-primary-700'
+                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+                  }`}
+                >
+                  Quiet
+                </button>
+                <button
+                  onClick={() => setFilters({ ...filters, noTimeLimit: !filters.noTimeLimit })}
+                  aria-pressed={filters.noTimeLimit}
+                  aria-label={`Filter by cafes with no time limit. ${filters.noTimeLimit ? 'Active' : 'Inactive'}`}
+                  className={`px-3 py-1 text-xs font-medium rounded-full border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 ${
+                    filters.noTimeLimit
+                      ? 'bg-primary-600 border-primary-600 text-white hover:bg-primary-700'
+                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+                  }`}
+                >
+                  No time limit
+                </button>
+                {/* Rating Filter */}
+                <div className="flex items-center gap-1">
+                  <label htmlFor="rating-filter" className="text-xs text-gray-600">
+                    Rating:
+                  </label>
+                  <select
+                    id="rating-filter"
+                    value={filters.minRating}
+                    onChange={(e) => setFilters({ ...filters, minRating: parseFloat(e.target.value) })}
+                    aria-label="Filter by minimum rating"
+                    className={`px-2 py-1 text-xs border-2 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors ${
+                      filters.minRating > 0
+                        ? 'border-primary-500 bg-primary-50'
+                        : 'border-gray-300'
+                    }`}
+                  >
+                    <option value="0">Any</option>
+                    <option value="3.0">3.0+</option>
+                    <option value="3.5">3.5+</option>
+                    <option value="4.0">4.0+</option>
+                    <option value="4.5">4.5+</option>
+                  </select>
+                </div>
+                {(() => {
+                  // Check if all cafes have unknown coffee quality
+                  const allUnknown = cafes.length > 0 && cafes.every(
+                    (c) => !c.coffeeQuality || c.coffeeQuality === 'unknown'
+                  )
+                  
+                  if (allUnknown) {
+                    return null // Hide the filter if all cafes are unknown
+                  }
+                  
+                  return (
+                    <button
+                      onClick={() => setFilters({ ...filters, coffeeQuality: !filters.coffeeQuality })}
+                      aria-pressed={filters.coffeeQuality}
+                      aria-label={`Filter by coffee quality. ${filters.coffeeQuality ? 'Active' : 'Inactive'}`}
+                      className={`px-3 py-1 text-xs font-medium rounded-full border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 ${
+                        filters.coffeeQuality
+                          ? 'bg-primary-600 border-primary-600 text-white hover:bg-primary-700'
+                          : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+                      }`}
+                    >
+                      Coffee quality
+                    </button>
+                  )
+                })()}
+              </div>
+
+              {/* Clear filters button */}
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  aria-label={`Clear ${activeFilterCount} active filter${activeFilterCount !== 1 ? 's' : ''}`}
+                  className="px-3 py-1 text-xs font-medium text-gray-600 hover:text-gray-800 border-2 border-gray-300 rounded-md bg-white hover:bg-gray-50 hover:border-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
+                >
+                  Clear
+                </button>
+              )}
+
+              {/* Sort Dropdown */}
+              <div className="flex items-center gap-2 ml-auto">
+                <label htmlFor="sort-select" className="text-xs text-gray-600 font-medium">
+                  Sort:
+                </label>
+                <select
+                  id="sort-select"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as 'distance' | 'rating' | 'laptopFriendly' | 'recentlyAdded')}
+                  className="px-3 py-1 text-xs border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                >
+                  <option value="distance">Nearest</option>
+                  <option value="rating">Highest rated</option>
+                  <option value="laptopFriendly">Most laptop-friendly</option>
+                  <option value="recentlyAdded">Recently added</option>
+                </select>
+              </div>
+            </div>
           </div>
-        ) : (
-          <div ref={mapRef} className="w-full h-full" />
-        )}
-      </div>
+        </div>
 
-      {/* Inline messaging */}
-      {dataStatus === 'error' && (
-        <p className="text-sm text-amber-700">
-          {error || 'Could not fetch cafés.'} Showing Berlin if available.
-        </p>
-      )}
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Map container - takes more space on desktop */}
+          <div className="w-full lg:flex-1 relative">
+            {/* Floating "Search this area" button */}
+            {hasMapMoved && !autoUpdate && (
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
+                <button
+                  onClick={handleSearchThisArea}
+                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+                >
+                  Search this area
+                </button>
+              </div>
+            )}
 
-      {dataStatus === 'success' && cafes.length === 0 && (
-        <p className="text-sm text-gray-600">
-          No cafés found in this area yet.
-        </p>
-      )}
+            {/* Auto/Manual toggle - minimal */}
+            <div className="absolute top-4 right-4 z-10">
+              <button
+                onClick={() => {
+                  setAutoUpdate(!autoUpdate)
+                  setHasMapMoved(false)
+                  setPendingBounds(null)
+                }}
+                className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg shadow-sm text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+                title={autoUpdate ? 'Automatic updates enabled' : 'Manual updates - click "Search this area" to update'}
+              >
+                {autoUpdate ? 'Auto' : 'Manual'}
+              </button>
+            </div>
 
-      {dataStatus === 'success' && cafes.length > 0 && !isUserLocation && (
-        <p className="text-sm text-gray-600">
-          Showing cafés in Berlin. Click “Use my location” to see cafés near you.
-        </p>
-      )}
+            <div className="w-full h-96 lg:h-[600px] rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+              {mapStatus === 'error' ? (
+                <div className="h-full flex flex-col items-center justify-center text-center px-4">
+                  <p className="text-red-800 font-semibold mb-2">Failed to load map</p>
+                  <p className="text-sm text-red-700 mb-3">{error || 'Could not load Google Maps.'}</p>
+                  <button
+                    onClick={() => {
+                      setError(null)
+                      setMapStatus('idle')
+                      // retry load
+                      loadGoogleMaps()
+                        .then(() => {
+                          initMap()
+                          setMapStatus('ready')
+                        })
+                        .catch((err) => {
+                          setMapStatus('error')
+                          setError(err?.message || 'Failed to load Google Maps.')
+                        })
+                    }}
+                    className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
+                  >
+                    Retry
+                  </button>
+                </div>
+              ) : (
+                <div ref={mapRef} className="w-full h-full" />
+              )}
+            </div>
 
-      {/* Results list */}
-      {cafes.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {cafes.slice(0, 6).map((cafe) => (
-            <div
-              key={cafe.id}
-              className="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-sm transition-shadow"
-            >
+            {/* Inline messaging */}
+            {dataStatus === 'error' && (
+              <p className="mt-4 text-sm text-amber-700">
+                {error || 'Could not fetch cafés.'} Showing Berlin if available.
+              </p>
+            )}
+
+            {dataStatus === 'success' && cafes.length === 0 && (
+              <p className="mt-4 text-sm text-gray-600">
+                No cafés found in this area yet.
+              </p>
+            )}
+
+            {dataStatus === 'success' && cafes.length > 0 && !isUserLocation && (
+              <p className="mt-4 text-sm text-gray-600">
+                Showing cafés in Berlin. Click "Use my location" to see cafés near you.
+              </p>
+            )}
+          </div>
+
+          {/* Results list - sidebar on desktop, below on mobile */}
+          {filteredCafes.length > 0 ? (
+            <div className="w-full lg:w-80 lg:flex-shrink-0">
+              {isUpdatingResults && (
+                <div className="mb-4 flex items-center gap-2 text-sm text-gray-600">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
+                  <span>Updating results…</span>
+                </div>
+              )}
+              <div className="space-y-4">
+                {filteredCafes.slice(0, 6).map((cafe) => (
+                  <div
+                    key={cafe.id}
+                    className="border border-gray-200 rounded-lg p-4 bg-white hover:border-gray-300 transition-colors"
+                  >
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="font-semibold text-gray-900">{cafe.name}</p>
@@ -433,11 +968,20 @@ export default function NearbyMapClient() {
                     No time limit
                   </span>
                 )}
+                  </div>
+                </div>
+                ))}
               </div>
             </div>
-          ))}
+          ) : cafes.length > 0 ? (
+            <div className="w-full lg:w-80 lg:flex-shrink-0">
+              <div className="text-center py-8 text-sm text-gray-600">
+                No cafés match the selected filters.
+              </div>
+            </div>
+          ) : null}
         </div>
-      )}
+      </div>
     </div>
   )
 }

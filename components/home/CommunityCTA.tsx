@@ -1,8 +1,9 @@
 import Link from 'next/link'
+import Section from '@/components/Section'
 
 export default function CommunityCTA() {
   return (
-    <section className="py-16 bg-primary-600">
+    <Section backgroundColor="primary" spacing="md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
@@ -19,6 +20,6 @@ export default function CommunityCTA() {
           </Link>
         </div>
       </div>
-    </section>
+    </Section>
   )
 }

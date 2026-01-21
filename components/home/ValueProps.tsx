@@ -1,3 +1,5 @@
+import Section from '@/components/Section'
+
 export default function ValueProps() {
   const props = [
     {
@@ -23,8 +25,16 @@ export default function ValueProps() {
   ]
 
   return (
-    <section className="py-16 bg-white">
+    <Section spacing="md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            Why Choose Our Directory
+          </h2>
+          <p className="text-gray-600">
+            Find cafés with all the amenities you need for productive remote work
+          </p>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {props.map((prop, index) => (
             <div
@@ -42,6 +52,6 @@ export default function ValueProps() {
           ))}
         </div>
       </div>
-    </section>
+    </Section>
   )
 }

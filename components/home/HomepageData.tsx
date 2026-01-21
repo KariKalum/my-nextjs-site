@@ -43,6 +43,7 @@ function getMockCafes(): Cafe[] {
       pet_friendly: false,
       outdoor_seating: true,
       overall_laptop_rating: 4.8,
+      coffee_quality: 'high',
       total_reviews: 127,
       total_visits: 450,
       is_active: true,
@@ -89,6 +90,7 @@ function getMockCafes(): Cafe[] {
       pet_friendly: true,
       outdoor_seating: false,
       overall_laptop_rating: 4.6,
+      coffee_quality: 'high',
       total_reviews: 89,
       total_visits: 320,
       is_active: true,
@@ -177,12 +179,14 @@ export default async function HomepageData() {
     <>
       <CafeSection
         title="Recently Added"
+        description="Discover the newest laptop-friendly cafés added to our directory"
         cafes={recentlyAdded}
         emptyMessage="No cafés have been added yet. Be the first to add one!"
         viewAllLink="/cities"
       />
       <CafeSection
         title="Top Rated to Work From"
+        description="Highest-rated cafés for productive remote work based on user reviews"
         cafes={topRated}
         emptyMessage="No cafés have been rated yet."
         viewAllLink="/cities"

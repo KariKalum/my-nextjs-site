@@ -73,6 +73,7 @@ export interface Cafe {
   business_status?: string | null
   google_reviews?: any[] | null
   google_reviews_fetched_at?: string | null
+  coffee_quality?: 'unknown' | 'low' | 'medium' | 'high' | null
   is_active: boolean
   is_verified: boolean
   created_at: string

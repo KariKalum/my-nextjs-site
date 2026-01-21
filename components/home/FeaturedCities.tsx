@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Section from '@/components/Section'
 
 const cities = [
   { name: 'Berlin', slug: 'berlin' },
@@ -11,13 +12,13 @@ const cities = [
 
 export default function FeaturedCities() {
   return (
-    <section className="py-16 bg-gray-50">
+    <Section backgroundColor="gray" spacing="md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
             Explore by City
           </h2>
-          <p className="text-lg text-gray-600">
+          <p className="text-gray-600">
             Discover laptop-friendly cafés in Germany's major cities
           </p>
         </div>
@@ -38,6 +39,6 @@ export default function FeaturedCities() {
           ))}
         </div>
       </div>
-    </section>
+    </Section>
   )
 }

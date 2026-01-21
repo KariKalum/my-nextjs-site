@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { supabase, type Cafe } from '@/lib/supabase'
 import BetaNotice from '@/components/BetaNotice'
 import CafeCard from '@/components/CafeCard'
+import SearchResults from '@/components/SearchResults'
 
 // SEO intro paragraphs for major German cities
 const cityIntros: Record<string, string> = {
@@ -214,35 +215,20 @@ export default async function CityPage({
         )}
 
         {/* Café Grid */}
-        {cafes.length === 0 ? (
+        <SearchResults cafes={cafes} cityName={cityName}>
           <section>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-              <div className="max-w-md mx-auto">
-                <div className="text-6xl mb-4">☕</div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-3">
-                  No cafés found in {cityName} yet
-                </h2>
-                <p className="text-gray-600 mb-6">
-                  Be the first to add a laptop-friendly café in {cityName}! Help the remote work community discover great workspaces.
-                </p>
-                <Link
-                  href="/submit"
-                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 transition-colors"
-                >
-                  Submit a café in {cityName}
-                </Link>
-              </div>
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm text-gray-600">
+                {cafes.length} {cafes.length === 1 ? 'café' : 'cafés'} found
+              </p>
             </div>
-          </section>
-        ) : (
-          <section>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {cafes.map((cafe) => (
                 <CafeCard key={cafe.id} cafe={cafe} />
               ))}
             </div>
           </section>
-        )}
+        </SearchResults>
       </main>
     </div>
   )
