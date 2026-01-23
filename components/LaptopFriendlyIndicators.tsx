@@ -1,6 +1,7 @@
 'use client'
 
 import type { Cafe } from '@/src/lib/supabase/types'
+import { formatWorkScore } from '@/lib/utils/cafe-formatters'
 
 interface LaptopFriendlyIndicatorsProps {
   cafe: Cafe
@@ -82,7 +83,7 @@ export default function LaptopFriendlyIndicators({ cafe }: LaptopFriendlyIndicat
             </div>
             <div className="ml-11">
               <p className="text-sm text-gray-600">
-                {cafe.work_score != null ? `${cafe.work_score}/100` : cafe.ai_score != null ? `${cafe.ai_score}/100` : '—'}
+                {formatWorkScore(cafe.work_score ?? cafe.ai_score) ?? '—'}
               </p>
             </div>
           </div>

@@ -1,17 +1,22 @@
 /**
  * Format work score for display
- * If work_score is 0-100, show "72/100"
- * If work_score is 0-10, show "7.2/10" (divide by 10, 1 decimal)
+ * Standardizes display to always show as X.X/10 (one decimal)
+ * 
+ * If work_score is stored as 0-100: divide by 10 (72 => 7.2/10)
+ * If work_score is stored as 0-10: show as-is with one decimal (7.2 => 7.2/10)
+ * 
+ * This ensures consistent display across the app regardless of storage format.
  */
 export function formatWorkScore(workScore: number | null | undefined): string | null {
   if (workScore == null) return null
   
-  // If score is 0-100, show as "72/100"
+  // If score is > 10, assume it's stored as 0-100 scale, convert to 0-10
   if (workScore > 10) {
-    return `${Math.round(workScore)}/100`
+    const normalized = workScore / 10
+    return `${normalized.toFixed(1)}/10`
   }
   
-  // If score is 0-10, show as "7.2/10"
+  // If score is 0-10, show as-is with one decimal
   return `${workScore.toFixed(1)}/10`
 }
 

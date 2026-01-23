@@ -1,4 +1,5 @@
 import type { Cafe } from '@/src/lib/supabase/types'
+import { formatWorkScore } from '@/lib/utils/cafe-formatters'
 import { getAbsoluteUrl } from './metadata'
 
 /**
@@ -51,7 +52,10 @@ export function buildCafeMetaDescription(cafe: Cafe): string {
   
   // Start with work score if available
   if (cafe.work_score != null) {
-    parts.push(`Work score: ${cafe.work_score}/10`)
+    const formatted = formatWorkScore(cafe.work_score)
+    if (formatted) {
+      parts.push(`Work score: ${formatted}`)
+    }
   } else if (cafe.google_rating != null) {
     parts.push(`${cafe.google_rating.toFixed(1)}/5 rating`)
   }

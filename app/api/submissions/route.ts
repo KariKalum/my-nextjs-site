@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/src/lib/supabase/server'
 
+// Mark as dynamic since we use cookies() via createClient()
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -128,7 +131,9 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
-      console.error('Error creating submission:', error)
+      if (process.env.NEXT_PUBLIC_DEBUG_LOGS === 'true') {
+        console.error('Error creating submission:', error)
+      }
       return NextResponse.json(
         { error: 'Failed to submit café suggestion. Please try again.' },
         { status: 500 }
@@ -140,7 +145,9 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error) {
-    console.error('Error processing submission:', error)
+    if (process.env.NEXT_PUBLIC_DEBUG_LOGS === 'true') {
+      console.error('Error processing submission:', error)
+    }
     return NextResponse.json(
       { error: 'An error occurred while processing your submission' },
       { status: 500 }

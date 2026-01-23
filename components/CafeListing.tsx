@@ -35,7 +35,9 @@ export default function CafeListing() {
 
       // If error, handle it gracefully
       if (fetchError) {
-        console.error('Supabase query error:', fetchError)
+        if (process.env.NEXT_PUBLIC_DEBUG_LOGS === 'true') {
+          console.error('Supabase query error:', fetchError)
+        }
         setCafes([])
         setError('Failed to load cafés. Please check your Supabase connection.')
         return
@@ -47,7 +49,9 @@ export default function CafeListing() {
       setError(null)
       
     } catch (err: any) {
-      console.error('Error fetching cafes:', err)
+      if (process.env.NEXT_PUBLIC_DEBUG_LOGS === 'true') {
+        console.error('Error fetching cafes:', err)
+      }
       setCafes([])
       setError('Failed to load cafés. Check your Supabase connection.')
     } finally {

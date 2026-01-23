@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/src/lib/supabase/server'
 
+// Mark as dynamic since we use request.url for query params
+export const dynamic = 'force-dynamic'
+
 type CafeRecord = {
   id: string
   place_id: string | null
@@ -73,12 +76,20 @@ export async function GET(req: Request) {
       radius = Math.min(halfDiagonal * 1.2, 10000) // Add 20% padding, max 10km
     } else {
       // Center+radius query (legacy)
+      // Validate that lat/lng are provided and not empty
+      if (!latStr || !lngStr || latStr.trim() === '' || lngStr.trim() === '') {
+        return NextResponse.json(
+          { error: 'lat and lng are required' },
+          { status: 400 }
+        )
+      }
+
       lat = parseFloat(latStr)
       lng = parseFloat(lngStr)
 
       if (Number.isNaN(lat) || Number.isNaN(lng)) {
         return NextResponse.json(
-          { error: 'lat and lng are required and must be numbers' },
+          { error: 'lat and lng must be valid numbers' },
           { status: 400 }
         )
       }

@@ -30,7 +30,10 @@ export function getCafeHref(cafe: {
 }): string {
   const id = getCafeIdentifier(cafe)
   if (id) return `/cafe/${id}`
-  if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
+  if (
+    typeof process !== 'undefined' &&
+    process.env.NEXT_PUBLIC_DEBUG_LOGS === 'true'
+  ) {
     // eslint-disable-next-line no-console
     console.warn('[getCafeHref] Cafe missing both place_id and id; falling back to /cities', {
       place_id: cafe.place_id ?? null,

@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { formatWorkScore } from '@/lib/utils/cafe-formatters'
 
 export const siteName = 'Café Directory'
 
@@ -80,7 +81,10 @@ export function buildCafeDescription(cafe: {
   
   // Add work score if available
   if (cafe.work_score != null) {
-    features.push(`Work score: ${cafe.work_score}/100`)
+    const formatted = formatWorkScore(cafe.work_score)
+    if (formatted) {
+      features.push(`Work score: ${formatted}`)
+    }
   }
   
   // Build description parts

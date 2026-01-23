@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import type { Cafe } from '@/src/lib/supabase/types'
+import { formatWorkScore } from '@/lib/utils/cafe-formatters'
 import CafeMap from './CafeMap'
 import LaptopFriendlyIndicators from './LaptopFriendlyIndicators'
 
@@ -102,11 +103,11 @@ export default function CafeDetail({ cafe }: CafeDetailProps) {
               {/* Work Score */}
               {(() => {
                 const score = cafe.work_score ?? cafe.ai_score
-                return score != null ? (
+                const formattedScore = score != null ? formatWorkScore(score) : null
+                return formattedScore ? (
                   <div className="mb-4">
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold text-primary-600">{score.toFixed(0)}</span>
-                      <span className="text-gray-500 text-sm">/100</span>
+                      <span className="text-2xl font-bold text-primary-600">{formattedScore}</span>
                     </div>
                     <p className="text-sm text-gray-600 mt-2">
                       {cafe.google_ratings_total ? `${cafe.google_ratings_total.toLocaleString()} ${cafe.google_ratings_total === 1 ? 'review' : 'reviews'}` : 'No reviews yet'}

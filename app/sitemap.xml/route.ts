@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/src/lib/supabase/server'
 import { getCafeHref } from '@/lib/cafeRouting'
 
+// Mark as dynamic since we use cookies() via createClient()
+export const dynamic = 'force-dynamic'
+
 // Supported major cities (fallback if database query fails)
 const majorCities = ['berlin', 'hamburg', 'munich', 'cologne', 'frankfurt', 'leipzig']
 

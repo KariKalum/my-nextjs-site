@@ -2,6 +2,7 @@
 
 import type { Cafe } from '@/src/lib/supabase/types'
 import { getCafeHref, hasValidCafeLink } from '@/lib/cafeRouting'
+import { formatWorkScore } from '@/lib/utils/cafe-formatters'
 
 interface CafeCardProps {
   cafe: Cafe
@@ -76,9 +77,9 @@ export default function CafeCard({ cafe }: CafeCardProps) {
         {(cafe.google_rating || cafe.work_score) && (
           <div className="mb-4">
             {cafe.google_rating && getRatingStars(cafe.google_rating)}
-            {cafe.work_score != null && (
+            {formatWorkScore(cafe.work_score) && (
               <div className="mt-2">
-                <span className="text-sm font-medium text-primary-600">Work Score: {cafe.work_score}/10</span>
+                <span className="text-sm font-medium text-primary-600">Work Score: {formatWorkScore(cafe.work_score)}</span>
               </div>
             )}
             {cafe.google_ratings_total && cafe.google_ratings_total > 0 && (

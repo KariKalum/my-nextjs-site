@@ -1,9 +1,12 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import type { Cafe } from '@/src/lib/supabase/types'
 import CafeCard from '@/components/CafeCard'
 import Section from '@/components/Section'
 
-interface CafeSectionProps {
+interface CafeSectionClientProps {
   title: string
   description?: string
   cafes: Cafe[]
@@ -12,14 +15,29 @@ interface CafeSectionProps {
   viewAllLink?: string
 }
 
-export default function CafeSection({
+/**
+ * Client component that handles responsive item limiting
+ * Mobile: 5 items, Desktop: 10 items
+ */
+export default function CafeSectionClient({
   title,
   description,
   cafes,
   emptyMessage = 'No cafés found yet.',
   showViewAll = true,
   viewAllLink = '/cities',
-}: CafeSectionProps) {
+}: CafeSectionClientProps) {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768) // md breakpoint
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
   if (cafes.length === 0) {
     return (
       <Section spacing="md">
@@ -48,6 +66,10 @@ export default function CafeSection({
     )
   }
 
+  const displayLimit = isMobile ? 5 : 10
+  const displayedCafes = cafes.slice(0, displayLimit)
+  const hasMore = cafes.length > displayLimit
+
   return (
     <Section spacing="md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -74,13 +96,11 @@ export default function CafeSection({
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Mobile: 5 items, Desktop: 10 items */}
-          {cafes.slice(0, 10).map((cafe) => (
+          {displayedCafes.map((cafe) => (
             <CafeCard key={cafe.id} cafe={cafe} />
           ))}
         </div>
-        {/* Show "View all" if there are more than the displayed limit */}
-        {showViewAll && cafes.length > 10 && (
+        {showViewAll && hasMore && (
           <div className="text-center mt-8">
             <Link
               href={viewAllLink}

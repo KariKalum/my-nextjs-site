@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseService } from '@/lib/supabase-service'
 
+// Mark as dynamic since we use request.url for query params
+export const dynamic = 'force-dynamic'
+
 /**
  * API Route using SERVICE_ROLE_KEY
  * 

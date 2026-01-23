@@ -57,3 +57,17 @@ export interface CafeFilters {
   min_google_rating?: number
   ai_noise_level?: string[]
 }
+
+/**
+ * City type matching the cities table schema
+ */
+export interface City {
+  id: string
+  name: string
+  slug: string
+  image_url: string | null
+  is_major: boolean
+  display_order: number
+  created_at: string | null
+  updated_at: string | null
+}

@@ -173,7 +173,9 @@ export default function CafeForm({ cafe, mode }: CafeFormProps) {
           .select()
 
         if (error) {
-          console.error('Supabase update error:', error)
+          if (process.env.NEXT_PUBLIC_DEBUG_LOGS === 'true') {
+            console.error('Supabase update error:', error)
+          }
           throw new Error(`Failed to update café: ${error.message || 'Database error'}`)
         }
         setSuccess(true)
@@ -186,7 +188,9 @@ export default function CafeForm({ cafe, mode }: CafeFormProps) {
           .single()
 
         if (error) {
-          console.error('Supabase insert error:', error)
+          if (process.env.NEXT_PUBLIC_DEBUG_LOGS === 'true') {
+            console.error('Supabase insert error:', error)
+          }
           // Provide more helpful error messages
           if (error.code === 'PGRST116') {
             throw new Error('The cafes table does not exist. Please run the database migrations in your Supabase project.')
