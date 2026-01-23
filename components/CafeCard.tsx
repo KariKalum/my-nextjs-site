@@ -29,14 +29,16 @@ export default function CafeCard({ cafe }: CafeCardProps) {
 
   const getNoiseLevelBadge = (level: string | null) => {
     if (!level) return null
+    const levelLower = level.toLowerCase()
     const colors = {
       quiet: 'bg-green-100 text-green-800',
       moderate: 'bg-yellow-100 text-yellow-800',
       loud: 'bg-red-100 text-red-800',
       variable: 'bg-blue-100 text-blue-800',
     }
+    const colorKey = Object.keys(colors).find(key => levelLower.includes(key)) as keyof typeof colors
     return (
-      <span className={`px-2 py-1 text-xs font-medium rounded-full ${colors[level as keyof typeof colors] || 'bg-gray-100 text-gray-800'}`}>
+      <span className={`px-2 py-1 text-xs font-medium rounded-full ${colorKey ? colors[colorKey] : 'bg-gray-100 text-gray-800'}`}>
         {level}
       </span>
     )
@@ -69,13 +71,18 @@ export default function CafeCard({ cafe }: CafeCardProps) {
           </p>
         )}
 
-        {/* Overall Rating */}
-        {cafe.overall_laptop_rating && (
+        {/* Rating */}
+        {(cafe.google_rating || cafe.work_score) && (
           <div className="mb-4">
-            {getRatingStars(cafe.overall_laptop_rating)}
-            {cafe.total_reviews > 0 && (
+            {cafe.google_rating && getRatingStars(cafe.google_rating)}
+            {cafe.work_score != null && (
+              <div className="mt-2">
+                <span className="text-sm font-medium text-primary-600">Work Score: {cafe.work_score}/10</span>
+              </div>
+            )}
+            {cafe.google_ratings_total && cafe.google_ratings_total > 0 && (
               <p className="text-xs text-gray-500 mt-1">
-                {cafe.total_reviews} {cafe.total_reviews === 1 ? 'review' : 'reviews'}
+                {cafe.google_ratings_total} {cafe.google_ratings_total === 1 ? 'review' : 'reviews'}
               </p>
             )}
           </div>
@@ -84,69 +91,37 @@ export default function CafeCard({ cafe }: CafeCardProps) {
         {/* Laptop-Friendly Features */}
         <div className="mb-4 space-y-2">
           <div className="flex flex-wrap gap-2">
-            {cafe.wifi_available && (
+            {cafe.is_work_friendly && (
+              <div className="flex items-center space-x-1 text-sm">
+                <span className="text-green-600">✅</span>
+                <span className="text-gray-700">Work-friendly</span>
+              </div>
+            )}
+            {cafe.ai_wifi_quality && (
               <div className="flex items-center space-x-1 text-sm">
                 <span className="text-green-600">📶</span>
-                <span className="text-gray-700">WiFi</span>
-                {cafe.wifi_speed_rating && (
-                  <span className="text-gray-500">({cafe.wifi_speed_rating}/5)</span>
-                )}
+                <span className="text-gray-700">{cafe.ai_wifi_quality}</span>
               </div>
             )}
-            {cafe.power_outlets_available && (
+            {cafe.ai_power_outlets && (
               <div className="flex items-center space-x-1 text-sm">
                 <span className="text-blue-600">🔌</span>
-                <span className="text-gray-700">Outlets</span>
-                {cafe.power_outlet_rating && (
-                  <span className="text-gray-500">({cafe.power_outlet_rating}/5)</span>
-                )}
+                <span className="text-gray-700">{cafe.ai_power_outlets}</span>
               </div>
             )}
-            {cafe.noise_level && (
+            {cafe.ai_noise_level && (
               <div className="flex items-center space-x-1">
-                {getNoiseLevelBadge(cafe.noise_level)}
+                {getNoiseLevelBadge(cafe.ai_noise_level)}
               </div>
             )}
-            {cafe.natural_light && (
+            {cafe.ai_laptop_policy && (
               <div className="flex items-center space-x-1 text-sm text-gray-700">
-                <span>☀️</span>
-                <span>Natural Light</span>
-              </div>
-            )}
-            {!cafe.time_limit_minutes && (
-              <div className="flex items-center space-x-1 text-sm text-gray-700">
-                <span>⏰</span>
-                <span>No Time Limit</span>
+                <span>💼</span>
+                <span>{cafe.ai_laptop_policy}</span>
               </div>
             )}
           </div>
         </div>
-
-        {/* Additional Info */}
-        <div className="flex flex-wrap gap-4 text-xs text-gray-600 mb-4">
-          {cafe.seating_capacity > 0 && (
-            <span>🪑 {cafe.seating_capacity} seats</span>
-          )}
-          {cafe.parking_available && (
-            <span>🅿️ Parking</span>
-          )}
-          {cafe.outdoor_seating && (
-            <span>🌳 Outdoor</span>
-          )}
-          {cafe.pet_friendly && (
-            <span>🐾 Pet Friendly</span>
-          )}
-          {cafe.accessible && (
-            <span>♿ Accessible</span>
-          )}
-        </div>
-
-        {/* Time Limit Warning */}
-        {cafe.time_limit_minutes && cafe.time_limit_minutes > 0 && (
-          <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
-            ⚠️ Time limit: {cafe.time_limit_minutes} minutes
-          </div>
-        )}
 
         {/* Actions */}
         <div className="flex items-center justify-between pt-4 border-t border-gray-200">

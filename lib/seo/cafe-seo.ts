@@ -28,24 +28,19 @@ export function extractStreetFromAddress(address: string): string | null {
 }
 
 /**
- * Build SEO-friendly title for cafe page
+ * Build SEO-friendly title for cafe page (for <title> tag).
+ * Format: {Cafe Name} — {Label} in {City}
+ * No street address, no parentheses.
  */
 export function buildCafeTitle(cafe: Cafe): string {
   const city = cafe.city || 'Germany'
-  const street = extractStreetFromAddress(cafe.address)
-  const streetPart = street ? ` (${street})` : ''
   
-  // Use is_work_friendly if available, otherwise default to true based on work_score
-  const isWorkFriendly = cafe.is_work_friendly !== false && 
-    (cafe.is_work_friendly === true || cafe.work_score !== null || cafe.overall_laptop_rating !== null)
+  // Determine work-friendly label
+  const workFriendlyLabel = cafe.is_work_friendly === true 
+    ? 'Laptop-friendly cafe' 
+    : 'Coworking-friendly cafe'
   
-  const workFriendlyPart = isWorkFriendly ? 'Laptop-friendly' : ''
-  
-  if (workFriendlyPart) {
-    return `${cafe.name} — ${workFriendlyPart} cafe in ${city}${streetPart}`
-  }
-  
-  return `${cafe.name} — Cafe in ${city}${streetPart}`
+  return `${cafe.name} — ${workFriendlyLabel} in ${city}`
 }
 
 /**
@@ -54,34 +49,26 @@ export function buildCafeTitle(cafe: Cafe): string {
 export function buildCafeMetaDescription(cafe: Cafe): string {
   const parts: string[] = []
   
-  // Start with work score or rating if available
-  if (cafe.work_score !== null && cafe.work_score !== undefined) {
+  // Start with work score if available
+  if (cafe.work_score != null) {
     parts.push(`Work score: ${cafe.work_score}/10`)
-  } else if (cafe.overall_laptop_rating) {
-    parts.push(`${cafe.overall_laptop_rating.toFixed(1)}/5 laptop rating`)
+  } else if (cafe.google_rating != null) {
+    parts.push(`${cafe.google_rating.toFixed(1)}/5 rating`)
   }
   
-  // Add WiFi info
-  if (cafe.wifi_available) {
-    if (cafe.wifi_speed_rating) {
-      parts.push(`${cafe.wifi_speed_rating}/5 WiFi`)
-    } else {
-      parts.push('Free WiFi')
-    }
+  // Add WiFi info (using ai_wifi_quality)
+  if (cafe.ai_wifi_quality) {
+    parts.push(`WiFi: ${cafe.ai_wifi_quality}`)
   }
   
-  // Add power outlets
-  if (cafe.power_outlets_available) {
-    if (cafe.power_outlet_rating) {
-      parts.push(`${cafe.power_outlet_rating}/5 outlets`)
-    } else {
-      parts.push('Power outlets')
-    }
+  // Add power outlets (using ai_power_outlets)
+  if (cafe.ai_power_outlets) {
+    parts.push(`Outlets: ${cafe.ai_power_outlets}`)
   }
   
-  // Add noise level
-  if (cafe.noise_level) {
-    parts.push(`${cafe.noise_level} atmosphere`)
+  // Add noise level (using ai_noise_level)
+  if (cafe.ai_noise_level) {
+    parts.push(`${cafe.ai_noise_level} atmosphere`)
   }
   
   // Add address

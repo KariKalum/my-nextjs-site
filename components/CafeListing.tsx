@@ -40,7 +40,7 @@ export default function CafeListing() {
         .from('cafes')
         .select('*')
         .eq('is_active', true)
-        .order('overall_laptop_rating', { ascending: false })
+        .order('work_score', { ascending: false, nullsFirst: false })
 
       // If error, check if it's because Supabase isn't configured
       if (fetchError) {
@@ -109,54 +109,32 @@ export default function CafeListing() {
       )
     }
 
-    // Filter by WiFi availability
-    if (filters.wifi_available) {
-      filtered = filtered.filter(cafe => cafe.wifi_available)
+    // Filter by work-friendly
+    if (filters.is_work_friendly !== undefined) {
+      filtered = filtered.filter(cafe => cafe.is_work_friendly === filters.is_work_friendly)
     }
 
-    // Filter by power outlets
-    if (filters.power_outlets_available) {
-      filtered = filtered.filter(cafe => cafe.power_outlets_available)
-    }
-
-    // Filter by noise level
-    if (filters.noise_level && filters.noise_level.length > 0) {
+    // Filter by work score
+    if (filters.min_work_score) {
       filtered = filtered.filter(cafe => 
-        cafe.noise_level && filters.noise_level!.includes(cafe.noise_level)
+        cafe.work_score && cafe.work_score >= filters.min_work_score!
       )
     }
 
-    // Filter by WiFi rating
-    if (filters.min_wifi_rating) {
+    // Filter by Google rating
+    if (filters.min_google_rating) {
       filtered = filtered.filter(cafe => 
-        cafe.wifi_speed_rating && cafe.wifi_speed_rating >= filters.min_wifi_rating!
+        cafe.google_rating && cafe.google_rating >= filters.min_google_rating!
       )
     }
 
-    // Filter by outlet rating
-    if (filters.min_outlet_rating) {
+    // Filter by noise level (using ai_noise_level)
+    if (filters.ai_noise_level && filters.ai_noise_level.length > 0) {
       filtered = filtered.filter(cafe => 
-        cafe.power_outlet_rating && cafe.power_outlet_rating >= filters.min_outlet_rating!
+        cafe.ai_noise_level && filters.ai_noise_level!.some(level => 
+          cafe.ai_noise_level?.toLowerCase().includes(level.toLowerCase())
+        )
       )
-    }
-
-    // Filter by overall rating
-    if (filters.min_overall_rating) {
-      filtered = filtered.filter(cafe => 
-        cafe.overall_laptop_rating && cafe.overall_laptop_rating >= filters.min_overall_rating!
-      )
-    }
-
-    // Filter by time limit
-    if (filters.no_time_limit) {
-      filtered = filtered.filter(cafe => 
-        !cafe.time_limit_minutes || cafe.time_limit_minutes === 0
-      )
-    }
-
-    // Filter for quiet only
-    if (filters.quiet_only) {
-      filtered = filtered.filter(cafe => cafe.noise_level === 'quiet')
     }
 
     setFilteredCafes(filtered)
@@ -257,10 +235,12 @@ export default function CafeListing() {
 }
 
 // Mock data for development/demo purposes
+// Mock data fallback - matches new schema
 function getMockCafes(): Cafe[] {
   return [
     {
       id: '1',
+      place_id: 'ChIJMock1',
       name: 'The Cozy Corner',
       description: 'A quiet café perfect for focused work with excellent WiFi and plenty of outlets.',
       address: '123 Main Street',
@@ -269,181 +249,23 @@ function getMockCafes(): Cafe[] {
       zip_code: '94102',
       country: 'US',
       phone: '+1-555-0101',
-      email: null,
       website: null,
       latitude: 37.7749,
       longitude: -122.4194,
-      wifi_available: true,
-      wifi_speed_rating: 5,
-      wifi_password_required: true,
-      wifi_password: 'cozy2024',
-      power_outlets_available: true,
-      power_outlet_rating: 5,
-      seating_capacity: 30,
-      comfortable_seating: true,
-      seating_variety: 'tables, couches, bar seating',
-      noise_level: 'quiet',
-      music_type: 'instrumental',
-      conversation_friendly: true,
-      table_space_rating: 5,
-      natural_light: true,
-      lighting_rating: 5,
+      google_rating: 4.8,
+      google_ratings_total: 127,
+      price_level: 2,
+      business_status: 'OPERATIONAL',
       hours: { monday: '7am-8pm', tuesday: '7am-8pm' },
-      time_limit_minutes: null,
-      reservation_required: false,
-      laptop_policy: 'unlimited',
-      parking_available: true,
-      parking_type: 'street',
-      accessible: true,
-      pet_friendly: false,
-      outdoor_seating: true,
-      overall_laptop_rating: 4.8,
-      coffee_quality: 'high',
-      total_reviews: 127,
-      total_visits: 450,
+      work_score: 8.5,
+      is_work_friendly: true,
+      ai_confidence: 'high',
+      ai_wifi_quality: 'Excellent',
+      ai_power_outlets: 'Plenty available',
+      ai_noise_level: 'Quiet',
+      ai_laptop_policy: 'Unlimited',
       is_active: true,
       is_verified: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    {
-      id: '2',
-      name: 'Brew & Code',
-      description: 'Tech-focused café with high-speed WiFi, multiple outlets, and great coffee.',
-      address: '456 Tech Avenue',
-      city: 'San Francisco',
-      state: 'CA',
-      zip_code: '94103',
-      country: 'US',
-      phone: '+1-555-0102',
-      email: null,
-      website: null,
-      latitude: 37.7849,
-      longitude: -122.4094,
-      wifi_available: true,
-      wifi_speed_rating: 5,
-      wifi_password_required: false,
-      wifi_password: null,
-      power_outlets_available: true,
-      power_outlet_rating: 4,
-      seating_capacity: 40,
-      comfortable_seating: true,
-      seating_variety: 'standing desks, tables, couches',
-      noise_level: 'moderate',
-      music_type: 'electronic',
-      conversation_friendly: true,
-      table_space_rating: 4,
-      natural_light: false,
-      lighting_rating: 4,
-      hours: { monday: '6am-10pm' },
-      time_limit_minutes: null,
-      reservation_required: false,
-      laptop_policy: 'unlimited',
-      parking_available: false,
-      parking_type: null,
-      accessible: true,
-      pet_friendly: true,
-      outdoor_seating: false,
-      overall_laptop_rating: 4.6,
-      coffee_quality: 'high',
-      total_reviews: 89,
-      total_visits: 320,
-      is_active: true,
-      is_verified: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    {
-      id: '3',
-      name: 'Quiet Hours Café',
-      description: 'Silent workspace café with dedicated quiet zones and excellent lighting.',
-      address: '789 Peace Street',
-      city: 'Oakland',
-      state: 'CA',
-      zip_code: '94601',
-      country: 'US',
-      phone: '+1-555-0103',
-      email: null,
-      website: null,
-      latitude: 37.8044,
-      longitude: -122.2712,
-      wifi_available: true,
-      wifi_speed_rating: 4,
-      wifi_password_required: true,
-      wifi_password: 'quiet123',
-      power_outlets_available: true,
-      power_outlet_rating: 3,
-      seating_capacity: 25,
-      comfortable_seating: true,
-      seating_variety: 'tables, armchairs',
-      noise_level: 'quiet',
-      music_type: null,
-      conversation_friendly: false,
-      table_space_rating: 5,
-      natural_light: true,
-      lighting_rating: 5,
-      hours: { monday: '8am-6pm' },
-      time_limit_minutes: 240,
-      reservation_required: false,
-      laptop_policy: 'peak hours only',
-      parking_available: true,
-      parking_type: 'lot',
-      accessible: true,
-      pet_friendly: false,
-      outdoor_seating: false,
-      overall_laptop_rating: 4.5,
-      coffee_quality: 'medium',
-      total_reviews: 56,
-      total_visits: 180,
-      is_active: true,
-      is_verified: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    {
-      id: '4',
-      name: 'Social Workspace',
-      description: 'Vibrant café with good WiFi but limited outlets. Great for meetings and collaboration.',
-      address: '321 Community Blvd',
-      city: 'San Francisco',
-      state: 'CA',
-      zip_code: '94104',
-      country: 'US',
-      phone: '+1-555-0104',
-      email: null,
-      website: null,
-      latitude: 37.7649,
-      longitude: -122.4294,
-      wifi_available: true,
-      wifi_speed_rating: 3,
-      wifi_password_required: false,
-      wifi_password: null,
-      power_outlets_available: true,
-      power_outlet_rating: 2,
-      seating_capacity: 50,
-      comfortable_seating: true,
-      seating_variety: 'tables, couches, communal seating',
-      noise_level: 'loud',
-      music_type: 'varied',
-      conversation_friendly: true,
-      table_space_rating: 3,
-      natural_light: true,
-      lighting_rating: 4,
-      hours: { monday: '7am-9pm' },
-      time_limit_minutes: 180,
-      reservation_required: false,
-      laptop_policy: 'restricted',
-      parking_available: false,
-      parking_type: null,
-      accessible: false,
-      pet_friendly: true,
-      outdoor_seating: true,
-      overall_laptop_rating: 3.2,
-      coffee_quality: 'low',
-      total_reviews: 43,
-      total_visits: 150,
-      is_active: true,
-      is_verified: false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },

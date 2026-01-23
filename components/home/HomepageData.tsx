@@ -1,11 +1,13 @@
 import { supabase, type Cafe } from '@/lib/supabase'
 import CafeSection from './CafeSection'
+import { combineDescription } from '@/lib/utils/description-combiner'
 
-// Mock data fallback (same as CafeListing)
+// Mock data fallback - matches new schema
 function getMockCafes(): Cafe[] {
   return [
     {
       id: '1',
+      place_id: 'ChIJMock1',
       name: 'The Cozy Corner',
       description: 'A quiet café perfect for focused work with excellent WiFi and plenty of outlets.',
       address: '123 Main Street',
@@ -14,88 +16,20 @@ function getMockCafes(): Cafe[] {
       zip_code: '10115',
       country: 'DE',
       phone: '+49-30-12345678',
-      email: null,
       website: null,
       latitude: 52.52,
       longitude: 13.405,
-      wifi_available: true,
-      wifi_speed_rating: 5,
-      wifi_password_required: true,
-      wifi_password: 'cozy2024',
-      power_outlets_available: true,
-      power_outlet_rating: 5,
-      seating_capacity: 30,
-      comfortable_seating: true,
-      seating_variety: 'tables, couches, bar seating',
-      noise_level: 'quiet',
-      music_type: 'instrumental',
-      conversation_friendly: true,
-      table_space_rating: 5,
-      natural_light: true,
-      lighting_rating: 5,
+      google_rating: 4.8,
+      google_ratings_total: 127,
+      price_level: 2,
+      business_status: 'OPERATIONAL',
       hours: { monday: '7am-8pm', tuesday: '7am-8pm' },
-      time_limit_minutes: null,
-      reservation_required: false,
-      laptop_policy: 'unlimited',
-      parking_available: true,
-      parking_type: 'street',
-      accessible: true,
-      pet_friendly: false,
-      outdoor_seating: true,
-      overall_laptop_rating: 4.8,
-      coffee_quality: 'high',
-      total_reviews: 127,
-      total_visits: 450,
+      work_score: 8.5,
+      is_work_friendly: true,
+      ai_confidence: 'high',
       is_active: true,
       is_verified: true,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    {
-      id: '2',
-      name: 'Brew & Code',
-      description: 'Tech-focused café with high-speed WiFi, multiple outlets, and great coffee.',
-      address: '456 Tech Avenue',
-      city: 'Munich',
-      state: null,
-      zip_code: '80331',
-      country: 'DE',
-      phone: '+49-89-98765432',
-      email: null,
-      website: null,
-      latitude: 48.1351,
-      longitude: 11.582,
-      wifi_available: true,
-      wifi_speed_rating: 5,
-      wifi_password_required: false,
-      wifi_password: null,
-      power_outlets_available: true,
-      power_outlet_rating: 4,
-      seating_capacity: 40,
-      comfortable_seating: true,
-      seating_variety: 'standing desks, tables, couches',
-      noise_level: 'moderate',
-      music_type: 'electronic',
-      conversation_friendly: true,
-      table_space_rating: 4,
-      natural_light: false,
-      lighting_rating: 4,
-      hours: { monday: '6am-10pm' },
-      time_limit_minutes: null,
-      reservation_required: false,
-      laptop_policy: 'unlimited',
-      parking_available: false,
-      parking_type: null,
-      accessible: true,
-      pet_friendly: true,
-      outdoor_seating: false,
-      overall_laptop_rating: 4.6,
-      coffee_quality: 'high',
-      total_reviews: 89,
-      total_visits: 320,
-      is_active: true,
-      is_verified: true,
-      created_at: new Date(Date.now() - 86400000).toISOString(),
       updated_at: new Date().toISOString(),
     },
   ]
@@ -127,7 +61,14 @@ async function getRecentlyAddedCafes(): Promise<Cafe[]> {
       }
       throw error
     }
-    return data && data.length > 0 ? data : []
+    
+    // Compute descriptionText for each cafe (combines description + ai_inference_notes)
+    const cafesWithDescriptionText = (data || []).map((cafe) => ({
+      ...cafe,
+      descriptionText: combineDescription(cafe.description, cafe.ai_inference_notes)
+    }))
+    
+    return cafesWithDescriptionText
   } catch (error) {
     console.error('Error fetching recently added cafes:', error)
     // Fallback to mock data
@@ -147,7 +88,7 @@ async function getTopRatedCafes(): Promise<Cafe[]> {
       .from('cafes')
       .select('*')
       .eq('is_active', true)
-      .order('overall_laptop_rating', { ascending: false })
+      .order('work_score', { ascending: false, nullsFirst: false })
       .limit(6)
 
     if (error) {
@@ -161,7 +102,14 @@ async function getTopRatedCafes(): Promise<Cafe[]> {
       }
       throw error
     }
-    return data && data.length > 0 ? data : []
+    
+    // Compute descriptionText for each cafe (combines description + ai_inference_notes)
+    const cafesWithDescriptionText = (data || []).map((cafe) => ({
+      ...cafe,
+      descriptionText: combineDescription(cafe.description, cafe.ai_inference_notes)
+    }))
+    
+    return cafesWithDescriptionText
   } catch (error) {
     console.error('Error fetching top rated cafes:', error)
     // Fallback to mock data

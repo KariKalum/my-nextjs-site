@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { supabase, type Cafe } from '@/lib/supabase'
-import BetaNotice from '@/components/BetaNotice'
+import CommunityNotice from '@/components/CommunityNotice'
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -111,8 +111,8 @@ export default async function CitiesIndexPage() {
         </div>
       </header>
 
-      {/* Beta Notice */}
-      <BetaNotice />
+      {/* Community Notice */}
+      <CommunityNotice />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Major Cities Section */}

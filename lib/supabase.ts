@@ -20,60 +20,47 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(url, key)
 
-// Types for our database
+// Types for our database - matches public.cafes table schema
 export interface Cafe {
   id: string
   place_id?: string | null
   name: string
   description: string | null
+  ai_human_summary?: string | null
+  ai_inference_notes?: string | null
   address: string
   city: string
   state: string | null
   zip_code: string | null
   country: string
-  phone: string | null
-  email: string | null
-  website: string | null
   latitude: number | null
   longitude: number | null
+  location?: any // PostGIS geography point
   google_maps_url?: string | null
-  wifi_available: boolean
-  wifi_speed_rating: number | null
-  wifi_password_required: boolean
-  wifi_password: string | null
-  power_outlets_available: boolean
-  power_outlet_rating: number | null
-  seating_capacity: number
-  comfortable_seating: boolean
-  seating_variety: string | null
-  noise_level: 'quiet' | 'moderate' | 'loud' | 'variable' | null
-  music_type: string | null
-  conversation_friendly: boolean
-  table_space_rating: number | null
-  natural_light: boolean
-  lighting_rating: number | null
-  hours: any
-  time_limit_minutes: number | null
-  reservation_required: boolean
-  laptop_policy: string | null
-  parking_available: boolean
-  parking_type: string | null
-  accessible: boolean
-  pet_friendly: boolean
-  outdoor_seating: boolean
-  work_score?: number | null
-  work_signals?: any | null
-  is_work_friendly?: boolean | null
-  overall_laptop_rating: number | null
-  total_reviews: number
-  total_visits: number
   google_rating?: number | null
   google_ratings_total?: number | null
   price_level?: number | null
   business_status?: string | null
   google_reviews?: any[] | null
   google_reviews_fetched_at?: string | null
-  coffee_quality?: 'unknown' | 'low' | 'medium' | 'high' | null
+  hours: any // JSONB
+  phone: string | null
+  website: string | null
+  work_score?: number | null
+  is_work_friendly?: boolean | null
+  ai_score?: number | null
+  ai_confidence?: string | null
+  ai_wifi_quality?: string | null
+  ai_power_outlets?: string | null
+  ai_noise_level?: string | null
+  ai_laptop_policy?: string | null
+  ai_signals?: string | null
+  ai_evidence?: string | null
+  ai_reasons?: string | null
+  ai_structured_json?: any | null
+  ai_rated_at?: string | null
+  /** Combined description field (description + ai_inference_notes) - set by server */
+  descriptionText?: string
   is_active: boolean
   is_verified: boolean
   created_at: string
@@ -82,12 +69,8 @@ export interface Cafe {
 
 export interface CafeFilters {
   city?: string
-  wifi_available?: boolean
-  power_outlets_available?: boolean
-  noise_level?: string[]
-  min_wifi_rating?: number
-  min_outlet_rating?: number
-  min_overall_rating?: number
-  no_time_limit?: boolean
-  quiet_only?: boolean
+  is_work_friendly?: boolean
+  min_work_score?: number
+  min_google_rating?: number
+  ai_noise_level?: string[]
 }

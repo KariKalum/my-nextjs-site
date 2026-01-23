@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import Logo from '@/components/Logo'
-import BetaNotice from '@/components/BetaNotice'
+import CommunityNotice from '@/components/CommunityNotice'
 import Hero from '@/components/home/Hero'
 import ValueProps from '@/components/home/ValueProps'
 import FeaturedCities from '@/components/home/FeaturedCities'
@@ -68,8 +68,8 @@ export default function Home({
         </div>
       </header>
 
-      {/* Beta Notice */}
-      <BetaNotice />
+      {/* Community Notice */}
+      <CommunityNotice />
 
       {/* Error Message */}
       {searchParams?.error === 'unauthorized' && (

@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { supabase, type Cafe } from '@/lib/supabase'
-import BetaNotice from '@/components/BetaNotice'
+import CommunityNotice from '@/components/CommunityNotice'
 import CafeCard from '@/components/CafeCard'
 import SearchResults from '@/components/SearchResults'
 
@@ -31,7 +31,7 @@ async function getCafesByCity(cityName: string): Promise<Cafe[]> {
       .from('cafes')
       .select('*')
       .eq('is_active', true)
-      .order('overall_laptop_rating', { ascending: false })
+      .order('work_score', { ascending: false, nullsFirst: false })
 
     if (error) throw error
 
@@ -173,8 +173,8 @@ export default async function CityPage({
         </div>
       </header>
 
-      {/* Beta Notice */}
-      <BetaNotice />
+      {/* Community Notice */}
+      <CommunityNotice />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* SEO Intro Paragraph */}

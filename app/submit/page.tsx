@@ -3,7 +3,7 @@
 import { useState, FormEvent, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import BetaNotice from '@/components/BetaNotice'
+import CommunityNotice from '@/components/CommunityNotice'
 
 export default function SubmitPage() {
   const router = useRouter()
@@ -203,8 +203,8 @@ export default function SubmitPage() {
         </div>
       </header>
 
-      {/* Beta Notice */}
-      <BetaNotice />
+      {/* Community Notice */}
+      <CommunityNotice />
 
       <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 lg:p-8">
