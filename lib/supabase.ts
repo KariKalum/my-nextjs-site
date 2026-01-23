@@ -45,6 +45,7 @@ export interface Cafe {
   google_reviews_fetched_at?: string | null
   hours: any // JSONB
   phone: string | null
+  email?: string | null
   website: string | null
   work_score?: number | null
   is_work_friendly?: boolean | null
