@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
+import { createClient } from '@/src/lib/supabase/server'
 
 type CafeRecord = {
   id: string
+  place_id: string | null
   name: string
   city: string | null
   latitude: number | null
@@ -143,7 +144,7 @@ export async function GET(req: Request) {
     const { data, error } = await supabase
       .from('cafes')
       .select(
-        'id, name, city, latitude, longitude, work_score, ai_score, is_active, created_at'
+        'id, place_id, name, city, latitude, longitude, work_score, ai_score, is_active, created_at'
       )
       .eq('is_active', true)
       .not('latitude', 'is', null)
@@ -191,14 +192,13 @@ export async function GET(req: Request) {
       radius,
       cafes: cafesWithDistance.map(({ cafe, distance }) => ({
         id: cafe.id,
+        place_id: cafe.place_id,
         name: cafe.name,
         lat: cafe.latitude,
         lng: cafe.longitude,
         distance,
         workScore: cafe.work_score ?? cafe.ai_score,
         createdAt: cafe.created_at,
-        // No slug column in schema yet; use id as slug-compatible value
-        slug: cafe.id,
       })),
     }
 

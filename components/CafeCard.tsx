@@ -1,6 +1,7 @@
 'use client'
 
-import type { Cafe } from '@/lib/supabase'
+import type { Cafe } from '@/src/lib/supabase/types'
+import { getCafeHref, hasValidCafeLink } from '@/lib/cafeRouting'
 
 interface CafeCardProps {
   cafe: Cafe
@@ -145,12 +146,18 @@ export default function CafeCard({ cafe }: CafeCardProps) {
               </a>
             )}
           </div>
-          <a
-            href={`/cafe/${cafe.id}`}
-            className="text-sm font-medium text-primary-600 hover:text-primary-700"
-          >
-            View Details →
-          </a>
+          {hasValidCafeLink(cafe) ? (
+            <a
+              href={getCafeHref(cafe)}
+              className="text-sm font-medium text-primary-600 hover:text-primary-700"
+            >
+              View Details →
+            </a>
+          ) : (
+            <span className="text-sm text-gray-400" aria-label="Detail link unavailable">
+              Unavailable
+            </span>
+          )}
         </div>
       </div>
     </div>

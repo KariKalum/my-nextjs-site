@@ -1,14 +1,15 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { getCafeHref } from '@/lib/cafeRouting'
 
 // Type definitions for cafe data
 export type CafeForMap = {
   id: string
+  place_id: string | null
   name: string
   lat: number
   lng: number
-  slug: string
   wifi?: {
     available: boolean
     speedRating?: number | null
@@ -206,6 +207,9 @@ export default function NearbyCafesMap({ center, cafes, className = '' }: Nearby
 
     const distanceText = cafe.distance ? ` • ${(cafe.distance / 1000).toFixed(2)} km` : ''
     const cityText = cafe.city ? `${cafe.city}${distanceText}` : distanceText ? distanceText.slice(3) : ''
+    
+    // Compute href using routing helper
+    const cafeHref = getCafeHref({ place_id: cafe.place_id, id: cafe.id })
 
     return `
       <div style="font-family: system-ui, -apple-system, sans-serif; padding: 0; min-width: 240px;">
@@ -235,7 +239,7 @@ export default function NearbyCafesMap({ center, cafes, className = '' }: Nearby
           </div>
           
           <a 
-            href="/cafe/${escapeHtml(cafe.slug)}" 
+            href="${escapeHtml(cafeHref)}" 
             style="display: inline-flex; align-items: center; justify-content: center; margin-top: 4px; padding: 8px 16px; font-size: 14px; font-weight: 500; color: #ffffff; background-color: #2563eb; border-radius: 6px; text-decoration: none; transition: background-color 0.2s;"
             onmouseover="this.style.backgroundColor='#1d4ed8'"
             onmouseout="this.style.backgroundColor='#2563eb'"

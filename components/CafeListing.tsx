@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase, type Cafe, type CafeFilters } from '@/lib/supabase'
+import { createClient } from '@/src/lib/supabase/client'
+import type { Cafe, CafeFilters } from '@/src/lib/supabase/types'
 import CafeCard from './CafeCard'
 
 export default function CafeListing() {
@@ -23,21 +24,13 @@ export default function CafeListing() {
     try {
       setLoading(true)
       
-      // Check if Supabase is configured by checking environment variable
-      // In client components, NEXT_PUBLIC_ variables are available
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-      if (!supabaseUrl || supabaseUrl.includes('placeholder') || supabaseUrl.trim() === '') {
-        console.warn('Supabase not configured.')
-        setCafes([])
-        setError('Supabase is not configured. Please check your environment variables.')
-        setLoading(false)
-        return
-      }
+      // Create Supabase client (validated at module load)
+      const supabase = createClient()
       
       const { data, error: fetchError } = await supabase
         .from('cafes')
         .select('*')
-        .eq('is_active', true)
+        .or('is_active.is.null,is_active.eq.true')
         .order('work_score', { ascending: false, nullsFirst: false })
 
       // If error, handle it gracefully

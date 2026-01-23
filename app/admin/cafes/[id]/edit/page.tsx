@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
-import { supabase, type Cafe } from '@/lib/supabase'
+import { createClient } from '@/src/lib/supabase/server'
+import type { Cafe } from '@/src/lib/supabase/types'
 import CafeForm from '@/components/CafeForm'
 
 export default async function EditCafePage({
@@ -7,6 +8,7 @@ export default async function EditCafePage({
 }: {
   params: { id: string }
 }) {
+  const supabase = await createClient()
   const { data: cafe, error } = await supabase
     .from('cafes')
     .select('*')

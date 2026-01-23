@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { createClient } from '@/lib/supabase-client'
+import { createClient } from '@/src/lib/supabase/client'
 
 function LoginForm() {
   const router = useRouter()

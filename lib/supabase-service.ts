@@ -29,19 +29,21 @@ function getServiceRoleConfig(): { url: string; serviceRoleKey: string } {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  if (!url) {
+  if (!url || url.trim() === '' || url.includes('placeholder')) {
     throw new Error(
-      'Missing NEXT_PUBLIC_SUPABASE_URL environment variable. ' +
-        'Please add it to your .env.local file.'
+      'Missing or invalid NEXT_PUBLIC_SUPABASE_URL environment variable.\n' +
+      'Please add it to your .env.local file:\n' +
+      'NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co\n\n' +
+      'Get it from: Supabase Dashboard -> Settings -> API -> Project URL'
     )
   }
 
-  if (!serviceRoleKey) {
+  if (!serviceRoleKey || serviceRoleKey.trim() === '') {
     throw new Error(
-      'Missing SUPABASE_SERVICE_ROLE_KEY environment variable. ' +
-        'This key is required for server-side operations. ' +
-        'Get it from: Supabase Dashboard -> Settings -> API -> service_role key. ' +
-        'NEVER expose this key to the browser or client-side code!'
+      'Missing SUPABASE_SERVICE_ROLE_KEY environment variable.\n' +
+      'This key is required for server-side operations.\n' +
+      'Get it from: Supabase Dashboard -> Settings -> API -> service_role key.\n' +
+      'NEVER expose this key to the browser or client-side code!'
     )
   }
 
@@ -50,8 +52,8 @@ function getServiceRoleConfig(): { url: string; serviceRoleKey: string } {
     new URL(url)
   } catch {
     throw new Error(
-      `Invalid NEXT_PUBLIC_SUPABASE_URL format: "${url}". ` +
-        'Expected a valid URL (e.g., https://your-project.supabase.co)'
+      `Invalid NEXT_PUBLIC_SUPABASE_URL format: "${url}".\n` +
+      'Expected a valid URL (e.g., https://your-project.supabase.co)'
     )
   }
 

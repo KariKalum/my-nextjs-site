@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { CafeFilters, Cafe } from '@/lib/supabase'
+import type { CafeFilters, Cafe } from '@/src/lib/supabase/types'
 
 interface CafeFiltersPanelProps {
   filters: CafeFilters

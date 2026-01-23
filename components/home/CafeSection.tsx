@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import type { Cafe } from '@/lib/supabase'
+import type { Cafe } from '@/src/lib/supabase/types'
 import CafeCard from '@/components/CafeCard'
 import Section from '@/components/Section'
 

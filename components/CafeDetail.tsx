@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import type { Cafe } from '@/lib/supabase'
+import type { Cafe } from '@/src/lib/supabase/types'
 import CafeMap from './CafeMap'
 import LaptopFriendlyIndicators from './LaptopFriendlyIndicators'
 

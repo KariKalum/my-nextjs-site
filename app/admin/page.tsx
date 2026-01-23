@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { supabase, type Cafe } from '@/lib/supabase'
+import { createClient } from '@/src/lib/supabase/client'
+import type { Cafe } from '@/src/lib/supabase/types'
+import { getCafeHref } from '@/lib/cafeRouting'
 
 export default function AdminDashboard() {
   const [cafes, setCafes] = useState<Cafe[]>([])
@@ -18,13 +20,15 @@ export default function AdminDashboard() {
   const fetchCafes = async () => {
     try {
       setLoading(true)
+      const supabase = createClient()
+      
       let query = supabase
         .from('cafes')
         .select('*')
         .order('created_at', { ascending: false })
 
       if (showActiveOnly) {
-        query = query.eq('is_active', true)
+        query = query.or('is_active.is.null,is_active.eq.true')
       }
 
       const { data, error: fetchError } = await query
@@ -44,6 +48,7 @@ export default function AdminDashboard() {
 
   const handleToggleActive = async (cafeId: string, currentStatus: boolean) => {
     try {
+      const supabase = createClient()
       const { error } = await supabase
         .from('cafes')
         .update({ is_active: !currentStatus })
@@ -67,6 +72,7 @@ export default function AdminDashboard() {
     }
 
     try {
+      const supabase = createClient()
       const { error } = await supabase
         .from('cafes')
         .delete()
@@ -275,7 +281,7 @@ export default function AdminDashboard() {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
                         <Link
-                          href={`/cafe/${cafe.id}`}
+                          href={getCafeHref(cafe)}
                           target="_blank"
                           className="text-primary-600 hover:text-primary-900"
                           title="View"

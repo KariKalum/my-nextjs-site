@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { supabase, type Cafe } from '@/lib/supabase'
+import { createClient } from '@/src/lib/supabase/server'
+import type { Cafe } from '@/src/lib/supabase/types'
 import CommunityNotice from '@/components/CommunityNotice'
 
 export const dynamic = "force-dynamic"
@@ -18,27 +19,13 @@ export const metadata: Metadata = {
 
 async function getCities(): Promise<Array<{ city: string; count: number }>> {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    console.log("🔐 SUPABASE_URL:", process.env.NEXT_PUBLIC_SUPABASE_URL)
-    console.log(
-      "🔐 SUPABASE_ANON_KEY exists?",
-      !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    )
-    console.log("🔥 getCities running. SUPABASE_URL exists?", !!supabaseUrl)
-    console.log("🔎 SUPABASE_URL:", supabaseUrl)
+    // Create Supabase client (validated at module load)
+    const supabase = await createClient()
 
-    if (!supabaseUrl || supabaseUrl.includes('placeholder')) {
-      console.log("⚠️ Supabase URL missing/placeholder. Returning []")
-      return []
-    }
-
-    console.log("🚀 Querying Supabase cafes...")
     const { data, error } = await supabase
       .from('cafes')
       .select('city')
-      .eq('is_active', true)
-
-    console.log("✅ Supabase responded. rows:", data?.length, "error:", error)
+      .or('is_active.is.null,is_active.eq.true')
 
     if (error) throw error
     if (!data || data.length === 0) {

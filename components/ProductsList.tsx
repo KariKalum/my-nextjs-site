@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, FormEvent } from 'react'
-import { supabaseClient } from '@/src/lib/supabaseClient'
+import { createClient } from '@/src/lib/supabase/client'
 
 interface Product {
   id: string
@@ -23,7 +23,8 @@ export default function ProductsList() {
       setLoading(true)
       setError(null)
 
-      const { data, error: fetchError } = await supabaseClient
+      const supabase = createClient()
+      const { data, error: fetchError } = await supabase
         .from('products')
         .select('*')
         .order('created_at', { ascending: false })
@@ -78,7 +79,8 @@ export default function ProductsList() {
         productData[key] = value.trim() === '' ? null : value.trim()
       })
 
-      const { data, error: insertError } = await supabaseClient
+      const supabase = createClient()
+      const { data, error: insertError } = await supabase
         .from('products')
         .insert([productData])
         .select()
@@ -135,7 +137,8 @@ export default function ProductsList() {
       setDeletingIds((prev) => new Set(prev).add(id))
       setDeleteError(null)
 
-      const { error: deleteError } = await supabaseClient
+      const supabase = createClient()
+      const { error: deleteError } = await supabase
         .from('products')
         .delete()
         .eq('id', id)

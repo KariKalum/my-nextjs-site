@@ -3,12 +3,14 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { getCafeHref } from '@/lib/cafeRouting'
 
 type NearbyApiResponse = {
   center: { lat: number; lng: number }
   radius: number
   cafes: Array<{
     id: string
+    place_id: string | null
     name: string
     lat: number | null
     lng: number | null
@@ -20,16 +22,15 @@ type NearbyApiResponse = {
     rating: number | null
     coffeeQuality?: 'unknown' | 'low' | 'medium' | 'high'
     createdAt: string | null
-    slug: string
   }>
 }
 
 type CafeForMap = {
   id: string
+  place_id: string | null
   name: string
   lat: number
   lng: number
-  slug: string
   wifi?: { available: boolean; speedRating?: number | null }
   outlets?: { available: boolean; rating?: number | null }
   noise?: string | null
@@ -154,6 +155,9 @@ export default function NearbyMapClient() {
     const timeLabel = cafe.timeLimit ? `${cafe.timeLimit} min` : 'No limit'
 
     const distanceText = cafe.distance ? `${(cafe.distance / 1000).toFixed(2)} km` : ''
+    
+    // Compute href using routing helper
+    const cafeHref = getCafeHref({ place_id: cafe.place_id, id: cafe.id })
 
     return `
       <div style="font-family: system-ui, -apple-system, sans-serif; padding: 0; min-width: 240px;">
@@ -181,7 +185,7 @@ export default function NearbyMapClient() {
             </div>
           </div>
           <a 
-            href="/cafe/${escapeHtml(cafe.slug)}" 
+            href="${escapeHtml(cafeHref)}" 
             style="display: inline-flex; align-items: center; justify-content: center; margin-top: 4px; padding: 8px 16px; font-size: 14px; font-weight: 500; color: #ffffff; background-color: #2563eb; border-radius: 6px; text-decoration: none; transition: background-color 0.2s;"
             onmouseover="this.style.backgroundColor='#1d4ed8'"
             onmouseout="this.style.backgroundColor='#2563eb'"
@@ -257,10 +261,10 @@ export default function NearbyMapClient() {
           .filter((c) => c.lat != null && c.lng != null)
           .map((c) => ({
             id: c.id,
+            place_id: c.place_id,
             name: c.name,
             lat: c.lat!,
             lng: c.lng!,
-            slug: c.slug,
             wifi: c.wifi,
             outlets: c.outlets,
             noise: c.noise,
@@ -308,10 +312,10 @@ export default function NearbyMapClient() {
           .filter((c) => c.lat != null && c.lng != null)
           .map((c) => ({
             id: c.id,
+            place_id: c.place_id,
             name: c.name,
             lat: c.lat!,
             lng: c.lng!,
-            slug: c.slug,
             wifi: c.wifi,
             outlets: c.outlets,
             noise: c.noise,
@@ -937,7 +941,7 @@ export default function NearbyMapClient() {
                   </p>
                 </div>
                 <Link
-                  href={`/cafe/${cafe.slug}`}
+                  href={getCafeHref({ place_id: cafe.place_id, id: cafe.id })}
                   className="text-sm text-primary-600 hover:text-primary-700 font-medium"
                 >
                   View details

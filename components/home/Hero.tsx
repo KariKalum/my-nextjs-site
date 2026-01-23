@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/src/lib/supabase/client'
+import { getCafeHref } from '@/lib/cafeRouting'
 
 interface HeroProps {
   onSearchChange?: (query: string) => void
@@ -46,12 +47,7 @@ export default function Hero({ onSearchChange }: HeroProps) {
   const fetchSuggestions = async (query: string) => {
     setLoading(true)
     try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-      if (!supabaseUrl || supabaseUrl.includes('placeholder')) {
-        setSuggestions([])
-        setLoading(false)
-        return
-      }
+      const supabase = createClient()
 
       const queryLower = query.toLowerCase()
       const results: Suggestion[] = []
@@ -60,7 +56,7 @@ export default function Hero({ onSearchChange }: HeroProps) {
       const { data: citiesData } = await supabase
         .from('cafes')
         .select('city')
-        .eq('is_active', true)
+        .or('is_active.is.null,is_active.eq.true')
         .ilike('city', `%${query}%`)
         .limit(5)
 
@@ -81,7 +77,7 @@ export default function Hero({ onSearchChange }: HeroProps) {
       const { data: cafesData } = await supabase
         .from('cafes')
         .select('id, name, city, place_id')
-        .eq('is_active', true)
+        .or('is_active.is.null,is_active.eq.true')
         .ilike('name', `%${query}%`)
         .limit(5)
 
@@ -130,7 +126,8 @@ export default function Hero({ onSearchChange }: HeroProps) {
     if (suggestion.type === 'city') {
       router.push(`/cities/${suggestion.slug}`)
     } else {
-      router.push(`/cafe/${suggestion.slug}`)
+      // suggestion.slug is place_id || id from the cafe
+      router.push(getCafeHref({ place_id: suggestion.slug || null, id: suggestion.slug }))
     }
   }
 

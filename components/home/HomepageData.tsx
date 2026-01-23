@@ -1,13 +1,15 @@
-import { supabase, type Cafe } from '@/lib/supabase'
+import { createClient } from '@/src/lib/supabase/server'
+import type { Cafe } from '@/src/lib/supabase/types'
 import CafeSection from './CafeSection'
 import { combineDescription } from '@/lib/utils/description-combiner'
 
 async function getRecentlyAddedCafes(): Promise<Cafe[]> {
   try {
+    const supabase = await createClient()
     const { data, error } = await supabase
       .from('cafes')
       .select('*')
-      .eq('is_active', true)
+      .or('is_active.is.null,is_active.eq.true')
       .order('created_at', { ascending: false })
       .limit(6)
 
@@ -31,10 +33,11 @@ async function getRecentlyAddedCafes(): Promise<Cafe[]> {
 
 async function getTopRatedCafes(): Promise<Cafe[]> {
   try {
+    const supabase = await createClient()
     const { data, error } = await supabase
       .from('cafes')
       .select('*')
-      .eq('is_active', true)
+      .or('is_active.is.null,is_active.eq.true')
       .order('work_score', { ascending: false, nullsFirst: false })
       .limit(6)
 

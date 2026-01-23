@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/src/lib/supabase/client'
+import { getCafeHref } from '@/lib/cafeRouting'
 
 interface Submission {
   id: string
@@ -38,6 +39,8 @@ export default function AdminSubmissionsPage() {
   const fetchSubmissions = async () => {
     try {
       setLoading(true)
+      const supabase = createClient()
+      
       let query = supabase
         .from('submissions')
         .select('*')
@@ -156,6 +159,7 @@ export default function AdminSubmissionsPage() {
       }
 
       // Create cafe entry
+      const supabase = createClient()
       const { data: createdCafe, error: cafeError } = await supabase
         .from('cafes')
         .insert([cafeData])
@@ -227,6 +231,7 @@ export default function AdminSubmissionsPage() {
     if (notes === null) return // User cancelled
 
     try {
+      const supabase = createClient()
       const { error } = await supabase
         .from('submissions')
         .update({
@@ -343,7 +348,7 @@ export default function AdminSubmissionsPage() {
                     </span>
                     {submission.cafe_id && (
                       <Link
-                        href={`/cafe/${submission.cafe_id}`}
+                        href={getCafeHref({ id: submission.cafe_id })}
                         className="text-xs text-primary-600 hover:text-primary-700"
                       >
                         View Café →

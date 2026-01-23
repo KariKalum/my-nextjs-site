@@ -1,7 +1,8 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { supabase, type Cafe } from '@/lib/supabase'
+import { createClient } from '@/src/lib/supabase/server'
+import type { Cafe } from '@/src/lib/supabase/types'
 import CommunityNotice from '@/components/CommunityNotice'
 import CafeCard from '@/components/CafeCard'
 import SearchResults from '@/components/SearchResults'
@@ -20,17 +21,14 @@ const majorCities = ['Berlin', 'Hamburg', 'Munich', 'Cologne', 'Frankfurt', 'Lei
 
 async function getCafesByCity(cityName: string): Promise<Cafe[]> {
   try {
-    // Check if Supabase is configured - skip if using placeholder
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    if (!supabaseUrl || supabaseUrl.includes('placeholder')) {
-      return []
-    }
+    // Create Supabase client (validated at module load)
+    const supabase = await createClient()
 
     // Fetch all active cafes
     const { data, error } = await supabase
       .from('cafes')
       .select('*')
-      .eq('is_active', true)
+      .or('is_active.is.null,is_active.eq.true')
       .order('work_score', { ascending: false, nullsFirst: false })
 
     if (error) throw error

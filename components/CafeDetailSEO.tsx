@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import Link from 'next/link'
-import type { Cafe } from '@/lib/supabase'
+import type { Cafe } from '@/src/lib/supabase/types'
 import CommunityNotice from './CommunityNotice'
 import CafeStructuredData from './CafeStructuredData'
 import CafeFAQ from './CafeFAQ'
@@ -16,6 +16,7 @@ import {
   buildCafeH1Title,
   cleanDescription
 } from '@/lib/utils/cafe-display'
+import { getCafeHref } from '@/lib/cafeRouting'
 import { sharePage } from '@/lib/utils/share'
 import { combineDescription } from '@/lib/utils/description-combiner'
 import {
@@ -34,8 +35,7 @@ interface CafeDetailSEOProps {
 export default function CafeDetailSEO({ cafe, nearbyCafes = [] }: CafeDetailSEOProps) {
   const [toast, setToast] = useState<string | null>(null)
 
-  const canonicalId = cafe.place_id || cafe.id
-  const cafeUrl = getAbsoluteUrl(`/cafe/${canonicalId}`)
+  const cafeUrl = getAbsoluteUrl(getCafeHref(cafe))
   const mapsUrl = getMapsUrl(cafe)
   const addressLine = formatAddress(cafe)
   const h1Title = buildCafeH1Title(cafe)
@@ -366,7 +366,7 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [] }: CafeDetailSEOP
                       {nearbyCafes.map((n) => (
                         <li key={n.id}>
                           <Link
-                            href={`/cafe/${n.place_id || n.id}`}
+                            href={getCafeHref(n)}
                             className="text-primary-600 hover:text-primary-700"
                           >
                             {n.name}

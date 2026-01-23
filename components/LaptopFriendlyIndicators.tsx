@@ -1,6 +1,6 @@
 'use client'
 
-import type { Cafe } from '@/lib/supabase'
+import type { Cafe } from '@/src/lib/supabase/types'
 
 interface LaptopFriendlyIndicatorsProps {
   cafe: Cafe

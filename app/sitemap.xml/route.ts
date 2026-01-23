@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/src/lib/supabase/server'
+import { getCafeHref } from '@/lib/cafeRouting'
 
 // Supported major cities (fallback if database query fails)
 const majorCities = ['berlin', 'hamburg', 'munich', 'cologne', 'frankfurt', 'leipzig']
@@ -55,30 +56,26 @@ export async function GET() {
   const citiesSet = new Set<string>()
   
   try {
-    // Check if Supabase is configured - skip if using placeholder
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    if (!supabaseUrl || supabaseUrl.includes('placeholder')) {
-      // Use fallback cities only
-      cafes = []
-    } else {
-      // Fetch cafes with id, city, and timestamps (limit 5000)
-      const { data, error } = await supabase
-        .from('cafes')
-        .select('id, city, updated_at, created_at')
-        .eq('is_active', true)
-        .order('updated_at', { ascending: false })
-        .limit(5000)
+    // Create Supabase client (validated at module load)
+    const supabase = await createClient()
+
+    // Fetch cafes with id, city, and timestamps (limit 5000)
+    const { data, error } = await supabase
+      .from('cafes')
+      .select('id, city, updated_at, created_at')
+      .or('is_active.is.null,is_active.eq.true')
+      .order('updated_at', { ascending: false })
+      .limit(5000)
       
-      if (!error && data) {
-        cafes = data
-        
-        // Collect unique cities from database
-        data.forEach((cafe) => {
-          if (cafe.city) {
-            citiesSet.add(cafe.city.toLowerCase())
-          }
-        })
-      }
+    if (!error && data) {
+      cafes = data
+      
+      // Collect unique cities from database
+      data.forEach((cafe) => {
+        if (cafe.city) {
+          citiesSet.add(cafe.city.toLowerCase())
+        }
+      })
     }
   } catch (error) {
     console.error('Error fetching cafes for sitemap:', error)
@@ -100,9 +97,9 @@ export async function GET() {
   
   // Add cafe detail pages
   cafes.forEach((cafe) => {
-    // Use /cafe/[id] pattern (detected from existing route)
+    // Use canonical routing helper
     const url: SitemapUrl = {
-      loc: `${baseUrl}/cafe/${cafe.id}`,
+      loc: `${baseUrl}${getCafeHref(cafe)}`,
       changefreq: 'monthly',
       priority: '0.7',
     }

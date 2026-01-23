@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/src/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
   try {
@@ -81,6 +81,9 @@ export async function POST(request: NextRequest) {
         )
       }
     }
+
+    // Create Supabase client (validated at module load)
+    const supabase = await createClient()
 
     // Basic rate limiting: Check for duplicate submissions in last hour
     // (Simple check - same name + city + address)

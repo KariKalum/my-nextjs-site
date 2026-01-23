@@ -1,86 +1,124 @@
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
-import { supabase, type Cafe } from '@/lib/supabase'
+import { createClient } from '@/src/lib/supabase/server'
+import type { Cafe } from '@/src/lib/supabase/types'
 import CafeDetailSEO from '@/components/CafeDetailSEO'
 import { combineDescription } from '@/lib/utils/description-combiner'
+import { getCafeHref, getDetailRouteQueryConfig } from '@/lib/cafeRouting'
+import { devLog } from '@/lib/utils/devLog'
 
-async function getCafe(id: string): Promise<Cafe | null> {
+/**
+ * Production-safe cafe loader that never returns false 404s.
+ * Distinguishes between permission errors, network errors, and actual not-found.
+ */
+type CafeLoadResult =
+  | { success: true; cafe: Cafe }
+  | { success: false; reason: 'not_found' | 'permission_error' | 'network_error' | 'invalid_param'; error?: any }
+
+async function getCafe(id: string): Promise<CafeLoadResult> {
+  const config = getDetailRouteQueryConfig(id)
+  if (!config) {
+    devLog('getCafe', { msg: 'invalid_param', param: (id ?? 'null').toString().slice(0, 20) })
+    return { success: false, reason: 'invalid_param' }
+  }
+
+  const { param: trimmedId, queriedColumn, isPlaceId } = config
+  const logContext = {
+    param: trimmedId.substring(0, 30),
+    queriedColumn,
+    isPlaceId,
+  }
+
   try {
-    // Check if Supabase is configured - skip if using placeholder
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    if (!supabaseUrl || supabaseUrl.includes('placeholder')) {
-      return null
-    }
-    
-    // Detect param type: Google place_id starts with "ChIJ", otherwise treat as UUID/id
-    const queryBy = id.startsWith('ChIJ') ? 'place_id' : 'id'
+    // Create Supabase client (validated at module load)
+    const supabase = await createClient()
 
-    // Query public.cafes table - select('*') gets all fields from new schema
-    let { data, error } = await supabase
+    // Query with safe is_active handling: true OR NULL
+    // Use .or() to allow rows where is_active is true OR NULL
+    let query = supabase
       .from('cafes')
       .select('*')
-      .eq(queryBy === 'place_id' ? 'place_id' : 'id', id)
-      .eq('is_active', true)
-      .single()
+      .eq(queriedColumn, trimmedId)
+      .or('is_active.is.null,is_active.eq.true')
 
-    // If not found and we queried by id, try place_id as fallback
-    if ((error || !data) && queryBy === 'id') {
-      const { data: placeData, error: placeError } = await supabase
-        .from('cafes')
-        .select('*')
-        .eq('place_id', id)
-        .eq('is_active', true)
-        .single()
-      
-      if (!placeError && placeData) {
-        data = placeData
-        error = null
-      }
-    }
-      
-    // Handle query errors - don't treat as 404
+    const { data, error } = await query.single()
+
+    // Handle Supabase errors
     if (error) {
-      console.error('[getCafe] Query error:', error.message)
-      return null
+      const errorCode = error.code || 'UNKNOWN'
+      const sanitizedCode = typeof errorCode === 'string' ? errorCode : 'UNKNOWN'
+
+      // PGRST116 = no rows found (actual 404)
+      if (sanitizedCode === 'PGRST116') {
+        devLog('getCafe', { ...logContext, code: sanitizedCode, msg: 'not_found' })
+        return { success: false, reason: 'not_found' }
+      }
+
+      // PGRST301 = permission denied / RLS violation
+      if (sanitizedCode === 'PGRST301' || sanitizedCode.includes('permission') || sanitizedCode.includes('403')) {
+        devLog('getCafe', { ...logContext, code: sanitizedCode, msg: 'permission_error' })
+        return { success: false, reason: 'permission_error', error }
+      }
+
+      // Network/connection errors
+      if (
+        sanitizedCode.includes('network') ||
+        sanitizedCode.includes('ECONNREFUSED') ||
+        sanitizedCode.includes('ETIMEDOUT') ||
+        sanitizedCode.includes('401')
+      ) {
+        devLog('getCafe', { ...logContext, code: sanitizedCode, msg: 'network_error' })
+        return { success: false, reason: 'network_error', error }
+      }
+
+      // Other known Supabase errors
+      devLog('getCafe', { ...logContext, code: sanitizedCode, msg: 'query_error' })
+      return { success: false, reason: 'network_error', error }
     }
 
-    // If no data found, return null
+    // If no data found (shouldn't happen with .single() but be safe)
     if (!data) {
-      return null
+      devLog('getCafe', { ...logContext, msg: 'no_data' })
+      return { success: false, reason: 'not_found' }
     }
 
-    // Combine descriptions and add descriptionText
-    const descriptionText = combineDescription(
-      data.description,
-      data.ai_inference_notes
-    )
+    // Success - combine descriptions and return
+    const descriptionText = combineDescription(data.description, data.ai_inference_notes)
+    const cafe = { ...data, descriptionText } as Cafe
 
-    return { ...data, descriptionText } as Cafe
-  } catch (error) {
-    console.error('Error fetching cafe:', error)
-    return null
+    devLog('getCafe', { ...logContext, cafeId: cafe.id?.slice(0, 20) ?? null })
+
+    return { success: true, cafe }
+  } catch (err: unknown) {
+    // Unexpected errors: rethrow so error boundary handles them (not swallowed)
+    devLog('getCafe', {
+      ...logContext,
+      msg: 'unexpected',
+      err: err instanceof Error ? err.message?.slice(0, 60) : String(err).slice(0, 60),
+    })
+    throw err
   }
 }
 
+/**
+ * Fetch nearby cafes efficiently (single query, no N+1)
+ */
 async function getNearbyCafes(cafe: Cafe, limit: number = 3): Promise<Cafe[]> {
   try {
-    // Check if Supabase is configured - skip if using placeholder
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    if (!supabaseUrl || supabaseUrl.includes('placeholder')) {
-      return []
-    }
-
     if (!cafe.latitude || !cafe.longitude || !cafe.city) {
       return []
     }
 
-    // Fetch cafes in the same city (excluding current cafe)
+    // Create Supabase client (validated at module load)
+    const supabase = await createClient()
+
+    // Single query with safe is_active handling
     const { data, error } = await supabase
       .from('cafes')
       .select('id, place_id, name, city, address, work_score, google_rating')
       .eq('city', cafe.city)
-      .eq('is_active', true)
       .neq('id', cafe.id)
+      .or('is_active.is.null,is_active.eq.true')
       .order('work_score', { ascending: false, nullsFirst: false })
       .limit(limit)
 
@@ -90,50 +128,82 @@ async function getNearbyCafes(cafe: Cafe, limit: number = 3): Promise<Cafe[]> {
 
     return data as Cafe[]
   } catch (error) {
-    console.error('Error fetching nearby cafes:', error)
     return []
   }
 }
 
+/**
+ * Error component for permission/network errors (not 404)
+ */
+function CafeError({ reason }: { reason: 'permission_error' | 'network_error' }) {
+  const { siteName } = require('@/lib/seo/metadata')
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-8 text-center">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">
+          {reason === 'permission_error' ? 'Access Restricted' : 'Unable to Load Café'}
+        </h1>
+        <p className="text-gray-600 mb-6">
+          {reason === 'permission_error'
+            ? 'This café listing is currently unavailable.'
+            : 'We encountered an issue loading this café. Please try again later.'}
+        </p>
+        <a
+          href="/cities"
+          className="inline-block px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+        >
+          Browse All Cafés
+        </a>
+      </div>
+    </div>
+  )
+}
 
 export default async function CafeDetailPage({
   params,
 }: {
   params: { id: string }
 }) {
-  const cafe = await getCafe(params.id)
+  const result = await getCafe(params.id)
 
-
-
-  if (!cafe) {
-    notFound()
+  // Handle different error types
+  if (!result.success) {
+    if (result.reason === 'not_found' || result.reason === 'invalid_param') {
+      notFound()
+    }
+    // Permission or network errors - show error UI, not 404
+    return <CafeError reason={result.reason === 'permission_error' ? 'permission_error' : 'network_error'} />
   }
 
-  // Ensure descriptionText is set (combines description + ai_inference_notes)
+  const { cafe } = result
+
+  // Ensure descriptionText is set
   if (!cafe.descriptionText) {
-    cafe.descriptionText = combineDescription(
-      cafe.description,
-      cafe.ai_inference_notes
-    )
+    cafe.descriptionText = combineDescription(cafe.description, cafe.ai_inference_notes)
   }
 
-  // Fetch nearby cafes for internal linking
+  // Fetch nearby cafes (single query, efficient)
   const nearbyCafes = await getNearbyCafes(cafe)
 
   return <CafeDetailSEO cafe={cafe} nearbyCafes={nearbyCafes} />
 }
 
-
-// Generate dynamic metadata for SEO
+/**
+ * Generate metadata safely - never crashes even if cafe is missing
+ */
 export async function generateMetadata({
   params,
 }: {
   params: { id: string }
 }): Promise<Metadata> {
-  const cafe = await getCafe(params.id)
-  
-  if (!cafe) {
-    const { siteName, getAbsoluteUrl } = await import('@/lib/seo/metadata')
+  const result = await getCafe(params.id)
+
+  // Import SEO helpers
+  const { siteName, getAbsoluteUrl } = await import('@/lib/seo/metadata')
+
+  // If cafe not found or error, return safe defaults
+  if (!result.success || !result.cafe) {
     return {
       title: `Café not found | ${siteName}`,
       description: 'The café you are looking for could not be found.',
@@ -148,36 +218,30 @@ export async function generateMetadata({
       },
     }
   }
-  
-  // Import SEO helpers
-  const { 
-    siteName, 
-    getAbsoluteUrl, 
-    getCafeOgImage 
-  } = await import('@/lib/seo/metadata')
-  
+
+  const cafe = result.cafe
+
+  // Build SEO metadata
   const {
     buildCafeTitle,
     buildCafeMetaDescription,
   } = await import('@/lib/seo/cafe-seo')
-  
-  // Build SEO-optimized title
+
+  const { getCafeOgImage } = await import('@/lib/seo/metadata')
+
   const title = buildCafeTitle(cafe)
   const fullTitle = `${title} | ${siteName}`
-  
-  // Build description (140-160 chars)
   const description = buildCafeMetaDescription(cafe)
-  
-  // Get canonical URL (use place_id if available, otherwise id)
-  const canonicalId = cafe.place_id || params.id
-  const canonicalUrl = getAbsoluteUrl(`/cafe/${canonicalId}`)
-  
-  // Get OG image
-  const ogImage = await getCafeOgImage(cafe.id)
-  
-  // Determine locale (default to 'en' but can be enhanced)
-  const locale = 'en_US'
-  
+  const canonicalUrl = getAbsoluteUrl(getCafeHref(cafe))
+
+  // Get OG image (safe - may be null)
+  let ogImage: string | undefined
+  try {
+    ogImage = await getCafeOgImage(cafe.id)
+  } catch (error) {
+    // Silently fail - OG image is optional
+  }
+
   return {
     title: fullTitle,
     description,
@@ -187,13 +251,15 @@ export async function generateMetadata({
       type: 'website',
       url: canonicalUrl,
       siteName,
-      locale,
-      images: ogImage ? [
-        {
-          url: ogImage,
-          alt: `${cafe.name} - ${cafe.city ? `Laptop-friendly café in ${cafe.city}` : 'Cafe'}`,
-        },
-      ] : undefined,
+      locale: 'en_US',
+      images: ogImage
+        ? [
+            {
+              url: ogImage,
+              alt: `${cafe.name} - ${cafe.city ? `Laptop-friendly café in ${cafe.city}` : 'Cafe'}`,
+            },
+          ]
+        : undefined,
     },
     twitter: {
       card: 'summary_large_image',
