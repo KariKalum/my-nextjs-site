@@ -2,31 +2,16 @@ import { notFound } from 'next/navigation'
 import { supabase, type Cafe } from '@/lib/supabase'
 import CafeForm from '@/components/CafeForm'
 
-async function getCafe(id: string): Promise<Cafe | null> {
-  try {
-    const { data, error } = await supabase
-      .from('cafes')
-      .select('*')
-      .eq('id', id)
-      .single()
-
-    if (error || !data) {
-      return null
-    }
-
-    return data as Cafe
-  } catch (error) {
-    console.error('Error fetching cafe:', error)
-    return null
-  }
-}
-
 export default async function EditCafePage({
   params,
 }: {
   params: { id: string }
 }) {
-  const cafe = await getCafe(params.id)
+  const { data: cafe, error } = await supabase
+    .from('cafes')
+    .select('*')
+    .eq('id', params.id)
+    .single()
 
   if (!cafe) {
     notFound()

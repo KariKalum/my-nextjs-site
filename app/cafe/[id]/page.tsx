@@ -103,6 +103,8 @@ export default async function CafeDetailPage({
 }) {
   const cafe = await getCafe(params.id)
 
+
+
   if (!cafe) {
     notFound()
   }
