@@ -245,7 +245,6 @@ export function buildCafeH1Title(cafe: {
   name: string
   address: string | null
   city?: string | null
-  address?: string | null
   is_work_friendly?: boolean | null
 }): string {
   // Determine city: use city field, or extract from address, or fallback
@@ -271,23 +270,37 @@ export function getMapsUrl(cafe: {
   google_maps_url: string | null
   latitude: number | null
   longitude: number | null
-  name: string
   address: string | null
   city: string | null
   state: string | null
   zip_code: string | null
+  name: string
 }): string {
+  // 1) Use Google Maps URL if already stored (non-empty)
   if (cafe.google_maps_url && cafe.google_maps_url.trim()) {
     return cafe.google_maps_url.trim()
   }
-  
+
+  // 2) Build a readable address-based query (best labels)
+  const addressParts = [
+    cafe.name,
+    cafe.address,
+    cafe.city,
+    cafe.state,
+    cafe.zip_code,
+  ].filter(Boolean)
+
+  if (addressParts.length > 0) {
+    const query = encodeURIComponent(addressParts.join(', '))
+    return `https://www.google.com/maps/search/?api=1&query=${query}`
+  }
+
+  // 3) Fallback to lat/lng
   if (cafe.latitude != null && cafe.longitude != null) {
     return `https://www.google.com/maps/search/?api=1&query=${cafe.latitude},${cafe.longitude}`
   }
-  
-  // Fallback to address search
-  const q = [cafe.name, cafe.address, cafe.city, cafe.state, cafe.zip_code]
-    .filter(Boolean)
-    .join(', ')
-  return `https://www.google.com/maps?q=${encodeURIComponent(q)}`
+
+  // 4) Final safe fallback (never breaks <a href>)
+  return 'https://www.google.com/maps'
 }
+

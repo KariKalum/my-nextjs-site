@@ -36,8 +36,7 @@ export default function AdminDashboard() {
     } catch (err) {
       console.error('Error fetching cafes:', err)
       setError('Failed to load cafés. Check your Supabase connection.')
-      // Use mock data for development
-      setCafes(getMockCafes())
+      setCafes([])
     } finally {
       setLoading(false)
     }
@@ -82,10 +81,18 @@ export default function AdminDashboard() {
     }
   }
 
+  // Null-safe string normalization helper
+  const normalizeString = (v: unknown): string => {
+    return String(v ?? '').toLowerCase()
+  }
+
+  // Normalize search term once
+  const normalizedSearchTerm = searchTerm.trim().toLowerCase()
+
   const filteredCafes = cafes.filter(cafe =>
-    cafe.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    cafe.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    cafe.address.toLowerCase().includes(searchTerm.toLowerCase())
+    normalizeString(cafe.name).includes(normalizedSearchTerm) ||
+    normalizeString(cafe.city).includes(normalizedSearchTerm) ||
+    normalizeString(cafe.address).includes(normalizedSearchTerm)
   )
 
   if (loading) {
@@ -160,13 +167,13 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-lg shadow p-6">
           <p className="text-sm font-medium text-gray-600">Active</p>
           <p className="text-3xl font-bold text-green-600 mt-2">
-            {cafes.filter(c => c.is_active).length}
+            {cafes.filter(c => c.is_active ?? false).length}
           </p>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
           <p className="text-sm font-medium text-gray-600">Verified</p>
           <p className="text-3xl font-bold text-blue-600 mt-2">
-            {cafes.filter(c => c.is_verified).length}
+            {cafes.filter(c => c.is_verified ?? false).length}
           </p>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
@@ -249,7 +256,7 @@ export default function AdminDashboard() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-2">
-                        {cafe.is_active ? (
+                        {(cafe.is_active ?? false) ? (
                           <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
                             Active
                           </span>
@@ -258,7 +265,7 @@ export default function AdminDashboard() {
                             Inactive
                           </span>
                         )}
-                        {cafe.is_verified && (
+                        {(cafe.is_verified ?? false) && (
                           <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
                             Verified
                           </span>
@@ -283,15 +290,15 @@ export default function AdminDashboard() {
                           ✏️
                         </Link>
                         <button
-                          onClick={() => handleToggleActive(cafe.id, cafe.is_active)}
+                          onClick={() => handleToggleActive(cafe.id, cafe.is_active ?? false)}
                           className={`${
-                            cafe.is_active
+                            (cafe.is_active ?? false)
                               ? 'text-yellow-600 hover:text-yellow-900'
                               : 'text-green-600 hover:text-green-900'
                           }`}
-                          title={cafe.is_active ? 'Deactivate' : 'Activate'}
+                          title={(cafe.is_active ?? false) ? 'Deactivate' : 'Activate'}
                         >
-                          {cafe.is_active ? '⏸️' : '▶️'}
+                          {(cafe.is_active ?? false) ? '⏸️' : '▶️'}
                         </button>
                         <button
                           onClick={() => handleDelete(cafe.id, cafe.name)}
@@ -313,42 +320,3 @@ export default function AdminDashboard() {
   )
 }
 
-// Mock data for development - matches new schema
-function getMockCafes(): Cafe[] {
-  return [
-    {
-      id: '1',
-      place_id: 'ChIJMock1',
-      name: 'The Cozy Corner',
-      description: 'A quiet café perfect for focused work',
-      address: '123 Main Street',
-      city: 'San Francisco',
-      state: 'CA',
-      zip_code: '94102',
-      country: 'US',
-      phone: '+1-555-0101',
-      email: null,
-      website: null,
-      latitude: 37.7749,
-      longitude: -122.4194,
-      google_maps_url: 'https://maps.google.com/?cid=123',
-      google_rating: 4.8,
-      google_ratings_total: 127,
-      price_level: 2,
-      business_status: 'OPERATIONAL',
-      hours: {},
-      work_score: 85,
-      is_work_friendly: true,
-      ai_score: 82,
-      ai_confidence: 'high',
-      ai_wifi_quality: 'Excellent',
-      ai_power_outlets: 'Plenty available',
-      ai_noise_level: 'Quiet',
-      ai_laptop_policy: 'Unlimited',
-      is_active: true,
-      is_verified: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-  ]
-}

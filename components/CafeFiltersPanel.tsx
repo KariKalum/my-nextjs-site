@@ -18,8 +18,14 @@ export default function CafeFiltersPanel({
 }: CafeFiltersPanelProps) {
   const [isOpen, setIsOpen] = useState(false)
 
-  // Get unique cities from cafes
-  const cities = Array.from(new Set(cafes.map(cafe => cafe.city))).sort()
+  // Get unique cities from cafes - filter out null/undefined/empty strings
+  const cityOptions = Array.from(
+    new Set(
+      cafes
+        .map(cafe => cafe.city)
+        .filter((c): c is string => typeof c === 'string' && c.trim().length > 0)
+    )
+  ).sort((a, b) => a.localeCompare(b))
 
   const updateFilter = (key: keyof CafeFilters, value: any) => {
     onFilterChange({ ...filters, [key]: value })
@@ -71,7 +77,7 @@ export default function CafeFiltersPanel({
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
             >
               <option value="">All Cities</option>
-              {cities.map(city => (
+              {cityOptions.map(city => (
                 <option key={city} value={city}>{city}</option>
               ))}
             </select>

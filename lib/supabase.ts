@@ -4,8 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-// Use placeholder values if not configured - components will use mock data on error
-// These are minimal valid formats that won't cause createClient to throw
+// Use placeholder values if not configured - these are minimal valid formats that won't cause createClient to throw
 const url = supabaseUrl && supabaseUrl.trim() !== '' 
   ? supabaseUrl 
   : 'https://placeholder.supabase.co'
@@ -15,7 +14,7 @@ const key = supabaseAnonKey && supabaseAnonKey.trim() !== ''
   : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDUxOTIwMDAsImV4cCI6MTk2MDc2ODAwMH0.placeholder'
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase not configured. The app will use mock data.')
+  console.warn('Supabase not configured. The app will show empty states if database queries fail.')
 }
 
 export const supabase = createClient(url, key)

@@ -2,47 +2,8 @@ import { supabase, type Cafe } from '@/lib/supabase'
 import CafeSection from './CafeSection'
 import { combineDescription } from '@/lib/utils/description-combiner'
 
-// Mock data fallback - matches new schema
-function getMockCafes(): Cafe[] {
-  return [
-    {
-      id: '1',
-      place_id: 'ChIJMock1',
-      name: 'The Cozy Corner',
-      description: 'A quiet café perfect for focused work with excellent WiFi and plenty of outlets.',
-      address: '123 Main Street',
-      city: 'Berlin',
-      state: null,
-      zip_code: '10115',
-      country: 'DE',
-      phone: '+49-30-12345678',
-      website: null,
-      latitude: 52.52,
-      longitude: 13.405,
-      google_rating: 4.8,
-      google_ratings_total: 127,
-      price_level: 2,
-      business_status: 'OPERATIONAL',
-      hours: { monday: '7am-8pm', tuesday: '7am-8pm' },
-      work_score: 8.5,
-      is_work_friendly: true,
-      ai_confidence: 'high',
-      is_active: true,
-      is_verified: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-  ]
-}
-
 async function getRecentlyAddedCafes(): Promise<Cafe[]> {
   try {
-    // Check if Supabase is configured - skip if using placeholder
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    if (!supabaseUrl || supabaseUrl.includes('placeholder') || supabaseUrl.trim() === '') {
-      return getMockCafes()
-    }
-
     const { data, error } = await supabase
       .from('cafes')
       .select('*')
@@ -51,15 +12,8 @@ async function getRecentlyAddedCafes(): Promise<Cafe[]> {
       .limit(6)
 
     if (error) {
-      // Check if it's a connection/config error
-      if (error.code === 'PGRST116' ||
-          error.message?.toLowerCase().includes('invalid') ||
-          error.message?.toLowerCase().includes('failed to fetch') ||
-          error.message?.toLowerCase().includes('enotfound')) {
-        // Use mock data for demo
-        return getMockCafes()
-      }
-      throw error
+      console.error('Error fetching recently added cafes:', error)
+      return []
     }
     
     // Compute descriptionText for each cafe (combines description + ai_inference_notes)
@@ -71,19 +25,12 @@ async function getRecentlyAddedCafes(): Promise<Cafe[]> {
     return cafesWithDescriptionText
   } catch (error) {
     console.error('Error fetching recently added cafes:', error)
-    // Fallback to mock data
-    return getMockCafes()
+    return []
   }
 }
 
 async function getTopRatedCafes(): Promise<Cafe[]> {
   try {
-    // Check if Supabase is configured - skip if using placeholder
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    if (!supabaseUrl || supabaseUrl.includes('placeholder') || supabaseUrl.trim() === '') {
-      return getMockCafes()
-    }
-
     const { data, error } = await supabase
       .from('cafes')
       .select('*')
@@ -92,15 +39,8 @@ async function getTopRatedCafes(): Promise<Cafe[]> {
       .limit(6)
 
     if (error) {
-      // Check if it's a connection/config error
-      if (error.code === 'PGRST116' ||
-          error.message?.toLowerCase().includes('invalid') ||
-          error.message?.toLowerCase().includes('failed to fetch') ||
-          error.message?.toLowerCase().includes('enotfound')) {
-        // Use mock data for demo
-        return getMockCafes()
-      }
-      throw error
+      console.error('Error fetching top rated cafes:', error)
+      return []
     }
     
     // Compute descriptionText for each cafe (combines description + ai_inference_notes)
@@ -112,8 +52,7 @@ async function getTopRatedCafes(): Promise<Cafe[]> {
     return cafesWithDescriptionText
   } catch (error) {
     console.error('Error fetching top rated cafes:', error)
-    // Fallback to mock data
-    return getMockCafes()
+    return []
   }
 }
 

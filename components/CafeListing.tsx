@@ -9,7 +9,6 @@ export default function CafeListing() {
   const [filteredCafes, setFilteredCafes] = useState<Cafe[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [usingMockData, setUsingMockData] = useState(false)
   const [filters, setFilters] = useState<CafeFilters>({})
 
   useEffect(() => {
@@ -28,10 +27,9 @@ export default function CafeListing() {
       // In client components, NEXT_PUBLIC_ variables are available
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
       if (!supabaseUrl || supabaseUrl.includes('placeholder') || supabaseUrl.trim() === '') {
-        console.warn('Supabase not configured. Using mock data.')
-        setCafes(getMockCafes())
-        setError(null)
-        setUsingMockData(true)
+        console.warn('Supabase not configured.')
+        setCafes([])
+        setError('Supabase is not configured. Please check your environment variables.')
         setLoading(false)
         return
       }
@@ -42,25 +40,11 @@ export default function CafeListing() {
         .eq('is_active', true)
         .order('work_score', { ascending: false, nullsFirst: false })
 
-      // If error, check if it's because Supabase isn't configured
+      // If error, handle it gracefully
       if (fetchError) {
         console.error('Supabase query error:', fetchError)
-        // Check if error is due to missing Supabase configuration or invalid credentials
-        if (fetchError.code === 'PGRST116' || // Table not found
-            fetchError.message?.toLowerCase().includes('invalid') ||
-            fetchError.message?.toLowerCase().includes('failed to fetch') ||
-            fetchError.message?.toLowerCase().includes('getaddrinfo enotfound')) {
-          // Supabase not properly configured or network error, use mock data
-          setCafes(getMockCafes())
-          setError(null)
-          setUsingMockData(true)
-          return
-        }
-        // Real Supabase error (like table doesn't exist), but connection works
-        // Show empty state instead of mock data
         setCafes([])
-        setError('No cafés found. Add your first café in the admin dashboard.')
-        setUsingMockData(false)
+        setError('Failed to load cafés. Please check your Supabase connection.')
         return
       }
 
@@ -68,32 +52,11 @@ export default function CafeListing() {
       // Show data from database (even if empty - this means no cafes added yet)
       setCafes(data || [])
       setError(null)
-      setUsingMockData(false)
       
     } catch (err: any) {
       console.error('Error fetching cafes:', err)
-      // Check if it's a connection/config error
-      if (err?.message?.toLowerCase().includes('fetch') ||
-          err?.code === 'ECONNREFUSED' ||
-          err?.message?.toLowerCase().includes('enotfound')) {
-        // Connection error - check if Supabase is configured
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-        if (!supabaseUrl || supabaseUrl.includes('placeholder')) {
-          setCafes(getMockCafes())
-          setError(null)
-          setUsingMockData(true)
-        } else {
-          // Supabase is configured but connection failed
-          setCafes([])
-          setError('Failed to connect to database. Please check your Supabase configuration.')
-          setUsingMockData(false)
-        }
-      } else {
-        // Other error - show empty state
-        setCafes([])
-        setError('Failed to load cafés. Check your database connection.')
-        setUsingMockData(false)
-      }
+      setCafes([])
+      setError('Failed to load cafés. Check your Supabase connection.')
     } finally {
       setLoading(false)
     }
@@ -104,8 +67,9 @@ export default function CafeListing() {
 
     // Filter by city
     if (filters.city) {
+      const normalizedCityFilter = filters.city.toLowerCase()
       filtered = filtered.filter(cafe => 
-        cafe.city.toLowerCase().includes(filters.city!.toLowerCase())
+        (cafe.city ?? '').toLowerCase().includes(normalizedCityFilter)
       )
     }
 
@@ -193,22 +157,6 @@ export default function CafeListing() {
             </div>
           )}
 
-          {/* Mock Data Info */}
-          {usingMockData && !error && (
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800">
-                <span className="font-medium">ℹ️ Demo Mode:</span> You're viewing sample data. 
-                <span className="ml-2 text-blue-600">
-                  <a 
-                    href="/admin" 
-                    className="underline hover:text-blue-800"
-                  >
-                    Add your own cafés
-                  </a>
-                </span>
-              </p>
-            </div>
-          )}
 
           {/* Café Grid */}
           {filteredCafes.length === 0 ? (
@@ -234,40 +182,3 @@ export default function CafeListing() {
   )
 }
 
-// Mock data for development/demo purposes
-// Mock data fallback - matches new schema
-function getMockCafes(): Cafe[] {
-  return [
-    {
-      id: '1',
-      place_id: 'ChIJMock1',
-      name: 'The Cozy Corner',
-      description: 'A quiet café perfect for focused work with excellent WiFi and plenty of outlets.',
-      address: '123 Main Street',
-      city: 'San Francisco',
-      state: 'CA',
-      zip_code: '94102',
-      country: 'US',
-      phone: '+1-555-0101',
-      website: null,
-      latitude: 37.7749,
-      longitude: -122.4194,
-      google_rating: 4.8,
-      google_ratings_total: 127,
-      price_level: 2,
-      business_status: 'OPERATIONAL',
-      hours: { monday: '7am-8pm', tuesday: '7am-8pm' },
-      work_score: 8.5,
-      is_work_friendly: true,
-      ai_confidence: 'high',
-      ai_wifi_quality: 'Excellent',
-      ai_power_outlets: 'Plenty available',
-      ai_noise_level: 'Quiet',
-      ai_laptop_policy: 'Unlimited',
-      is_active: true,
-      is_verified: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-  ]
-}

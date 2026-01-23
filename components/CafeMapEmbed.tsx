@@ -75,7 +75,17 @@ export default function CafeMapEmbed({ cafe }: CafeMapEmbedProps) {
       />
       <div className="px-4 py-3 border-t border-gray-200 bg-white">
         <a
-          href={getMapsUrl(cafe)}
+          href={getMapsUrl({
+            google_maps_url: cafe.google_maps_url ?? null,
+            latitude: cafe.latitude ?? null,
+            longitude: cafe.longitude ?? null,
+            address: cafe.address ?? null,
+            city: cafe.city ?? null,
+            state: cafe.state ?? null,
+            zip_code: cafe.zip_code ?? null,
+            name: cafe.name ?? '',
+
+          })}
           target="_blank"
           rel="noopener noreferrer"
           className="text-sm font-medium text-primary-600 hover:text-primary-700 inline-flex items-center gap-1"

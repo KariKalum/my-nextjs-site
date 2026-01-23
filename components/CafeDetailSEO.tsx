@@ -101,7 +101,7 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [] }: CafeDetailSEOP
             </h1>
             <p className="text-gray-600 mb-3 break-words">{addressLine}</p>
             <div className="mb-3">
-              {cafe.is_verified ? (
+              {(cafe.is_verified ?? false) ? (
                 <span className="inline-flex items-center gap-1.5 text-sm font-medium text-green-700 bg-green-50 px-3 py-1.5 rounded-full">
                   ✅ Verified by Scout Brew
                 </span>
@@ -223,7 +223,7 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [] }: CafeDetailSEOP
                   <div>
                     <dt className="text-sm text-gray-500">Status</dt>
                     <dd className="font-medium text-gray-900 capitalize">
-                      {cafe.business_status.replace(/_/g, ' ')}
+                      {(cafe.business_status ?? '').replace(/_/g, ' ')}
                     </dd>
                   </div>
                 )}
@@ -242,7 +242,7 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [] }: CafeDetailSEOP
                     <dt className="text-sm text-gray-500">🌐 Website</dt>
                     <dd>
                       <a
-                        href={cafe.website.startsWith('http') ? cafe.website : `https://${cafe.website}`}
+                        href={(cafe.website ?? '').startsWith('http') ? cafe.website! : `https://${cafe.website}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="font-medium text-primary-600 hover:text-primary-700"

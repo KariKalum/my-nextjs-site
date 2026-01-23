@@ -44,7 +44,7 @@ async function getCafe(id: string): Promise<Cafe | null> {
       return null
     }
 
-    // If no data found, return null (will try mock data)
+    // If no data found, return null
     if (!data) {
       return null
     }
@@ -101,18 +101,13 @@ export default async function CafeDetailPage({
 }: {
   params: { id: string }
 }) {
-  let cafe = await getCafe(params.id)
-
-  // If not found in database, try mock data for demo
-  if (!cafe) {
-    cafe = getMockCafe(params.id)
-  }
+  const cafe = await getCafe(params.id)
 
   if (!cafe) {
     notFound()
   }
 
-  // Ensure descriptionText is set (for mock data or if somehow missing)
+  // Ensure descriptionText is set (combines description + ai_inference_notes)
   if (!cafe.descriptionText) {
     cafe.descriptionText = combineDescription(
       cafe.description,
@@ -126,54 +121,6 @@ export default async function CafeDetailPage({
   return <CafeDetailSEO cafe={cafe} nearbyCafes={nearbyCafes} />
 }
 
-// Mock data for development/demo - matches new schema
-function getMockCafe(id: string): Cafe | null {
-  const mockCafes: Record<string, Cafe> = {
-    '1': {
-      id: '1',
-      place_id: 'ChIJMock1',
-      name: 'The Cozy Corner',
-      description: 'A quiet café perfect for focused work with excellent WiFi and plenty of outlets.',
-      ai_inference_notes: 'Great for remote work. Quiet atmosphere with reliable internet.',
-      address: '123 Main Street',
-      city: 'San Francisco',
-      state: 'CA',
-      zip_code: '94102',
-      country: 'US',
-      phone: '+1-555-0101',
-      website: 'https://cozycorner.com',
-      latitude: 37.7749,
-      longitude: -122.4194,
-      google_maps_url: 'https://maps.google.com/?cid=123',
-      google_rating: 4.8,
-      google_ratings_total: 127,
-      price_level: 2,
-      business_status: 'OPERATIONAL',
-      hours: {
-        monday: '7:00 AM - 8:00 PM',
-        tuesday: '7:00 AM - 8:00 PM',
-        wednesday: '7:00 AM - 8:00 PM',
-        thursday: '7:00 AM - 8:00 PM',
-        friday: '7:00 AM - 9:00 PM',
-        saturday: '8:00 AM - 9:00 PM',
-        sunday: '8:00 AM - 7:00 PM',
-      },
-      work_score: 8.5,
-      is_work_friendly: true,
-      ai_confidence: 'high',
-      ai_wifi_quality: 'Excellent',
-      ai_power_outlets: 'Plenty available',
-      ai_noise_level: 'Quiet',
-      ai_laptop_policy: 'Unlimited',
-      is_active: true,
-      is_verified: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-  }
-
-  return mockCafes[id] || null
-}
 
 // Generate dynamic metadata for SEO
 export async function generateMetadata({
@@ -181,12 +128,7 @@ export async function generateMetadata({
 }: {
   params: { id: string }
 }): Promise<Metadata> {
-  let cafe = await getCafe(params.id)
-  
-  // Try mock data if not found in database
-  if (!cafe) {
-    cafe = getMockCafe(params.id)
-  }
+  const cafe = await getCafe(params.id)
   
   if (!cafe) {
     const { siteName, getAbsoluteUrl } = await import('@/lib/seo/metadata')
