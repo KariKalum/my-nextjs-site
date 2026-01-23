@@ -99,15 +99,21 @@ export default function CafeDetail({ cafe }: CafeDetailProps) {
                 {cafe.address}, {cafe.city}{cafe.state ? `, ${cafe.state}` : ''} {cafe.zip_code}
               </p>
 
-              {/* Overall Rating */}
-              {cafe.overall_laptop_rating && (
-                <div className="mb-4">
-                  {getRatingStars(cafe.overall_laptop_rating)}
-                  <p className="text-sm text-gray-600 mt-2">
-                    {cafe.google_ratings_total ? `${cafe.google_ratings_total.toLocaleString()} ${cafe.google_ratings_total === 1 ? 'review' : 'reviews'}` : 'No reviews yet'}
-                  </p>
-                </div>
-              )}
+              {/* Work Score */}
+              {(() => {
+                const score = cafe.work_score ?? cafe.ai_score
+                return score != null ? (
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl font-bold text-primary-600">{score.toFixed(0)}</span>
+                      <span className="text-gray-500 text-sm">/100</span>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-2">
+                      {cafe.google_ratings_total ? `${cafe.google_ratings_total.toLocaleString()} ${cafe.google_ratings_total === 1 ? 'review' : 'reviews'}` : 'No reviews yet'}
+                    </p>
+                  </div>
+                ) : null
+              })()}
 
               {/* Noise Level Badge */}
               {cafe.noise_level && (

@@ -7,14 +7,8 @@ type CafeRecord = {
   city: string | null
   latitude: number | null
   longitude: number | null
-  wifi_available: boolean
-  wifi_speed_rating: number | null
-  power_outlets_available: boolean
-  power_outlet_rating: number | null
-  noise_level: string | null
-  time_limit_minutes: number | null
-  overall_laptop_rating: number | null
-  coffee_quality: 'unknown' | 'low' | 'medium' | 'high' | null
+  work_score: number | null
+  ai_score: number | null
   is_active: boolean
   created_at: string | null
 }
@@ -149,7 +143,7 @@ export async function GET(req: Request) {
     const { data, error } = await supabase
       .from('cafes')
       .select(
-        'id, name, city, latitude, longitude, wifi_available, wifi_speed_rating, power_outlets_available, power_outlet_rating, noise_level, time_limit_minutes, overall_laptop_rating, coffee_quality, is_active, created_at'
+        'id, name, city, latitude, longitude, work_score, ai_score, is_active, created_at'
       )
       .eq('is_active', true)
       .not('latitude', 'is', null)
@@ -201,18 +195,7 @@ export async function GET(req: Request) {
         lat: cafe.latitude,
         lng: cafe.longitude,
         distance,
-        wifi: {
-          available: cafe.wifi_available,
-          speedRating: cafe.wifi_speed_rating,
-        },
-        outlets: {
-          available: cafe.power_outlets_available,
-          rating: cafe.power_outlet_rating,
-        },
-        noise: cafe.noise_level,
-        timeLimit: cafe.time_limit_minutes,
-        rating: cafe.overall_laptop_rating,
-        coffeeQuality: cafe.coffee_quality || 'unknown',
+        workScore: cafe.work_score ?? cafe.ai_score,
         createdAt: cafe.created_at,
         // No slug column in schema yet; use id as slug-compatible value
         slug: cafe.id,

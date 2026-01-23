@@ -233,16 +233,19 @@ export default function AdminDashboard() {
                       <div className="text-sm text-gray-500">{cafe.address}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {cafe.overall_laptop_rating ? (
-                        <div className="flex items-center">
-                          <span className="text-sm font-medium text-gray-900">
-                            {cafe.overall_laptop_rating.toFixed(1)}
-                          </span>
-                          <span className="ml-1 text-yellow-400">★</span>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-gray-400">No rating</span>
-                      )}
+                      {(() => {
+                        const score = cafe.work_score ?? cafe.ai_score
+                        return score != null ? (
+                          <div className="flex items-center">
+                            <span className="text-sm font-medium text-gray-900">
+                              {score.toFixed(0)}
+                            </span>
+                            <span className="ml-1 text-gray-500 text-xs">/100</span>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-400">—</span>
+                        )
+                      })()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-2">
