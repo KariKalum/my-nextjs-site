@@ -1,7 +1,11 @@
+'use client'
+
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import type { Cafe } from '@/src/lib/supabase/types'
 import CafeCard from '@/components/CafeCard'
 import Section from '@/components/Section'
+import { getLocaleFromPathname, prefixWithLocale } from '@/lib/i18n/routing'
 
 interface CafeSectionProps {
   title: string
@@ -20,6 +24,8 @@ export default function CafeSection({
   showViewAll = true,
   viewAllLink = '/cities',
 }: CafeSectionProps) {
+  const pathname = usePathname()
+  const locale = getLocaleFromPathname(pathname)
   if (cafes.length === 0) {
     return (
       <Section spacing="md">
@@ -65,7 +71,7 @@ export default function CafeSection({
             </div>
             {showViewAll && (
               <Link
-                href={viewAllLink}
+                href={viewAllLink.startsWith('/') ? prefixWithLocale(viewAllLink, locale) : viewAllLink}
                 className="text-sm text-primary-600 hover:text-primary-700 font-medium"
               >
                 View all →
@@ -76,14 +82,14 @@ export default function CafeSection({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Mobile: 5 items, Desktop: 10 items */}
           {cafes.slice(0, 10).map((cafe) => (
-            <CafeCard key={cafe.id} cafe={cafe} />
+            <CafeCard key={cafe.id} cafe={cafe} locale={locale} />
           ))}
         </div>
         {/* Show "View all" if there are more than the displayed limit */}
         {showViewAll && cafes.length > 10 && (
           <div className="text-center mt-8">
             <Link
-              href={viewAllLink}
+              href={viewAllLink.startsWith('/') ? prefixWithLocale(viewAllLink, locale) : viewAllLink}
               className="text-primary-600 hover:text-primary-700 font-medium"
             >
               View all cafés →

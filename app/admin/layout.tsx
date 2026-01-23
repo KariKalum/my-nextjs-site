@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { createClient } from '@/src/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import { ReactNode } from 'react'
+import { defaultLocale } from '@/lib/i18n/config'
+import { withLocale } from '@/lib/i18n/path'
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const router = useRouter()
@@ -76,7 +78,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-8">
-              <Link href="/" className="text-2xl font-bold text-primary-600">
+              <Link href={withLocale(defaultLocale, '/')} className="text-2xl font-bold text-primary-600">
                 ☕ Café Directory
               </Link>
               <nav className="hidden md:flex space-x-4">
@@ -110,7 +112,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 Admin
               </span>
               <Link
-                href="/"
+                href={withLocale(defaultLocale, '/')}
                 className="text-sm text-gray-600 hover:text-gray-900"
               >
                 View Site

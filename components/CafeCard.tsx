@@ -3,12 +3,19 @@
 import type { Cafe } from '@/src/lib/supabase/types'
 import { getCafeHref, hasValidCafeLink } from '@/lib/cafeRouting'
 import { formatWorkScore } from '@/lib/utils/cafe-formatters'
+import { type Locale } from '@/lib/i18n/config'
+import { t } from '@/lib/i18n/t'
+import type { Dictionary } from '@/lib/i18n/getDictionary'
+import en from '@/lib/i18n/dictionaries/en.json'
 
 interface CafeCardProps {
   cafe: Cafe
+  locale: Locale
+  dict?: Dictionary
 }
 
-export default function CafeCard({ cafe }: CafeCardProps) {
+export default function CafeCard({ cafe, locale, dict }: CafeCardProps) {
+  const d = dict ?? (en as Dictionary)
   const getRatingStars = (rating: number | null) => {
     if (!rating) return null
     const fullStars = Math.floor(rating)
@@ -60,7 +67,7 @@ export default function CafeCard({ cafe }: CafeCardProps) {
             </p>
           </div>
           {cafe.is_verified && (
-            <span className="ml-2 text-primary-600" title="Verified">
+            <span className="ml-2 text-primary-600" title={t(d, 'cafeCard.verified')}>
               ✓
             </span>
           )}
@@ -79,12 +86,12 @@ export default function CafeCard({ cafe }: CafeCardProps) {
             {cafe.google_rating && getRatingStars(cafe.google_rating)}
             {formatWorkScore(cafe.work_score) && (
               <div className="mt-2">
-                <span className="text-sm font-medium text-primary-600">Work Score: {formatWorkScore(cafe.work_score)}</span>
+                <span className="text-sm font-medium text-primary-600">{t(d, 'common.workScore')} {formatWorkScore(cafe.work_score)}</span>
               </div>
             )}
             {cafe.google_ratings_total && cafe.google_ratings_total > 0 && (
               <p className="text-xs text-gray-500 mt-1">
-                {cafe.google_ratings_total} {cafe.google_ratings_total === 1 ? 'review' : 'reviews'}
+                {cafe.google_ratings_total} {cafe.google_ratings_total === 1 ? t(d, 'common.review') : t(d, 'common.reviews')}
               </p>
             )}
           </div>
@@ -96,7 +103,7 @@ export default function CafeCard({ cafe }: CafeCardProps) {
             {cafe.is_work_friendly && (
               <div className="flex items-center space-x-1 text-sm">
                 <span className="text-green-600">✅</span>
-                <span className="text-gray-700">Work-friendly</span>
+                <span className="text-gray-700">{t(d, 'common.workFriendly')}</span>
               </div>
             )}
             {cafe.ai_wifi_quality && (
@@ -135,7 +142,7 @@ export default function CafeCard({ cafe }: CafeCardProps) {
                 rel="noopener noreferrer"
                 className="text-primary-600 hover:text-primary-700 font-medium"
               >
-                Website
+                {t(d, 'common.website')}
               </a>
             )}
             {cafe.phone && (
@@ -149,14 +156,14 @@ export default function CafeCard({ cafe }: CafeCardProps) {
           </div>
           {hasValidCafeLink(cafe) ? (
             <a
-              href={getCafeHref(cafe)}
+              href={getCafeHref(cafe, locale)}
               className="text-sm font-medium text-primary-600 hover:text-primary-700"
             >
-              View Details →
+              {t(d, 'common.viewDetailsLink')}
             </a>
           ) : (
-            <span className="text-sm text-gray-400" aria-label="Detail link unavailable">
-              Unavailable
+            <span className="text-sm text-gray-400" aria-label={t(d, 'cafeCard.detailLinkUnavailable')}>
+              {t(d, 'common.unavailable')}
             </span>
           )}
         </div>

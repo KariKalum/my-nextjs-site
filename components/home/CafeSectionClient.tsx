@@ -5,6 +5,9 @@ import Link from 'next/link'
 import type { Cafe } from '@/src/lib/supabase/types'
 import CafeCard from '@/components/CafeCard'
 import Section from '@/components/Section'
+import { t } from '@/lib/i18n/t'
+import type { Locale } from '@/lib/i18n/config'
+import type { Dictionary } from '@/lib/i18n/getDictionary'
 
 interface CafeSectionClientProps {
   title: string
@@ -13,12 +16,10 @@ interface CafeSectionClientProps {
   emptyMessage?: string
   showViewAll?: boolean
   viewAllLink?: string
+  locale: Locale
+  dict?: Dictionary
 }
 
-/**
- * Client component that handles responsive item limiting
- * Mobile: 5 items, Desktop: 10 items
- */
 export default function CafeSectionClient({
   title,
   description,
@@ -26,7 +27,12 @@ export default function CafeSectionClient({
   emptyMessage = 'No cafés found yet.',
   showViewAll = true,
   viewAllLink = '/cities',
+  locale,
+  dict,
 }: CafeSectionClientProps) {
+  const viewAll = dict ? t(dict, 'home.sections.viewAll') : 'View all →'
+  const viewAllCafes = dict ? t(dict, 'home.sections.viewAllCafes') : 'View all cafés →'
+  const addInAdmin = dict ? t(dict, 'home.sections.addInAdmin') : 'Add cafés in admin dashboard →'
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
@@ -58,7 +64,7 @@ export default function CafeSectionClient({
               href="/admin"
               className="text-primary-600 hover:text-primary-700 font-medium"
             >
-              Add cafés in admin dashboard →
+              {addInAdmin}
             </Link>
           </div>
         </div>
@@ -90,14 +96,14 @@ export default function CafeSectionClient({
                 href={viewAllLink}
                 className="text-sm text-primary-600 hover:text-primary-700 font-medium"
               >
-                View all →
+                {viewAll}
               </Link>
             )}
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {displayedCafes.map((cafe) => (
-            <CafeCard key={cafe.id} cafe={cafe} />
+            <CafeCard key={cafe.id} cafe={cafe} locale={locale} dict={dict} />
           ))}
         </div>
         {showViewAll && hasMore && (
@@ -106,7 +112,7 @@ export default function CafeSectionClient({
               href={viewAllLink}
               className="text-primary-600 hover:text-primary-700 font-medium"
             >
-              View all cafés →
+              {viewAllCafes}
             </Link>
           </div>
         )}

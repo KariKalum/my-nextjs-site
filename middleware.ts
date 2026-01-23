@@ -1,7 +1,35 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { defaultLocale, isValidLocale } from '@/lib/i18n/config'
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // Handle locale redirects for public routes (not admin, api, or _next)
+  if (
+    !pathname.startsWith('/admin') &&
+    !pathname.startsWith('/api') &&
+    !pathname.startsWith('/_next') &&
+    !pathname.startsWith('/login') &&
+    pathname !== '/robots.txt' &&
+    pathname !== '/sitemap.xml'
+  ) {
+    // Check if pathname already has a locale
+    const pathnameParts = pathname.split('/').filter(Boolean)
+    const firstSegment = pathnameParts[0]
+
+    // If first segment is a valid locale, continue
+    if (isValidLocale(firstSegment)) {
+      // Valid locale in path, continue to next middleware logic
+    } else {
+      // No locale in path - redirect to default locale
+      const newPath = `/${defaultLocale}${pathname === '/' ? '' : pathname}`
+      const url = request.nextUrl.clone()
+      url.pathname = newPath
+      return NextResponse.redirect(url)
+    }
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,

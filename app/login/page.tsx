@@ -233,7 +233,7 @@ function LoginForm() {
 
           <div className="mt-6 text-center">
             <a
-              href="/"
+              href="/de"
               className="text-sm text-primary-600 hover:text-primary-700"
             >
               ← Back to Directory

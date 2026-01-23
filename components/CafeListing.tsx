@@ -1,11 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import { createClient } from '@/src/lib/supabase/client'
 import type { Cafe, CafeFilters } from '@/src/lib/supabase/types'
 import CafeCard from './CafeCard'
+import { getLocaleFromPathname } from '@/lib/i18n/routing'
 
 export default function CafeListing() {
+  const pathname = usePathname()
+  const locale = getLocaleFromPathname(pathname)
   const [cafes, setCafes] = useState<Cafe[]>([])
   const [filteredCafes, setFilteredCafes] = useState<Cafe[]>([])
   const [loading, setLoading] = useState(true)
@@ -169,7 +173,7 @@ export default function CafeListing() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {filteredCafes.map((cafe) => (
-                <CafeCard key={cafe.id} cafe={cafe} />
+                <CafeCard key={cafe.id} cafe={cafe} locale={locale} />
               ))}
             </div>
           )}

@@ -17,19 +17,23 @@ function assertCafeIdentifier(identifier: unknown): identifier is CafeIdentifier
 
 /**
  * Get the canonical href for a cafe detail page.
- * Always uses /cafe/[identifier] format.
+ * Always uses /[locale]/cafe/[identifier] format.
  * Prefers place_id if available, otherwise falls back to id.
  *
  * @param cafe - Cafe object with place_id and/or id
- * @returns Canonical href path (e.g. "/cafe/ChIJ...") or "/cities" if no valid identifier
- * @throws Never throws - always returns a valid path (falls back to /cities if both missing)
+ * @param locale - Optional locale (defaults to 'de' if not provided)
+ * @returns Canonical href path (e.g. "/de/cafe/ChIJ...") or "/[locale]/cities" if no valid identifier
+ * @throws Never throws - always returns a valid path (falls back to /[locale]/cities if both missing)
  */
-export function getCafeHref(cafe: {
-  place_id?: string | null
-  id?: string
-}): string {
+export function getCafeHref(
+  cafe: {
+    place_id?: string | null
+    id?: string
+  },
+  locale: string = 'de'
+): string {
   const id = getCafeIdentifier(cafe)
-  if (id) return `/cafe/${id}`
+  if (id) return `/${locale}/cafe/${id}`
   if (
     typeof process !== 'undefined' &&
     process.env.NEXT_PUBLIC_DEBUG_LOGS === 'true'
@@ -40,7 +44,7 @@ export function getCafeHref(cafe: {
       id: cafe.id ?? null,
     })
   }
-  return '/cities'
+  return `/${locale}/cities`
 }
 
 /**

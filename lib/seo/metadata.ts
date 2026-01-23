@@ -174,3 +174,42 @@ export async function getCafeOgImage(cafeId: string): Promise<string> {
   // Return default image path
   return getAbsoluteUrl('/og-default.jpg')
 }
+
+/**
+ * Generate hreflang alternates for bilingual pages
+ * 
+ * @param pathWithoutLocale - Path without locale prefix (e.g., "/cities/berlin" or "/cafe/123")
+ * @param currentLocale - Current locale ('en' or 'de')
+ * @returns Metadata alternates object with hreflang and canonical tags
+ * 
+ * @example
+ * getHreflangAlternates('/cities/berlin', 'en')
+ * // Returns alternates with hreflang for /en/cities/berlin, /de/cities/berlin, and x-default
+ */
+export function getHreflangAlternates(
+  pathWithoutLocale: string,
+  currentLocale: 'en' | 'de'
+): { alternates: { canonical: string; languages: Record<string, string> } } {
+  // Ensure path starts with /
+  const cleanPath = pathWithoutLocale.startsWith('/') 
+    ? pathWithoutLocale 
+    : `/${pathWithoutLocale}`
+  
+  // Build URLs for both locales
+  const enUrl = getAbsoluteUrl(`/en${cleanPath}`)
+  const deUrl = getAbsoluteUrl(`/de${cleanPath}`)
+  
+  // Build canonical URL for current locale
+  const canonicalUrl = currentLocale === 'en' ? enUrl : deUrl
+  
+  return {
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        'en': enUrl,
+        'de': deUrl,
+        'x-default': deUrl, // Germany primary
+      },
+    },
+  }
+}

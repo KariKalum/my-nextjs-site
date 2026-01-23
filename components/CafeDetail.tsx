@@ -1,16 +1,23 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import type { Cafe } from '@/src/lib/supabase/types'
 import { formatWorkScore } from '@/lib/utils/cafe-formatters'
 import CafeMap from './CafeMap'
 import LaptopFriendlyIndicators from './LaptopFriendlyIndicators'
+import { getLocaleFromPathname } from '@/lib/i18n/routing'
+import { withLocale } from '@/lib/i18n/path'
 
 interface CafeDetailProps {
   cafe: Cafe
 }
 
 export default function CafeDetail({ cafe }: CafeDetailProps) {
+  const pathname = usePathname()
+  const locale = getLocaleFromPathname(pathname)
+  const homeHref = withLocale(locale, '/')
+
   const getRatingStars = (rating: number | null) => {
     if (!rating) return null
     const fullStars = Math.floor(rating)
@@ -68,7 +75,7 @@ export default function CafeDetail({ cafe }: CafeDetailProps) {
       <header className="bg-white shadow-sm border-b sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <Link 
-            href="/"
+            href={homeHref}
             className="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium mb-2"
           >
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

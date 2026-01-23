@@ -56,7 +56,17 @@ function validateSupabaseEnv(): { url: string; anonKey: string } {
 }
 
 // Validate at module load (fails fast if env vars missing)
+// #region agent log
+try {
+  const validationResult = validateSupabaseEnv()
+  const { url: SUPABASE_URL, anonKey: SUPABASE_ANON_KEY } = validationResult
+  fetch('http://127.0.0.1:7242/ingest/24a24cf4-1961-4c08-bb87-a79a77563728',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/lib/supabase/server.ts:59',message:'Env validation success',data:{urlLength:SUPABASE_URL?.length,keyLength:SUPABASE_ANON_KEY?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+} catch (validationError: any) {
+  fetch('http://127.0.0.1:7242/ingest/24a24cf4-1961-4c08-bb87-a79a77563728',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/lib/supabase/server.ts:59',message:'Env validation failed',data:{error:validationError?.message?.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  throw validationError
+}
 const { url: SUPABASE_URL, anonKey: SUPABASE_ANON_KEY } = validateSupabaseEnv()
+// #endregion
 
 /**
  * Create a Supabase client for server-side usage

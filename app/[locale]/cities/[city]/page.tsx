@@ -4,17 +4,21 @@ import Link from 'next/link'
 import { createClient } from '@/src/lib/supabase/server'
 import type { Cafe } from '@/src/lib/supabase/types'
 import CommunityNotice from '@/components/CommunityNotice'
+import LanguageSwitcher from '@/components/LanguageSwitcher'
 import CafeCard from '@/components/CafeCard'
 import SearchResults from '@/components/SearchResults'
+import { getLocaleFromParams, type Locale } from '@/lib/i18n/config'
+import { getDictionary } from '@/lib/i18n/getDictionary'
+import { t, tmpl } from '@/lib/i18n/t'
+import { prefixWithLocale } from '@/lib/i18n/routing'
 
-// SEO intro paragraphs for major German cities
-const cityIntros: Record<string, string> = {
-  berlin: 'Berlin, Germany\'s vibrant capital, offers an incredible selection of laptop-friendly cafés perfect for remote workers, freelancers, and digital nomads. From trendy Kreuzberg coffee shops to quiet Prenzlauer Berg workspaces, find cafés with fast WiFi, power outlets, and comfortable seating throughout the city.',
-  hamburg: 'Discover Hamburg\'s best laptop-friendly cafés, from the historic Speicherstadt to trendy Sternschanze. These cafés offer excellent WiFi, plenty of power outlets, and quiet workspaces ideal for productivity. Perfect for remote workers exploring Germany\'s second-largest city.',
-  munich: 'Munich\'s laptop-friendly café scene combines traditional Bavarian charm with modern workspaces. Find cafés in Schwabing, Glockenbachviertel, and throughout the city center with high-speed WiFi, comfortable seating, and a welcoming atmosphere for remote work.',
-  cologne: 'Cologne boasts a thriving café culture perfect for laptop users. Explore cafés in the Altstadt, Belgisches Viertel, and beyond, each offering fast internet, power outlets, and comfortable spaces for remote work and studying.',
-  frankfurt: 'Frankfurt, Germany\'s financial hub, is home to numerous laptop-friendly cafés catering to professionals and remote workers. Find excellent WiFi, quiet workspaces, and modern amenities throughout the city center and surrounding neighborhoods.',
-  leipzig: 'Leipzig\'s growing tech scene is matched by its excellent selection of laptop-friendly cafés. Discover workspaces in the city center and trendy neighborhoods with fast WiFi, power outlets, and inspiring environments for remote work and creativity.',
+const CITY_INTRO_KEYS: Record<string, string> = {
+  berlin: 'meta.city.introBerlin',
+  hamburg: 'meta.city.introHamburg',
+  munich: 'meta.city.introMunich',
+  cologne: 'meta.city.introCologne',
+  frankfurt: 'meta.city.introFrankfurt',
+  leipzig: 'meta.city.introLeipzig',
 }
 
 const majorCities = ['Berlin', 'Hamburg', 'Munich', 'Cologne', 'Frankfurt', 'Leipzig']
@@ -71,31 +75,24 @@ function getCityNameFromSlug(slug: string): string {
 export async function generateMetadata({
   params,
 }: {
-  params: { city: string }
+  params: { city: string; locale: Locale }
 }): Promise<Metadata> {
+  const locale = getLocaleFromParams(params)
+  const dict = getDictionary(locale)
   const cityName = getCityNameFromSlug(params.city)
   const cafes = await getCafesByCity(cityName)
   const count = cafes.length
-
-  // Import SEO helpers
   const { siteName, getAbsoluteUrl } = await import('@/lib/seo/metadata')
 
-  // Build title: "Laptop-friendly cafés in <City> | <SiteName>"
-  const title = `Laptop-friendly cafés in ${cityName} | ${siteName}`
-
-  // Build description mentioning working/studying, Wi-Fi, outlets, quiet spaces, Germany
-  let description: string
-  if (count > 0) {
-    description = `Discover ${count} laptop-friendly cafés in ${cityName}, Germany. Perfect for remote work and studying with fast Wi-Fi, power outlets (Steckdosen), and quiet workspaces. Find your ideal café workspace.`
-  } else {
-    description = `Find laptop-friendly cafés in ${cityName}, Germany. Perfect for remote work and studying with fast Wi-Fi, power outlets, and quiet workspaces.`
-  }
-
-  // Get canonical URL
-  const canonicalUrl = getAbsoluteUrl(`/cities/${params.city}`)
-
-  // Get default OG image
+  const title = tmpl(t(dict, 'meta.city.title'), { city: cityName, siteName })
+  const description =
+    count > 0
+      ? tmpl(t(dict, 'meta.city.descriptionWithCount'), { count: String(count), city: cityName })
+      : tmpl(t(dict, 'meta.city.descriptionNoCount'), { city: cityName })
+  const ogAlt = tmpl(t(dict, 'meta.city.ogAlt'), { city: cityName })
+  const canonicalUrl = getAbsoluteUrl(`/${locale}/cities/${params.city}`)
   const ogImage = getAbsoluteUrl('/og-default.jpg')
+  const { getHreflangAlternates } = await import('@/lib/seo/metadata')
 
   return {
     title,
@@ -106,12 +103,7 @@ export async function generateMetadata({
       type: 'website',
       url: canonicalUrl,
       siteName,
-      images: [
-        {
-          url: ogImage,
-          alt: `Laptop-friendly cafés in ${cityName}, Germany`,
-        },
-      ],
+      images: [{ url: ogImage, alt: ogAlt }],
     },
     twitter: {
       card: 'summary_large_image',
@@ -119,23 +111,23 @@ export async function generateMetadata({
       description,
       images: [ogImage],
     },
-    alternates: {
-      canonical: canonicalUrl,
-    },
+    ...getHreflangAlternates(`/cities/${params.city}`, locale),
   }
 }
 
 export default async function CityPage({
   params,
 }: {
-  params: { city: string }
+  params: { city: string; locale: Locale }
 }) {
+  const locale = getLocaleFromParams(params)
+  const dict = getDictionary(locale)
   const cityName = getCityNameFromSlug(params.city)
   const cafes = await getCafesByCity(cityName)
 
-  // Get intro text if available
   const cityKey = params.city.toLowerCase()
-  const introText = cityIntros[cityKey] || null
+  const introKey = CITY_INTRO_KEYS[cityKey]
+  const introText = introKey ? t(dict, introKey) : null
 
   // Get other major cities for internal links
   const otherCities = majorCities
@@ -144,35 +136,36 @@ export default async function CityPage({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Link
-              href="/"
-              className="text-primary-600 hover:text-primary-700 font-medium text-sm"
-            >
-              ← Home
-            </Link>
-            <span className="text-gray-400">•</span>
-            <Link
-              href="/cities"
-              className="text-primary-600 hover:text-primary-700 font-medium text-sm"
-            >
-              All Cities
-            </Link>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Link
+                href={prefixWithLocale('/', locale)}
+                className="text-primary-600 hover:text-primary-700 font-medium text-sm"
+              >
+                {t(dict, 'city.home')}
+              </Link>
+              <span className="text-gray-400">•</span>
+              <Link
+                href={prefixWithLocale('/cities', locale)}
+                className="text-primary-600 hover:text-primary-700 font-medium text-sm"
+              >
+                {t(dict, 'city.allCities')}
+              </Link>
+            </div>
+            <LanguageSwitcher />
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
-            Laptop-friendly cafés in {cityName}
+            {t(dict, 'city.laptopFriendlyIn')} {cityName}
           </h1>
           <p className="mt-2 text-lg text-gray-600">
-            {cafes.length} {cafes.length === 1 ? 'café found' : 'cafés found'}
+            {cafes.length} {cafes.length === 1 ? t(dict, 'common.cafeFound') : t(dict, 'common.cafesFound')}
           </p>
         </div>
       </header>
 
-      {/* Community Notice */}
-      <CommunityNotice />
+      <CommunityNotice dict={dict} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* SEO Intro Paragraph */}
@@ -186,43 +179,41 @@ export default async function CityPage({
           </section>
         )}
 
-        {/* Internal Links to Other Cities */}
         {otherCities.length > 0 && (
           <section className="mb-12">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Explore Other Cities
+              {t(dict, 'city.exploreOtherCities')}
             </h2>
             <div className="flex flex-wrap gap-2">
               {otherCities.map((city) => (
                 <Link
                   key={city}
-                  href={`/cities/${encodeURIComponent(city.toLowerCase())}`}
+                  href={prefixWithLocale(`/cities/${encodeURIComponent(city.toLowerCase())}`, locale)}
                   className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-primary-300 hover:text-primary-700 transition-colors"
                 >
                   {city}
                 </Link>
               ))}
               <Link
-                href="/cities"
+                href={prefixWithLocale('/cities', locale)}
                 className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-primary-300 hover:text-primary-700 transition-colors"
               >
-                View All Cities →
+                {t(dict, 'city.viewAllCities')}
               </Link>
             </div>
           </section>
         )}
 
-        {/* Café Grid */}
-        <SearchResults cafes={cafes} cityName={cityName}>
+        <SearchResults cafes={cafes} cityName={cityName} locale={locale} dict={dict}>
           <section>
             <div className="mb-4 flex items-center justify-between">
               <p className="text-sm text-gray-600">
-                {cafes.length} {cafes.length === 1 ? 'café' : 'cafés'} found
+                {cafes.length} {cafes.length === 1 ? t(dict, 'common.cafeFound') : t(dict, 'common.cafesFound')}
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {cafes.map((cafe) => (
-                <CafeCard key={cafe.id} cafe={cafe} />
+                <CafeCard key={cafe.id} cafe={cafe} locale={locale} dict={dict} />
               ))}
             </div>
           </section>

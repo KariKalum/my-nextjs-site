@@ -1,10 +1,14 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { t } from '@/lib/i18n/t'
+import type { Dictionary } from '@/lib/i18n/getDictionary'
+import en from '@/lib/i18n/dictionaries/en.json'
 
 const STORAGE_KEY = 'scoutbrew_notice_dismissed_until'
 
-export default function CommunityNotice() {
+export default function CommunityNotice({ dict }: { dict?: Dictionary }) {
+  const d = dict ?? (en as Dictionary)
   const [isVisible, setIsVisible] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
@@ -76,9 +80,9 @@ export default function CommunityNotice() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-gray-800 leading-relaxed">
-                  <span className="font-medium">Scout Brew is brewing better café intel.</span>{' '}
-                  These listings are AI-curated and evolving.{' '}
-                  <span className="text-gray-700">Review a café and help Scout Brew perfect it.</span>
+                  <span className="font-medium">{t(d, 'home.community.bold')}</span>{' '}
+                  {t(d, 'home.community.body')}{' '}
+                  <span className="text-gray-700">{t(d, 'home.community.review')}</span>
                 </p>
               </div>
             </div>
@@ -87,12 +91,12 @@ export default function CommunityNotice() {
                 onClick={handleLearnMore}
                 className="text-sm font-medium text-primary-600 hover:text-primary-700 px-3 py-1.5 rounded-md hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-blue-50"
               >
-                Learn more
+                {t(d, 'home.community.learnMore')}
               </button>
               <button
                 onClick={handleDismiss}
                 className="text-gray-400 hover:text-gray-600 p-1 rounded-md hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-blue-50"
-                aria-label="Dismiss notice"
+                aria-label={t(d, 'home.community.dismissLabel')}
               >
                 <svg
                   className="w-5 h-5"
@@ -137,7 +141,7 @@ export default function CommunityNotice() {
               <button
                 onClick={handleCloseModal}
                 className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1 rounded-md hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
-                aria-label="Close modal"
+                aria-label={t(d, 'home.community.closeModal')}
               >
                 <svg
                   className="w-5 h-5"
@@ -155,25 +159,19 @@ export default function CommunityNotice() {
                 </svg>
               </button>
               <h2 id="modal-title" className="text-xl font-semibold text-gray-900 mb-4 pr-8">
-                About Scout Brew
+                {t(d, 'home.community.modalTitle')}
               </h2>
               <div className="space-y-3 text-gray-700">
-                <p>
-                  Scout Brew is an AI agent that discovers and sorts laptop-friendly cafés.
-                </p>
-                <p>
-                  He's still learning and can make mistakes.
-                </p>
-                <p>
-                  Your reviews help improve accuracy and polish café cards over time.
-                </p>
+                <p>{t(d, 'home.community.modalP1')}</p>
+                <p>{t(d, 'home.community.modalP2')}</p>
+                <p>{t(d, 'home.community.modalP3')}</p>
               </div>
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={handleCloseModal}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
                 >
-                  Got it
+                  {t(d, 'home.community.gotIt')}
                 </button>
               </div>
             </div>

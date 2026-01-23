@@ -5,39 +5,37 @@ import Link from 'next/link'
 import type { Cafe } from '@/src/lib/supabase/types'
 import CafeCard from '@/components/CafeCard'
 import { getCafeHref } from '@/lib/cafeRouting'
+import { prefixWithLocale } from '@/lib/i18n/routing'
+import { t } from '@/lib/i18n/t'
+import type { Dictionary } from '@/lib/i18n/getDictionary'
+import type { Locale } from '@/lib/i18n/config'
 
-type FeatureConfig = {
-  key: string
-  title: string
-  intro: string
-  icon: string
+const FEATURE_ICONS: Record<string, string> = {
+  wifi: '📶',
+  outlets: '🔌',
+  quiet: '🔇',
+  'time-limit': '⏰',
 }
 
-const FEATURE_CONFIGS: Record<string, FeatureConfig> = {
-  wifi: {
-    key: 'wifi',
-    title: 'Find cafés with fast Wi-Fi',
-    intro: 'Discover laptop-friendly cafés with high-speed internet connections. Perfect for video calls, streaming, and productive remote work.',
-    icon: '📶',
-  },
-  outlets: {
-    key: 'outlets',
-    title: 'Find cafés with power outlets',
-    intro: 'Never worry about your laptop battery. Find cafés with plenty of power outlets (Steckdosen) to keep you charged all day.',
-    icon: '🔌',
-  },
-  quiet: {
-    key: 'quiet',
-    title: 'Find quiet cafés',
-    intro: 'Focus without distractions. Discover cafés with quiet or moderate noise levels, perfect for deep work and concentration.',
-    icon: '🔇',
-  },
-  'time-limit': {
-    key: 'time-limit',
-    title: 'Find time-limit friendly cafés',
-    intro: 'Work as long as you need. Explore cafés with no time restrictions, so you can stay productive without worrying about time limits.',
-    icon: '⏰',
-  },
+const FEATURE_TITLE_KEYS: Record<string, string> = {
+  wifi: 'find.wifiTitle',
+  outlets: 'find.outletsTitle',
+  quiet: 'find.quietTitle',
+  'time-limit': 'find.timeLimitTitle',
+}
+
+const FEATURE_INTRO_KEYS: Record<string, string> = {
+  wifi: 'find.wifiIntro',
+  outlets: 'find.outletsIntro',
+  quiet: 'find.quietIntro',
+  'time-limit': 'find.timeLimitIntro',
+}
+
+const FEATURE_LABEL_KEYS: Record<string, string> = {
+  wifi: 'find.wifiLabel',
+  outlets: 'find.outletsLabel',
+  quiet: 'find.quietLabel',
+  'time-limit': 'find.timeLimitLabel',
 }
 
 type CafeWithDistance = Cafe & {
@@ -46,14 +44,19 @@ type CafeWithDistance = Cafe & {
 
 type FeaturePageTemplateProps = {
   feature: string
+  dict: Dictionary
+  locale: Locale
 }
 
-const DEFAULT_RADIUS = 5000 // 5km
-const MAX_RADIUS = 20000 // 20km
+const DEFAULT_RADIUS = 5000
+const MAX_RADIUS = 20000
 const BERLIN_CENTER = { lat: 52.52, lng: 13.405 }
 
-export default function FeaturePageTemplate({ feature }: FeaturePageTemplateProps) {
-  const config = FEATURE_CONFIGS[feature]
+export default function FeaturePageTemplate({ feature, dict, locale }: FeaturePageTemplateProps) {
+  const titleKey = FEATURE_TITLE_KEYS[feature]
+  const introKey = FEATURE_INTRO_KEYS[feature]
+  const labelKey = FEATURE_LABEL_KEYS[feature]
+  const icon = FEATURE_ICONS[feature]
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<google.maps.Map | null>(null)
   const markersRef = useRef<google.maps.Marker[]>([])
@@ -114,9 +117,7 @@ export default function FeaturePageTemplate({ feature }: FeaturePageTemplateProp
     setMapStatus('ready')
   }, [])
 
-  // Place markers on map
   const placeMarkers = useCallback((map: google.maps.Map, cafesList: CafeWithDistance[]) => {
-    // Clear existing markers
     markersRef.current.forEach((m) => m.setMap(null))
     infoWindowsRef.current.forEach((iw) => iw.close())
     markersRef.current = []
@@ -125,6 +126,8 @@ export default function FeaturePageTemplate({ feature }: FeaturePageTemplateProp
     if (cafesList.length === 0) return
 
     const bounds = new google.maps.LatLngBounds()
+    const kmAway = t(dict, 'find.kmAway')
+    const viewDetailsLink = t(dict, 'find.viewDetailsLink')
 
     cafesList.forEach((cafe) => {
       if (cafe.latitude == null || cafe.longitude == null) return
@@ -144,12 +147,12 @@ export default function FeaturePageTemplate({ feature }: FeaturePageTemplateProp
             <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #111827;">
               ${escapeHtml(cafe.name)}
             </h3>
-            ${cafe.distance ? `<p style="margin: 0 0 8px 0; font-size: 13px; color: #6b7280;">${(cafe.distance / 1000).toFixed(2)} km away</p>` : ''}
+            ${cafe.distance ? `<p style="margin: 0 0 8px 0; font-size: 13px; color: #6b7280;">${(cafe.distance / 1000).toFixed(2)} ${escapeHtml(kmAway)}</p>` : ''}
             <a 
-              href="${escapeHtml(getCafeHref(cafe))}" 
+              href="${escapeHtml(getCafeHref(cafe, locale))}" 
               style="display: inline-block; margin-top: 8px; padding: 6px 12px; font-size: 13px; font-weight: 500; color: #ffffff; background-color: #2563eb; border-radius: 6px; text-decoration: none;"
             >
-              View details →
+              ${escapeHtml(viewDetailsLink)}
             </a>
           </div>
         `,
@@ -171,7 +174,7 @@ export default function FeaturePageTemplate({ feature }: FeaturePageTemplateProp
     } else if (markersRef.current.length > 1) {
       map.fitBounds(bounds, 50)
     }
-  }, [])
+  }, [dict, locale])
 
   const escapeHtml = (text: string) => {
     if (typeof document === 'undefined') return text
@@ -191,7 +194,7 @@ export default function FeaturePageTemplate({ feature }: FeaturePageTemplateProp
       )
 
       if (!response.ok) {
-        throw new Error('Failed to fetch cafés')
+        throw new Error(t(dict, 'find.failedFetchCafes'))
       }
 
       const data = await response.json()
@@ -252,12 +255,12 @@ export default function FeaturePageTemplate({ feature }: FeaturePageTemplateProp
         map.panTo({ lat, lng })
       }
     } catch (err: any) {
-      setError(err?.message || 'Failed to fetch cafés. Please try again.')
+      setError(err?.message || t(dict, 'find.failedFetchCafes'))
       setCafes([])
     } finally {
       setLoading(false)
     }
-  }, [feature, placeMarkers])
+  }, [feature, placeMarkers, dict])
 
   // Request user location
   const requestLocation = useCallback(() => {
@@ -279,34 +282,27 @@ export default function FeaturePageTemplate({ feature }: FeaturePageTemplateProp
       },
       () => {
         setLocationStatus('denied')
-        setError('Location permission denied. Please use the city search below or allow location access.')
+        setError(t(dict, 'find.geolocationDeniedError'))
       },
       { enableHighAccuracy: true, timeout: 10000 }
     )
-  }, [fetchCafes, radius])
+  }, [fetchCafes, radius, dict])
 
-  // Search by city (fallback)
   const searchByCity = useCallback(async () => {
     if (!manualCity.trim()) {
-      setError('Please enter a city name')
+      setError(t(dict, 'find.errorEnterCity'))
       return
     }
 
     setLoading(true)
     setError(null)
 
-    // For city search, use a default location (Berlin center)
-    // In production, you could integrate a geocoding service here
-    // For now, we'll use Berlin as fallback and inform the user
     const cityLocation = BERLIN_CENTER
     setLocation(cityLocation)
     setLocationStatus('granted')
-    
-    // Show a friendly message that we're using Berlin as default
-    setError(`Searching near Berlin center. For accurate results, please allow location access or visit the city page for "${manualCity}".`)
-    
+    setError(t(dict, 'find.searchingNearBerlin').replace('{city}', manualCity))
     await fetchCafes(cityLocation.lat, cityLocation.lng, radius)
-  }, [manualCity, radius, fetchCafes])
+  }, [manualCity, radius, fetchCafes, dict])
 
   // Load map on mount
   useEffect(() => {
@@ -327,7 +323,7 @@ export default function FeaturePageTemplate({ feature }: FeaturePageTemplateProp
       } catch (err: any) {
         if (cancelled) return
         setMapStatus('error')
-        setError(err?.message || 'Failed to load Google Maps.')
+        setError(err?.message || t(dict, 'find.failedLoadMaps'))
       }
     }
 
@@ -336,7 +332,7 @@ export default function FeaturePageTemplate({ feature }: FeaturePageTemplateProp
     return () => {
       cancelled = true
     }
-  }, [apiKey, loadGoogleMaps, initMap])
+  }, [apiKey, loadGoogleMaps, initMap, dict])
 
   // Update map when location changes
   useEffect(() => {
@@ -346,14 +342,14 @@ export default function FeaturePageTemplate({ feature }: FeaturePageTemplateProp
     }
   }, [location, mapStatus])
 
-  if (!config) {
+  if (!titleKey || !icon) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Feature not found</h1>
-          <p className="text-gray-600 mb-4">The requested feature page does not exist.</p>
-          <Link href="/" className="text-primary-600 hover:text-primary-700 font-medium">
-            Back to homepage →
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">{t(dict, 'find.featureNotFound')}</h1>
+          <p className="text-gray-600 mb-4">{t(dict, 'find.featureNotFoundDesc')}</p>
+          <Link href={prefixWithLocale('/', locale)} className="text-primary-600 hover:text-primary-700 font-medium">
+            {t(dict, 'find.backToHomepage')}
           </Link>
         </div>
       </div>
@@ -362,28 +358,26 @@ export default function FeaturePageTemplate({ feature }: FeaturePageTemplateProp
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="text-primary-600 hover:text-primary-700 font-medium text-sm">
-              ← Back to Directory
+            <Link href={prefixWithLocale('/', locale)} className="text-primary-600 hover:text-primary-700 font-medium text-sm">
+              {t(dict, 'find.backToDirectory')}
             </Link>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Title & Intro */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
-            <span className="text-4xl">{config.icon}</span>
+            <span className="text-4xl">{icon}</span>
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
-              {config.title}
+              {t(dict, titleKey)}
             </h1>
           </div>
           <p className="text-lg text-gray-600 max-w-3xl">
-            {config.intro}
+            {t(dict, introKey)}
           </p>
         </div>
 
@@ -397,20 +391,20 @@ export default function FeaturePageTemplate({ feature }: FeaturePageTemplateProp
                   disabled={loading || isRequestingLocation}
                   className="w-full md:w-auto px-6 py-3 rounded-lg bg-primary-600 text-white font-semibold shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                 >
-                  {loading || isRequestingLocation ? 'Requesting location...' : '📍 Use my location'}
+                  {loading || isRequestingLocation ? t(dict, 'find.requestingLocation') : `📍 ${t(dict, 'find.useMyLocation')}`}
                 </button>
               </div>
               {locationStatus === 'denied' && (
                 <div className="pt-4 border-t border-gray-200">
                   <p className="text-sm text-gray-600 mb-3">
-                    Location access denied. Search by city instead:
+                    {t(dict, 'find.locationDeniedSearchCity')}
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3">
                     <input
                       type="text"
                       value={manualCity}
                       onChange={(e) => setManualCity(e.target.value)}
-                      placeholder="Enter city name (e.g., Berlin)"
+                      placeholder={t(dict, 'find.enterCityPlaceholder')}
                       className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-base"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
@@ -423,7 +417,7 @@ export default function FeaturePageTemplate({ feature }: FeaturePageTemplateProp
                       disabled={loading || !manualCity.trim()}
                       className="px-6 py-2.5 rounded-lg bg-gray-700 text-white font-medium hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                     >
-                      Search
+                      {t(dict, 'find.search')}
                     </button>
                   </div>
                 </div>
@@ -432,14 +426,14 @@ export default function FeaturePageTemplate({ feature }: FeaturePageTemplateProp
           ) : locationStatus === 'granted' && location ? (
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Searching near your location</p>
+                <p className="text-sm text-gray-600 mb-1">{t(dict, 'find.searchingNearYou')}</p>
                 <p className="text-xs text-gray-500">
-                  Radius: {(radius / 1000).toFixed(1)} km
+                  {t(dict, 'find.radius')} {(radius / 1000).toFixed(1)} km
                 </p>
               </div>
               <div className="flex items-center gap-3">
                 <label className="text-sm text-gray-600">
-                  Radius:
+                  {t(dict, 'find.radius')}
                   <select
                     value={radius}
                     onChange={(e) => {
@@ -461,7 +455,7 @@ export default function FeaturePageTemplate({ feature }: FeaturePageTemplateProp
                   onClick={requestLocation}
                   className="text-sm text-primary-600 hover:text-primary-700 font-medium"
                 >
-                  Change location
+                  {t(dict, 'find.changeLocation')}
                 </button>
               </div>
             </div>
@@ -479,13 +473,13 @@ export default function FeaturePageTemplate({ feature }: FeaturePageTemplateProp
           <div className="h-64 md:h-96 lg:h-[500px] relative bg-gray-100">
             {mapStatus === 'error' ? (
               <div className="h-full flex flex-col items-center justify-center text-center px-4">
-                <p className="text-red-800 font-semibold mb-2">Map unavailable</p>
+                <p className="text-red-800 font-semibold mb-2">{t(dict, 'find.mapUnavailable')}</p>
                 <p className="text-sm text-red-700 mb-3">
-                  {apiKey ? 'Failed to load Google Maps.' : 'Google Maps API key not configured.'}
+                  {apiKey ? t(dict, 'find.failedLoadMaps') : t(dict, 'find.mapsKeyNotConfigured')}
                 </p>
                 {!apiKey && (
                   <p className="text-xs text-gray-600">
-                    Set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to enable maps.
+                    {t(dict, 'find.setMapsKey')}
                   </p>
                 )}
               </div>
@@ -500,30 +494,30 @@ export default function FeaturePageTemplate({ feature }: FeaturePageTemplateProp
           {loading ? (
             <div className="text-center py-12">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mb-4"></div>
-              <p className="text-gray-600">Searching for cafés...</p>
+              <p className="text-gray-600">{t(dict, 'find.searchingForCafes')}</p>
             </div>
           ) : cafes.length > 0 ? (
             <>
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Found {cafes.length} {cafes.length === 1 ? 'café' : 'cafés'}
+                  {t(dict, 'find.foundCafes')} {cafes.length} {cafes.length === 1 ? t(dict, 'common.cafe') : t(dict, 'common.cafes')}
                 </h2>
                 <p className="text-gray-600">
-                  Showing cafés with {config.title.toLowerCase().replace('find cafés with ', '')} within {(radius / 1000).toFixed(1)} km
+                  {t(dict, 'find.showingCafesWith')} {labelKey ? t(dict, labelKey) : ''} {t(dict, 'find.withinKm')} {(radius / 1000).toFixed(1)}&nbsp;km
                 </p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {cafes.map((cafe) => (
-                  <CafeCard key={cafe.id} cafe={cafe} />
+                  <CafeCard key={cafe.id} cafe={cafe} locale={locale} dict={dict} />
                 ))}
               </div>
             </>
           ) : locationStatus === 'granted' ? (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
               <div className="text-4xl mb-4">🔍</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No cafés found</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">{t(dict, 'find.noCafesFound')}</h3>
               <p className="text-gray-600 mb-6">
-                We couldn&apos;t find any cafés matching this feature in your area.
+                {t(dict, 'find.noCafesMatchingFeature')}
               </p>
               <div className="space-y-3">
                 <button
@@ -536,14 +530,14 @@ export default function FeaturePageTemplate({ feature }: FeaturePageTemplateProp
                   }}
                   className="px-6 py-2.5 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
                 >
-                  Increase search radius
+                  {t(dict, 'find.increaseSearchRadius')}
                 </button>
                 <div>
                   <Link
-                    href="/cities"
+                    href={prefixWithLocale('/cities', locale)}
                     className="text-sm text-primary-600 hover:text-primary-700 font-medium"
                   >
-                    Browse all cities →
+                    {t(dict, 'find.browseAllCities')}
                   </Link>
                 </div>
               </div>

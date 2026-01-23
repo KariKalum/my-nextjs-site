@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
+import { defaultLocale } from '@/lib/i18n/config'
+import { withLocale } from '@/lib/i18n/path'
 
 export default function Error({
   error,
@@ -30,7 +32,7 @@ export default function Error({
             Try again
           </button>
           <Link
-            href="/"
+            href={withLocale(defaultLocale, '/')}
             className="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
           >
             Go home

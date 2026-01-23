@@ -1,11 +1,17 @@
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
+import Link from 'next/link'
 import { createClient } from '@/src/lib/supabase/server'
 import type { Cafe } from '@/src/lib/supabase/types'
 import CafeDetailSEO from '@/components/CafeDetailSEO'
 import { combineDescription } from '@/lib/utils/description-combiner'
 import { getCafeHref, getDetailRouteQueryConfig } from '@/lib/cafeRouting'
 import { devLog } from '@/lib/utils/devLog'
+import { getLocaleFromParams, type Locale } from '@/lib/i18n/config'
+import { getDictionary } from '@/lib/i18n/getDictionary'
+import { t, tmpl } from '@/lib/i18n/t'
+import { formatWorkScore } from '@/lib/utils/cafe-formatters'
+import type { Dictionary } from '@/lib/i18n/getDictionary'
 
 /**
  * Production-safe cafe loader that never returns false 404s.
@@ -135,26 +141,34 @@ async function getNearbyCafes(cafe: Cafe, limit: number = 3): Promise<Cafe[]> {
 /**
  * Error component for permission/network errors (not 404)
  */
-function CafeError({ reason }: { reason: 'permission_error' | 'network_error' }) {
-  const { siteName } = require('@/lib/seo/metadata')
-
+function CafeError({
+  reason,
+  locale,
+  dict,
+}: {
+  reason: 'permission_error' | 'network_error'
+  locale: Locale
+  dict: Dictionary
+}) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-8 text-center">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">
-          {reason === 'permission_error' ? 'Access Restricted' : 'Unable to Load Café'}
+          {reason === 'permission_error'
+            ? t(dict, 'meta.cafe.errorAccessRestricted')
+            : t(dict, 'meta.cafe.errorUnableToLoad')}
         </h1>
         <p className="text-gray-600 mb-6">
           {reason === 'permission_error'
-            ? 'This café listing is currently unavailable.'
-            : 'We encountered an issue loading this café. Please try again later.'}
+            ? t(dict, 'meta.cafe.errorUnavailable')
+            : t(dict, 'meta.cafe.errorTryAgain')}
         </p>
-        <a
-          href="/cities"
+        <Link
+          href={`/${locale}/cities`}
           className="inline-block px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
         >
-          Browse All Cafés
-        </a>
+          {t(dict, 'meta.cafe.browseAllCafes')}
+        </Link>
       </div>
     </div>
   )
@@ -163,30 +177,77 @@ function CafeError({ reason }: { reason: 'permission_error' | 'network_error' })
 export default async function CafeDetailPage({
   params,
 }: {
-  params: { id: string }
+  params: { id: string; locale: Locale }
 }) {
+  const locale = getLocaleFromParams(params)
+  const dict = getDictionary(locale)
   const result = await getCafe(params.id)
 
-  // Handle different error types
   if (!result.success) {
     if (result.reason === 'not_found' || result.reason === 'invalid_param') {
       notFound()
     }
-    // Permission or network errors - show error UI, not 404
-    return <CafeError reason={result.reason === 'permission_error' ? 'permission_error' : 'network_error'} />
+    return (
+      <CafeError
+        reason={result.reason === 'permission_error' ? 'permission_error' : 'network_error'}
+        locale={locale}
+        dict={dict}
+      />
+    )
   }
 
   const { cafe } = result
 
-  // Ensure descriptionText is set
   if (!cafe.descriptionText) {
     cafe.descriptionText = combineDescription(cafe.description, cafe.ai_inference_notes)
   }
 
-  // Fetch nearby cafes (single query, efficient)
   const nearbyCafes = await getNearbyCafes(cafe)
 
-  return <CafeDetailSEO cafe={cafe} nearbyCafes={nearbyCafes} />
+  return <CafeDetailSEO cafe={cafe} nearbyCafes={nearbyCafes} dict={dict} locale={locale} />
+}
+
+/**
+ * Build localized meta description for cafe (same structure as buildCafeMetaDescription, strings from dict)
+ */
+function buildLocalizedCafeDescription(cafe: Cafe, dict: Dictionary): string {
+  const parts: string[] = []
+  if (cafe.work_score != null) {
+    const formatted = formatWorkScore(cafe.work_score)
+    if (formatted) {
+      parts.push(tmpl(t(dict, 'meta.cafe.descWorkScore'), { value: formatted }))
+    }
+  } else if (cafe.google_rating != null) {
+    parts.push(tmpl(t(dict, 'meta.cafe.descRating'), { value: cafe.google_rating.toFixed(1) }))
+  }
+  if (cafe.ai_wifi_quality) {
+    parts.push(tmpl(t(dict, 'meta.cafe.descWifi'), { value: cafe.ai_wifi_quality }))
+  }
+  if (cafe.ai_power_outlets) {
+    parts.push(tmpl(t(dict, 'meta.cafe.descOutlets'), { value: cafe.ai_power_outlets }))
+  }
+  if (cafe.ai_noise_level) {
+    parts.push(tmpl(t(dict, 'meta.cafe.descAtmosphere'), { value: cafe.ai_noise_level }))
+  }
+  const cityState = [cafe.city, cafe.state].filter(Boolean).join(', ')
+  if (cityState) {
+    parts.push(tmpl(t(dict, 'meta.cafe.descLocated'), { value: cityState }))
+  }
+  let description = parts.join('. ')
+  if (description.length < 140 && cafe.description && description.length < 120) {
+    const shortDesc = cafe.description.slice(0, 40)
+    description = `${shortDesc}. ${description}`
+  }
+  if (description.length > 160) {
+    description = description.slice(0, 157) + '...'
+  }
+  return (
+    description ||
+    tmpl(t(dict, 'meta.cafe.descDiscover'), {
+      name: cafe.name || '',
+      city: cafe.city || 'Germany',
+    })
+  )
 }
 
 /**
@@ -195,52 +256,56 @@ export default async function CafeDetailPage({
 export async function generateMetadata({
   params,
 }: {
-  params: { id: string }
+  params: { id: string; locale: Locale }
 }): Promise<Metadata> {
+  const locale = getLocaleFromParams(params)
+  const dict = getDictionary(locale)
   const result = await getCafe(params.id)
+  const { siteName, getAbsoluteUrl, getCafeOgImage } = await import('@/lib/seo/metadata')
 
-  // Import SEO helpers
-  const { siteName, getAbsoluteUrl } = await import('@/lib/seo/metadata')
-
-  // If cafe not found or error, return safe defaults
   if (!result.success || !result.cafe) {
+    const notFoundTitle = tmpl(t(dict, 'meta.cafe.notFoundTitle'), { siteName })
+    const notFoundDesc = t(dict, 'meta.cafe.notFoundDescription')
+    const { getHreflangAlternates } = await import('@/lib/seo/metadata')
     return {
-      title: `Café not found | ${siteName}`,
-      description: 'The café you are looking for could not be found.',
+      title: notFoundTitle,
+      description: notFoundDesc,
       openGraph: {
-        title: `Café not found | ${siteName}`,
-        description: 'The café you are looking for could not be found.',
+        title: notFoundTitle,
+        description: notFoundDesc,
         type: 'website',
         siteName,
       },
-      alternates: {
-        canonical: getAbsoluteUrl(`/cafe/${params.id}`),
-      },
+      ...getHreflangAlternates(`/cafe/${params.id}`, locale),
     }
   }
 
   const cafe = result.cafe
-
-  // Build SEO metadata
-  const {
-    buildCafeTitle,
-    buildCafeMetaDescription,
-  } = await import('@/lib/seo/cafe-seo')
-
-  const { getCafeOgImage } = await import('@/lib/seo/metadata')
-
-  const title = buildCafeTitle(cafe)
+  const city = cafe.city || 'Germany'
+  const label = t(
+    dict,
+    cafe.is_work_friendly === true ? 'meta.cafe.titleWorkFriendly' : 'meta.cafe.titleCoworking'
+  )
+  const title = `${cafe.name} — ${label} in ${city}`
   const fullTitle = `${title} | ${siteName}`
-  const description = buildCafeMetaDescription(cafe)
-  const canonicalUrl = getAbsoluteUrl(getCafeHref(cafe))
+  const description = buildLocalizedCafeDescription(cafe, dict)
+  const canonicalUrl = getAbsoluteUrl(getCafeHref(cafe, locale))
 
-  // Get OG image (safe - may be null)
   let ogImage: string | undefined
   try {
     ogImage = await getCafeOgImage(cafe.id)
-  } catch (error) {
-    // Silently fail - OG image is optional
+  } catch {
+    /* OG image optional */
   }
+
+  const ogAlt = cafe.city
+    ? tmpl(t(dict, 'meta.cafe.ogAltCafe'), { city: cafe.city })
+    : t(dict, 'meta.cafe.ogAltCafeFallback')
+
+  // Get cafe identifier for path (place_id or id)
+  const cafeId = cafe.place_id || cafe.id || params.id
+  const pathWithoutLocale = `/cafe/${cafeId}`
+  const { getHreflangAlternates } = await import('@/lib/seo/metadata')
 
   return {
     title: fullTitle,
@@ -251,15 +316,8 @@ export async function generateMetadata({
       type: 'website',
       url: canonicalUrl,
       siteName,
-      locale: 'en_US',
-      images: ogImage
-        ? [
-            {
-              url: ogImage,
-              alt: `${cafe.name} - ${cafe.city ? `Laptop-friendly café in ${cafe.city}` : 'Cafe'}`,
-            },
-          ]
-        : undefined,
+      locale: locale === 'de' ? 'de_DE' : 'en_US',
+      images: ogImage ? [{ url: ogImage, alt: `${cafe.name} - ${ogAlt}` }] : undefined,
     },
     twitter: {
       card: 'summary_large_image',
@@ -267,8 +325,6 @@ export async function generateMetadata({
       description,
       images: ogImage ? [ogImage] : undefined,
     },
-    alternates: {
-      canonical: canonicalUrl,
-    },
+    ...getHreflangAlternates(pathWithoutLocale, locale),
   }
 }

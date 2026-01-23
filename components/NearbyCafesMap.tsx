@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { getCafeHref } from '@/lib/cafeRouting'
+import { getLocaleFromPathname } from '@/lib/i18n/routing'
 
 // Type definitions for cafe data
 export type CafeForMap = {
@@ -45,6 +47,8 @@ type GoogleLatLng = google.maps.LatLng
 type GoogleLatLngBounds = google.maps.LatLngBounds
 
 export default function NearbyCafesMap({ center, cafes, className = '' }: NearbyCafesMapProps) {
+  const pathname = usePathname()
+  const locale = getLocaleFromPathname(pathname)
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<GoogleMap | null>(null)
   const markersRef = useRef<GoogleMarker[]>([])
@@ -209,7 +213,7 @@ export default function NearbyCafesMap({ center, cafes, className = '' }: Nearby
     const cityText = cafe.city ? `${cafe.city}${distanceText}` : distanceText ? distanceText.slice(3) : ''
     
     // Compute href using routing helper
-    const cafeHref = getCafeHref({ place_id: cafe.place_id, id: cafe.id })
+    const cafeHref = getCafeHref({ place_id: cafe.place_id, id: cafe.id }, locale)
 
     return `
       <div style="font-family: system-ui, -apple-system, sans-serif; padding: 0; min-width: 240px;">

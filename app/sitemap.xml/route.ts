@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/src/lib/supabase/server'
 import { getCafeHref } from '@/lib/cafeRouting'
+import { locales, type Locale } from '@/lib/i18n/config'
 
 // Mark as dynamic since we use cookies() via createClient()
 export const dynamic = 'force-dynamic'
@@ -31,26 +32,25 @@ export async function GET() {
   
   const urls: SitemapUrl[] = []
   
-  // Static pages with priorities and change frequencies
+  // Static pages with priorities and change frequencies (paths without locale)
   const staticPages: Array<{ path: string; priority: string; changefreq: string }> = [
     { path: '/', priority: '1.0', changefreq: 'daily' },
     { path: '/cities', priority: '0.9', changefreq: 'weekly' },
     { path: '/submit', priority: '0.8', changefreq: 'monthly' },
-    // Optional pages (add if they exist in your project)
-    // { path: '/about', priority: '0.7', changefreq: 'monthly' },
-    // { path: '/faq', priority: '0.7', changefreq: 'monthly' },
-    // { path: '/contact', priority: '0.7', changefreq: 'monthly' },
-    // { path: '/privacy', priority: '0.5', changefreq: 'yearly' },
-    // { path: '/terms', priority: '0.5', changefreq: 'yearly' },
-    // { path: '/imprint', priority: '0.5', changefreq: 'yearly' },
+    { path: '/find/wifi', priority: '0.7', changefreq: 'monthly' },
+    { path: '/find/outlets', priority: '0.7', changefreq: 'monthly' },
+    { path: '/find/quiet', priority: '0.7', changefreq: 'monthly' },
+    { path: '/find/time-limit', priority: '0.7', changefreq: 'monthly' },
   ]
   
-  // Add static pages
+  // Add static pages for each locale
   staticPages.forEach((page) => {
-    urls.push({
-      loc: `${baseUrl}${page.path}`,
-      changefreq: page.changefreq,
-      priority: page.priority,
+    locales.forEach((locale) => {
+      urls.push({
+        loc: `${baseUrl}/${locale}${page.path === '/' ? '' : page.path}`,
+        changefreq: page.changefreq,
+        priority: page.priority,
+      })
     })
   })
   
@@ -90,31 +90,36 @@ export async function GET() {
     ? Array.from(citiesSet)
     : majorCities
   
+  // Add city pages for each locale
   citiesToInclude.forEach((city) => {
-    urls.push({
-      loc: `${baseUrl}/cities/${encodeURIComponent(city)}`,
-      changefreq: 'weekly',
-      priority: '0.8',
+    locales.forEach((locale) => {
+      urls.push({
+        loc: `${baseUrl}/${locale}/cities/${encodeURIComponent(city)}`,
+        changefreq: 'weekly',
+        priority: '0.8',
+      })
     })
   })
   
-  // Add cafe detail pages
+  // Add cafe detail pages for each locale
   cafes.forEach((cafe) => {
-    // Use canonical routing helper
-    const url: SitemapUrl = {
-      loc: `${baseUrl}${getCafeHref(cafe)}`,
-      changefreq: 'monthly',
-      priority: '0.7',
-    }
-    
-    // Add lastmod if available (prefer updated_at, fallback to created_at)
-    if (cafe.updated_at) {
-      url.lastmod = formatDate(cafe.updated_at)
-    } else if (cafe.created_at) {
-      url.lastmod = formatDate(cafe.created_at)
-    }
-    
-    urls.push(url)
+    locales.forEach((locale) => {
+      // Use canonical routing helper with locale
+      const url: SitemapUrl = {
+        loc: `${baseUrl}${getCafeHref(cafe, locale)}`,
+        changefreq: 'monthly',
+        priority: '0.7',
+      }
+      
+      // Add lastmod if available (prefer updated_at, fallback to created_at)
+      if (cafe.updated_at) {
+        url.lastmod = formatDate(cafe.updated_at)
+      } else if (cafe.created_at) {
+        url.lastmod = formatDate(cafe.created_at)
+      }
+      
+      urls.push(url)
+    })
   })
   
   // Generate XML sitemap

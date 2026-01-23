@@ -1,12 +1,16 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/src/lib/supabase/client'
 import { getCafeHref } from '@/lib/cafeRouting'
+import { getLocaleFromPathname } from '@/lib/i18n/routing'
+import { t } from '@/lib/i18n/t'
+import type { Dictionary } from '@/lib/i18n/getDictionary'
 
 interface HeroProps {
+  dict: Dictionary
   onSearchChange?: (query: string) => void
 }
 
@@ -17,8 +21,10 @@ interface Suggestion {
   slug?: string
 }
 
-export default function Hero({ onSearchChange }: HeroProps) {
+export default function Hero({ dict, onSearchChange }: HeroProps) {
   const router = useRouter()
+  const pathname = usePathname()
+  const locale = getLocaleFromPathname(pathname)
   const [searchQuery, setSearchQuery] = useState('')
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [selectedIndex, setSelectedIndex] = useState(-1)
@@ -124,10 +130,10 @@ export default function Hero({ onSearchChange }: HeroProps) {
     setSelectedIndex(-1)
 
     if (suggestion.type === 'city') {
-      router.push(`/cities/${suggestion.slug}`)
+      router.push(`/${locale}/cities/${suggestion.slug}`)
     } else {
       // suggestion.slug is place_id || id from the cafe
-      router.push(getCafeHref({ place_id: suggestion.slug || null, id: suggestion.slug }))
+      router.push(getCafeHref({ place_id: suggestion.slug || null, id: suggestion.slug }, locale))
     }
   }
 
@@ -171,7 +177,7 @@ export default function Hero({ onSearchChange }: HeroProps) {
     if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
       handleSelectSuggestion(suggestions[selectedIndex])
     } else if (searchQuery.trim()) {
-      router.push(`/cities?q=${encodeURIComponent(searchQuery.trim())}`)
+      router.push(`/${locale}/cities?q=${encodeURIComponent(searchQuery.trim())}`)
     }
   }
 
@@ -188,7 +194,7 @@ export default function Hero({ onSearchChange }: HeroProps) {
     setLocationLoading(true)
 
     if (!navigator.geolocation) {
-      setLocationError('Location access denied.')
+      setLocationError(t(dict, 'home.hero.locationDenied'))
       setLocationLoading(false)
       setTimeout(() => setLocationError(null), 5000)
       return
@@ -205,7 +211,7 @@ export default function Hero({ onSearchChange }: HeroProps) {
         }
       },
       (error) => {
-        setLocationError('Location access denied.')
+        setLocationError(t(dict, 'home.hero.locationDenied'))
         setLocationLoading(false)
         // Clear error after 5 seconds
         setTimeout(() => setLocationError(null), 5000)
@@ -219,10 +225,10 @@ export default function Hero({ onSearchChange }: HeroProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
-            Find the Best Laptop-Friendly Cafés in Germany ☕💻
+            {t(dict, 'home.hero.title')}
           </h1>
           <p className="text-lg md:text-xl font-normal text-gray-600 mb-6">
-            Work remotely with fast Wi-Fi, power outlets, and quiet spaces.
+            {t(dict, 'home.hero.subtitle')}
           </p>
 
           {/* Search Input */}
@@ -242,7 +248,7 @@ export default function Hero({ onSearchChange }: HeroProps) {
                       }
                     }}
                     onBlur={handleInputBlur}
-                    placeholder="Search by city or café (e.g. Berlin, Hamburg, coworking café)"
+                    placeholder={t(dict, 'home.hero.placeholder')}
                     className="w-full px-6 pr-14 py-4 md:py-5 text-base border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900"
                   />
                   <button
@@ -277,7 +283,7 @@ export default function Hero({ onSearchChange }: HeroProps) {
                     <div className="absolute left-0 right-0 top-full mt-2 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-4">
                       <div className="flex items-center gap-3 text-gray-600">
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
-                        <span className="text-sm">Searching…</span>
+                        <span className="text-sm">{t(dict, 'home.hero.searching')}</span>
                       </div>
                     </div>
                   )}
@@ -318,7 +324,7 @@ export default function Hero({ onSearchChange }: HeroProps) {
                   type="submit"
                   className="w-full sm:w-auto px-6 py-4 md:py-5 text-base bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors touch-manipulation"
                 >
-                  Search
+                  {t(dict, 'home.hero.searchButton')}
                 </button>
               </div>
             </div>
@@ -326,14 +332,14 @@ export default function Hero({ onSearchChange }: HeroProps) {
 
           {/* Popular Searches */}
           <div className="flex flex-wrap justify-center gap-2 mb-6">
-            <span className="text-sm text-gray-500 mr-1">Popular:</span>
+            <span className="text-sm text-gray-500 mr-1">{t(dict, 'home.hero.popular')}</span>
             {['Berlin', 'Hamburg', 'Munich', 'Cologne', 'Frankfurt'].map((city) => (
               <button
                 key={city}
                 type="button"
                 onClick={() => {
                   setSearchQuery(city)
-                  router.push(`/cities/${city.toLowerCase()}`)
+                  router.push(`/${locale}/cities/${city.toLowerCase()}`)
                 }}
                 className="px-4 py-1.5 text-sm text-gray-700 bg-white border border-gray-300 rounded-full hover:border-primary-400 hover:text-primary-600 hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
               >
@@ -345,10 +351,10 @@ export default function Hero({ onSearchChange }: HeroProps) {
           {/* Secondary CTA */}
           <div className="flex justify-center">
             <Link
-              href="/submit"
+              href={`/${locale}/submit`}
               className="px-6 py-2.5 text-sm text-gray-600 hover:text-gray-900 font-medium border border-gray-300 rounded-lg hover:border-gray-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
             >
-              Submit a café
+              {t(dict, 'home.hero.submitCafe')}
             </Link>
           </div>
         </div>

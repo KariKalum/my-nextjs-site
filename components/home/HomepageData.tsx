@@ -1,16 +1,19 @@
 import type { Cafe } from '@/src/lib/supabase/types'
 import CafeSectionClient from './CafeSectionClient'
 import { getTopRatedCafes, getRecentlyAddedCafes } from '@/src/lib/cafes/homepage'
+import { prefixWithLocale } from '@/lib/i18n/routing'
+import { type Locale } from '@/lib/i18n/config'
+import { t } from '@/lib/i18n/t'
+import type { Dictionary } from '@/lib/i18n/getDictionary'
 
-/**
- * HomepageData component
- * Fetches and displays Top Rated and Recently Added sections
- * 
- * Fetches 10 items per section (client component slices to 5 for mobile)
- * Sections are reordered: Top Rated first, then Recently Added
- */
-export default async function HomepageData() {
-  // Fetch 10 items each (client component will slice to 5 for mobile)
+export default async function HomepageData({
+  params,
+  dict,
+}: {
+  params: { locale: Locale }
+  dict: Dictionary
+}) {
+  const locale = params.locale
   const [topRated, recentlyAdded] = await Promise.all([
     getTopRatedCafes(10),
     getRecentlyAddedCafes(10),
@@ -18,21 +21,23 @@ export default async function HomepageData() {
 
   return (
     <>
-      {/* Top Rated first (reordered) */}
       <CafeSectionClient
-        title="Top Rated to Work From"
-        description="Highest-rated cafés for productive remote work based on user reviews"
+        title={t(dict, 'home.sections.topRatedTitle')}
+        description={t(dict, 'home.sections.topRatedDesc')}
         cafes={topRated}
-        emptyMessage="No cafés have been rated yet."
-        viewAllLink="/cities"
+        emptyMessage={t(dict, 'home.sections.topRatedEmpty')}
+        viewAllLink={prefixWithLocale('/cities', locale)}
+        locale={locale}
+        dict={dict}
       />
-      {/* Recently Added second */}
       <CafeSectionClient
-        title="Recently Added"
-        description="Discover the newest laptop-friendly cafés added to our directory"
+        title={t(dict, 'home.sections.recentlyAddedTitle')}
+        description={t(dict, 'home.sections.recentlyAddedDesc')}
         cafes={recentlyAdded}
-        emptyMessage="No cafés have been added yet. Be the first to add one!"
-        viewAllLink="/cities"
+        emptyMessage={t(dict, 'home.sections.recentlyAddedEmpty')}
+        viewAllLink={prefixWithLocale('/cities', locale)}
+        locale={locale}
+        dict={dict}
       />
     </>
   )

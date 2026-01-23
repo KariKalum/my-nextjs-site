@@ -4,6 +4,10 @@ import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { getCafeHref } from '@/lib/cafeRouting'
+import { t } from '@/lib/i18n/t'
+import type { Dictionary } from '@/lib/i18n/getDictionary'
+import type { Locale } from '@/lib/i18n/config'
+import { prefixWithLocale } from '@/lib/i18n/routing'
 
 type NearbyApiResponse = {
   center: { lat: number; lng: number }
@@ -49,7 +53,13 @@ const BERLIN_CENTER = { lat: 52.52, lng: 13.405 }
 const BERLIN_RADIUS = 3000 // meters
 const USER_LOCATION_RADIUS = 2000 // meters
 
-export default function NearbyMapClient() {
+export default function NearbyMapClient({
+  dict,
+  locale,
+}: {
+  dict: Dictionary
+  locale: Locale
+}) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -152,12 +162,10 @@ export default function NearbyMapClient() {
       ? `Outlets${cafe.outlets.rating ? ` ${cafe.outlets.rating}/5` : ''}`
       : '—'
     const noiseLabel = cafe.noise ? cafe.noise : '—'
-    const timeLabel = cafe.timeLimit ? `${cafe.timeLimit} min` : 'No limit'
-
+    const timeLabel = cafe.timeLimit ? `${cafe.timeLimit} min` : t(dict, 'home.map.noLimit')
     const distanceText = cafe.distance ? `${(cafe.distance / 1000).toFixed(2)} km` : ''
-    
-    // Compute href using routing helper
-    const cafeHref = getCafeHref({ place_id: cafe.place_id, id: cafe.id })
+    const cafeHref = getCafeHref({ place_id: cafe.place_id, id: cafe.id }, locale)
+    const viewDetailsLink = t(dict, 'home.map.viewDetailsLink')
 
     return `
       <div style="font-family: system-ui, -apple-system, sans-serif; padding: 0; min-width: 240px;">
@@ -190,7 +198,7 @@ export default function NearbyMapClient() {
             onmouseover="this.style.backgroundColor='#1d4ed8'"
             onmouseout="this.style.backgroundColor='#2563eb'"
           >
-            View details →
+            ${escapeHtml(viewDetailsLink)}
           </a>
         </div>
       </div>
@@ -254,7 +262,7 @@ export default function NearbyMapClient() {
       try {
         const res = await fetch(`/api/cafes/nearby?lat=${lat}&lng=${lng}&radius=${radius}`)
         if (!res.ok) {
-          throw new Error('Failed to load nearby cafés')
+          throw new Error(t(dict, 'home.map.failedLoadNearby'))
         }
         const data = (await res.json()) as NearbyApiResponse
         const mapped: CafeForMap[] = data.cafes
@@ -305,7 +313,7 @@ export default function NearbyMapClient() {
           `/api/cafes/nearby?neLat=${ne.lat()}&neLng=${ne.lng()}&swLat=${sw.lat()}&swLng=${sw.lng()}`
         )
         if (!res.ok) {
-          throw new Error('Failed to load cafés')
+          throw new Error(t(dict, 'home.map.failedLoadCafes'))
         }
         const data = (await res.json()) as NearbyApiResponse
         const mapped: CafeForMap[] = data.cafes
@@ -337,7 +345,7 @@ export default function NearbyMapClient() {
           }, 100)
         }
       } catch (err: any) {
-        setError(err?.message || 'Something went wrong while fetching cafés.')
+        setError(err?.message || t(dict, 'home.map.fetchErrorGeneric'))
       } finally {
         setIsUpdatingResults(false)
       }
@@ -349,7 +357,7 @@ export default function NearbyMapClient() {
   useEffect(() => {
     if (!apiKey) {
       setMapStatus('error')
-      setError('Google Maps API key is missing. Set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY.')
+      setError(t(dict, 'home.map.mapsKeyHint'))
       return
     }
 
@@ -365,7 +373,7 @@ export default function NearbyMapClient() {
       } catch (err: any) {
         if (cancelled) return
         setMapStatus('error')
-        setError(err?.message || 'Failed to load Google Maps.')
+        setError(err?.message || t(dict, 'home.map.couldNotLoadMaps'))
       }
     }
 
@@ -374,7 +382,7 @@ export default function NearbyMapClient() {
     return () => {
       cancelled = true
     }
-  }, [apiKey, loadGoogleMaps, initMap])
+  }, [apiKey, loadGoogleMaps, initMap, dict])
 
   // After map is ready, fetch Berlin cafes (initial load)
   useEffect(() => {
@@ -451,7 +459,7 @@ export default function NearbyMapClient() {
     setHasMapMoved(false)
     if (!navigator.geolocation) {
       setDataStatus('error')
-      setError('Geolocation is not supported by your browser.')
+      setError(t(dict, 'home.map.geolocationUnsupported'))
       return
     }
 
@@ -674,12 +682,11 @@ export default function NearbyMapClient() {
     }
   }, [filteredCafes])
 
-  // --- UI States ---
   if (!apiKey) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-        <p className="text-red-800 font-semibold mb-1">Maps API key missing</p>
-        <p className="text-sm text-red-700">Set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to enable the map.</p>
+        <p className="text-red-800 font-semibold mb-1">{t(dict, 'home.map.mapsKeyMissing')}</p>
+        <p className="text-sm text-red-700">{t(dict, 'home.map.mapsKeyHint')}</p>
       </div>
     )
   }
@@ -694,13 +701,15 @@ export default function NearbyMapClient() {
             disabled={dataStatus === 'loading' || mapStatus === 'loading'}
             className="px-5 py-3 rounded-lg bg-primary-600 text-white font-semibold shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {dataStatus === 'loading' || mapStatus === 'loading' ? 'Loading…' : 'Use my location'}
+            {dataStatus === 'loading' || mapStatus === 'loading'
+              ? t(dict, 'home.map.loading')
+              : t(dict, 'home.map.useLocation')}
           </button>
           <Link
-            href="/cities"
+            href={prefixWithLocale('/cities', locale)}
             className="text-sm text-primary-600 hover:text-primary-700"
           >
-            Browse all cities →
+            {t(dict, 'home.map.browseAll')}
           </Link>
         </div>
       </div>
@@ -714,7 +723,8 @@ export default function NearbyMapClient() {
               {/* Active filters indicator */}
               {hasActiveFilters && (
                 <div className="text-xs text-gray-600 font-medium">
-                  Active filters: <span className="font-semibold text-primary-700">{activeFilterCount}</span>
+                  {t(dict, 'home.map.activeFilters')}{' '}
+                  <span className="font-semibold text-primary-700">{activeFilterCount}</span>
                 </div>
               )}
 
@@ -730,7 +740,7 @@ export default function NearbyMapClient() {
                       : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
                   }`}
                 >
-                  Power outlets
+                  {t(dict, 'home.map.powerOutlets')}
                 </button>
                 <button
                   onClick={() => setFilters({ ...filters, quiet: !filters.quiet })}
@@ -742,7 +752,7 @@ export default function NearbyMapClient() {
                       : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
                   }`}
                 >
-                  Quiet
+                  {t(dict, 'home.map.quiet')}
                 </button>
                 <button
                   onClick={() => setFilters({ ...filters, noTimeLimit: !filters.noTimeLimit })}
@@ -754,12 +764,11 @@ export default function NearbyMapClient() {
                       : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
                   }`}
                 >
-                  No time limit
+                  {t(dict, 'home.map.noTimeLimit')}
                 </button>
-                {/* Rating Filter */}
                 <div className="flex items-center gap-1">
                   <label htmlFor="rating-filter" className="text-xs text-gray-600">
-                    Rating:
+                    {t(dict, 'home.map.rating')}
                   </label>
                   <select
                     id="rating-filter"
@@ -772,7 +781,7 @@ export default function NearbyMapClient() {
                         : 'border-gray-300'
                     }`}
                   >
-                    <option value="0">Any</option>
+                    <option value="0">{t(dict, 'home.map.any')}</option>
                     <option value="3.0">3.0+</option>
                     <option value="3.5">3.5+</option>
                     <option value="4.0">4.0+</option>
@@ -800,27 +809,25 @@ export default function NearbyMapClient() {
                           : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
                       }`}
                     >
-                      Coffee quality
+                      {t(dict, 'home.map.coffeeQuality')}
                     </button>
                   )
                 })()}
               </div>
 
-              {/* Clear filters button */}
               {hasActiveFilters && (
                 <button
                   onClick={clearFilters}
-                  aria-label={`Clear ${activeFilterCount} active filter${activeFilterCount !== 1 ? 's' : ''}`}
+                  aria-label={`${t(dict, 'home.map.clear')} ${activeFilterCount} active filter${activeFilterCount !== 1 ? 's' : ''}`}
                   className="px-3 py-1 text-xs font-medium text-gray-600 hover:text-gray-800 border-2 border-gray-300 rounded-md bg-white hover:bg-gray-50 hover:border-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
                 >
-                  Clear
+                  {t(dict, 'home.map.clear')}
                 </button>
               )}
 
-              {/* Sort Dropdown */}
               <div className="flex items-center gap-2 ml-auto">
                 <label htmlFor="sort-select" className="text-xs text-gray-600 font-medium">
-                  Sort:
+                  {t(dict, 'home.map.sort')}
                 </label>
                 <select
                   id="sort-select"
@@ -828,10 +835,10 @@ export default function NearbyMapClient() {
                   onChange={(e) => setSortBy(e.target.value as 'distance' | 'rating' | 'laptopFriendly' | 'recentlyAdded')}
                   className="px-3 py-1 text-xs border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 >
-                  <option value="distance">Nearest</option>
-                  <option value="rating">Highest rated</option>
-                  <option value="laptopFriendly">Most laptop-friendly</option>
-                  <option value="recentlyAdded">Recently added</option>
+                  <option value="distance">{t(dict, 'home.map.nearest')}</option>
+                  <option value="rating">{t(dict, 'home.map.highestRated')}</option>
+                  <option value="laptopFriendly">{t(dict, 'home.map.mostLaptopFriendly')}</option>
+                  <option value="recentlyAdded">{t(dict, 'home.map.recentlyAdded')}</option>
                 </select>
               </div>
             </div>
@@ -848,12 +855,11 @@ export default function NearbyMapClient() {
                   onClick={handleSearchThisArea}
                   className="px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
                 >
-                  Search this area
+                  {t(dict, 'home.map.searchThisArea')}
                 </button>
               </div>
             )}
 
-            {/* Auto/Manual toggle - minimal */}
             <div className="absolute top-4 right-4 z-10">
               <button
                 onClick={() => {
@@ -862,22 +868,21 @@ export default function NearbyMapClient() {
                   setPendingBounds(null)
                 }}
                 className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg shadow-sm text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
-                title={autoUpdate ? 'Automatic updates enabled' : 'Manual updates - click "Search this area" to update'}
+                title={autoUpdate ? t(dict, 'home.map.autoTitle') : t(dict, 'home.map.manualTitle')}
               >
-                {autoUpdate ? 'Auto' : 'Manual'}
+                {autoUpdate ? t(dict, 'home.map.auto') : t(dict, 'home.map.manual')}
               </button>
             </div>
 
             <div className="w-full h-96 lg:h-[600px] rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
               {mapStatus === 'error' ? (
                 <div className="h-full flex flex-col items-center justify-center text-center px-4">
-                  <p className="text-red-800 font-semibold mb-2">Failed to load map</p>
-                  <p className="text-sm text-red-700 mb-3">{error || 'Could not load Google Maps.'}</p>
+                  <p className="text-red-800 font-semibold mb-2">{t(dict, 'home.map.failedToLoadMap')}</p>
+                  <p className="text-sm text-red-700 mb-3">{error || t(dict, 'home.map.couldNotLoadMaps')}</p>
                   <button
                     onClick={() => {
                       setError(null)
                       setMapStatus('idle')
-                      // retry load
                       loadGoogleMaps()
                         .then(() => {
                           initMap()
@@ -885,12 +890,12 @@ export default function NearbyMapClient() {
                         })
                         .catch((err) => {
                           setMapStatus('error')
-                          setError(err?.message || 'Failed to load Google Maps.')
+                          setError(err?.message || t(dict, 'home.map.couldNotLoadMaps'))
                         })
                     }}
                     className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
                   >
-                    Retry
+                    {t(dict, 'home.map.retry')}
                   </button>
                 </div>
               ) : (
@@ -901,19 +906,19 @@ export default function NearbyMapClient() {
             {/* Inline messaging */}
             {dataStatus === 'error' && (
               <p className="mt-4 text-sm text-amber-700">
-                {error || 'Could not fetch cafés.'} Showing Berlin if available.
+                {error || t(dict, 'home.map.couldNotFetch')} Showing Berlin if available.
               </p>
             )}
 
             {dataStatus === 'success' && cafes.length === 0 && (
               <p className="mt-4 text-sm text-gray-600">
-                No cafés found in this area yet.
+                {t(dict, 'home.map.noCafesInArea')}
               </p>
             )}
 
             {dataStatus === 'success' && cafes.length > 0 && !isUserLocation && (
               <p className="mt-4 text-sm text-gray-600">
-                Showing cafés in Berlin. Click "Use my location" to see cafés near you.
+                {t(dict, 'home.map.showingBerlin')}
               </p>
             )}
           </div>
@@ -924,7 +929,7 @@ export default function NearbyMapClient() {
               {isUpdatingResults && (
                 <div className="mb-4 flex items-center gap-2 text-sm text-gray-600">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
-                  <span>Updating results…</span>
+                  <span>{t(dict, 'home.map.updatingResults')}</span>
                 </div>
               )}
               <div className="space-y-4">
@@ -937,14 +942,16 @@ export default function NearbyMapClient() {
                 <div>
                   <p className="font-semibold text-gray-900">{cafe.name}</p>
                   <p className="text-sm text-gray-600">
-                    {cafe.distance ? `${(cafe.distance / 1000).toFixed(2)} km away` : ''}
+                    {cafe.distance
+                      ? `${(cafe.distance / 1000).toFixed(2)} ${t(dict, 'home.map.kmAway')}`
+                      : ''}
                   </p>
                 </div>
                 <Link
-                  href={getCafeHref({ place_id: cafe.place_id, id: cafe.id })}
+                  href={getCafeHref({ place_id: cafe.place_id, id: cafe.id }, locale)}
                   className="text-sm text-primary-600 hover:text-primary-700 font-medium"
                 >
-                  View details
+                  {t(dict, 'home.map.viewDetails')}
                 </Link>
               </div>
               <div className="flex flex-wrap gap-2 text-xs text-gray-700 mt-2">
@@ -965,11 +972,11 @@ export default function NearbyMapClient() {
                 )}
                 {cafe.timeLimit ? (
                   <span className="px-2 py-1 bg-red-50 text-red-700 rounded-md">
-                    {cafe.timeLimit} min limit
+                    {cafe.timeLimit} {t(dict, 'home.map.minLimit')}
                   </span>
                 ) : (
                   <span className="px-2 py-1 bg-green-50 text-green-700 rounded-md">
-                    No time limit
+                    {t(dict, 'home.map.noLimit')}
                   </span>
                 )}
                   </div>
@@ -980,7 +987,7 @@ export default function NearbyMapClient() {
           ) : cafes.length > 0 ? (
             <div className="w-full lg:w-80 lg:flex-shrink-0">
               <div className="text-center py-8 text-sm text-gray-600">
-                No cafés match the selected filters.
+                {t(dict, 'home.map.noMatchFilters')}
               </div>
             </div>
           ) : null}

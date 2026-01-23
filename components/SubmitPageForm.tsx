@@ -4,8 +4,17 @@ import { useState, FormEvent, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import CommunityNotice from '@/components/CommunityNotice'
+import { t } from '@/lib/i18n/t'
+import type { Dictionary } from '@/lib/i18n/getDictionary'
+import type { Locale } from '@/lib/i18n/config'
+import { prefixWithLocale } from '@/lib/i18n/routing'
 
-export default function SubmitPage() {
+interface SubmitPageFormProps {
+  dict: Dictionary
+  locale: Locale
+}
+
+export default function SubmitPageForm({ dict, locale }: SubmitPageFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -15,14 +24,12 @@ export default function SubmitPage() {
   const errorRef = useRef<HTMLDivElement>(null)
   const successRef = useRef<HTMLDivElement>(null)
 
-  // Focus error message when error occurs for screen readers
   useEffect(() => {
     if (error && errorRef.current) {
       errorRef.current.focus()
     }
   }, [error])
 
-  // Focus success message when success occurs for screen readers
   useEffect(() => {
     if (success && successRef.current) {
       successRef.current.focus()
@@ -50,100 +57,66 @@ export default function SubmitPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    
-    // Prevent double submissions
-    if (isSubmittingRef.current || loading) {
-      return
-    }
-
-    // Reset error states
+    if (isSubmittingRef.current || loading) return
     setError(null)
     setIsNetworkError(false)
     setSuccess(false)
-    
-    // Basic validation with specific messages
+
     if (!formData.name.trim()) {
-      setError('Please enter the café name to continue.')
-      // Focus the name field
+      setError(t(dict, 'submit.errorName'))
       setTimeout(() => document.getElementById('name')?.focus(), 100)
       return
     }
-
     if (!formData.city.trim()) {
-      setError('Please enter the city where this café is located.')
-      // Focus the city field
+      setError(t(dict, 'submit.errorCity'))
       setTimeout(() => document.getElementById('city')?.focus(), 100)
       return
     }
-
     if (!formData.address.trim()) {
-      setError('Please enter the café address so visitors can find it.')
-      // Focus the address field
+      setError(t(dict, 'submit.errorAddress'))
       setTimeout(() => document.getElementById('address')?.focus(), 100)
       return
     }
-
-    // Validate website URL format if provided
     if (formData.website && formData.website.trim()) {
       try {
         new URL(formData.website)
       } catch {
-        setError('Please enter a valid website URL (e.g., https://example.com) or leave it blank.')
+        setError(t(dict, 'submit.errorWebsite'))
         return
       }
     }
-
-    // Validate Google Maps URL format if provided
     if (formData.google_maps_url && formData.google_maps_url.trim()) {
       try {
         new URL(formData.google_maps_url)
       } catch {
-        setError('Please enter a valid Google Maps URL or leave it blank.')
+        setError(t(dict, 'submit.errorMaps'))
         return
       }
     }
 
-    // Set submitting state
     isSubmittingRef.current = true
     setLoading(true)
 
     try {
       const response = await fetch('/api/submissions', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       })
-
-      // Handle network errors (no response received)
-      if (!response) {
-        throw new Error('NETWORK_ERROR')
-      }
-
+      if (!response) throw new Error('NETWORK_ERROR')
       let data
       try {
         data = await response.json()
-      } catch (parseError) {
+      } catch {
         throw new Error('NETWORK_ERROR')
       }
-
       if (!response.ok) {
-        // Handle specific error cases
-        if (response.status === 400) {
-          throw new Error(data.error || 'Please check your information and try again.')
-        } else if (response.status === 500) {
-          throw new Error('Our servers are having trouble right now. Please try again in a moment.')
-        } else {
-          throw new Error(data.error || 'We couldn\'t process your submission. Please try again.')
-        }
+        if (response.status === 400) throw new Error(data.error || t(dict, 'submit.errorCheckInfo'))
+        if (response.status === 500) throw new Error(t(dict, 'submit.errorServers'))
+        throw new Error(data.error || t(dict, 'submit.errorProcess'))
       }
-
-      // Success!
       setSuccess(true)
       setIsNetworkError(false)
-      
-      // Reset form
       setFormData({
         name: '',
         city: '',
@@ -157,21 +130,14 @@ export default function SubmitPage() {
         noise_notes: '',
         time_limit_notes: '',
       })
-
-      // Redirect after 3 seconds
-      setTimeout(() => {
-        router.push('/')
-      }, 3000)
+      setTimeout(() => router.push(prefixWithLocale('/', locale)), 3000)
     } catch (err: any) {
-      console.error('Error submitting form:', err)
-      
-      // Handle network errors specifically
-      if (err.message === 'NETWORK_ERROR' || err.name === 'TypeError' || err.message.includes('fetch')) {
+      if (err.message === 'NETWORK_ERROR' || err.name === 'TypeError' || err.message?.includes('fetch')) {
         setIsNetworkError(true)
-        setError('Unable to connect to our servers. Please check your internet connection and try again.')
+        setError(t(dict, 'submit.errorConnect'))
       } else {
         setIsNetworkError(false)
-        setError(err.message || 'We couldn\'t submit your suggestion. Please check your information and try again.')
+        setError(err.message || t(dict, 'submit.errorSubmit'))
       }
     } finally {
       setLoading(false)
@@ -185,31 +151,30 @@ export default function SubmitPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <nav aria-label="Breadcrumb" className="mb-3 sm:mb-4">
             <Link
-              href="/"
+              href={prefixWithLocale('/', locale)}
               className="inline-block text-primary-600 hover:text-primary-700 font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded px-2 py-1.5 -ml-2 text-sm sm:text-base min-h-[44px] min-w-[44px] flex items-center"
             >
-              <span aria-hidden="true">←</span> <span className="ml-1">Back to Directory</span>
+              <span aria-hidden="true">←</span> <span className="ml-1">{t(dict, 'submit.backToDirectory')}</span>
             </Link>
           </nav>
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
-            Suggest a Café
+            {t(dict, 'submit.suggestCafe')}
           </h1>
           <p className="mt-3 sm:mt-4 text-base sm:text-lg lg:text-xl text-gray-700 font-medium leading-relaxed">
-            Help remote workers discover great laptop-friendly spaces by sharing your favorite café.
+            {t(dict, 'submit.helpRemoteWorkers')}
           </p>
           <p className="mt-2 sm:mt-3 text-sm sm:text-base text-gray-600 leading-relaxed">
-            Your suggestion will help others find the perfect workspace in your city.
+            {t(dict, 'submit.suggestionHelpsOthers')}
           </p>
         </div>
       </header>
 
-      {/* Community Notice */}
-      <CommunityNotice />
+      <CommunityNotice dict={dict} />
 
       <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 lg:p-8">
           {success && (
-            <div 
+            <div
               ref={successRef}
               role="alert"
               aria-live="polite"
@@ -225,15 +190,11 @@ export default function SubmitPage() {
                 </div>
                 <div className="ml-3 flex-1">
                   <h3 className="text-sm sm:text-base font-semibold text-green-800 mb-2 leading-snug">
-                    Thank you for your submission!
+                    {t(dict, 'submit.thankYou')}
                   </h3>
                   <div className="text-sm text-green-700 space-y-2 leading-relaxed">
-                    <p>
-                      We've received your café suggestion and our team will review it within 24-48 hours.
-                    </p>
-                    <p>
-                      Once approved, your café will appear in our directory and help others find great laptop-friendly workspaces. We'll redirect you to the homepage in a moment.
-                    </p>
+                    <p>{t(dict, 'submit.receivedReview')}</p>
+                    <p>{t(dict, 'submit.approvedRedirect')}</p>
                   </div>
                 </div>
               </div>
@@ -241,7 +202,7 @@ export default function SubmitPage() {
           )}
 
           {error && (
-            <div 
+            <div
               ref={errorRef}
               id="form-error"
               role="alert"
@@ -258,24 +219,24 @@ export default function SubmitPage() {
                 </div>
                 <div className="ml-3 flex-1">
                   <h3 className="text-sm sm:text-base font-semibold text-red-800 mb-2 leading-snug">
-                    {isNetworkError ? 'Connection Problem' : 'Unable to Submit'}
+                    {isNetworkError ? t(dict, 'submit.connectionProblem') : t(dict, 'submit.unableToSubmit')}
                   </h3>
                   <p id="error-message" className="text-sm text-red-700 mb-3 leading-relaxed">
                     {error}
                   </p>
                   {isNetworkError ? (
                     <div className="text-sm text-red-600 space-y-2 leading-relaxed">
-                      <p className="font-medium">What you can do:</p>
+                      <p className="font-medium">{t(dict, 'submit.whatYouCanDo')}</p>
                       <ul className="list-disc list-inside space-y-1.5 ml-2">
-                        <li>Check your internet connection</li>
-                        <li>Make sure you're online</li>
-                        <li>Try again in a few moments</li>
-                        <li>If the problem continues, refresh the page and resubmit</li>
+                        <li>{t(dict, 'submit.checkConnection')}</li>
+                        <li>{t(dict, 'submit.makeSureOnline')}</li>
+                        <li>{t(dict, 'submit.tryAgain')}</li>
+                        <li>{t(dict, 'submit.refreshResubmit')}</li>
                       </ul>
                     </div>
                   ) : (
                     <p className="text-sm text-red-600 leading-relaxed">
-                      Please check your information above and try again. Your data is safe - you won't lose what you've entered.
+                      {t(dict, 'submit.errorCheckInfo')}
                     </p>
                   )}
                 </div>
@@ -286,7 +247,7 @@ export default function SubmitPage() {
           <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6" noValidate>
             <div>
               <label htmlFor="name" className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
-                Café Name <span className="text-red-500" aria-label="required">*</span>
+                {t(dict, 'submit.nameLabel')} <span className="text-red-500" aria-label="required">*</span>
               </label>
               <input
                 type="text"
@@ -296,21 +257,20 @@ export default function SubmitPage() {
                 onChange={handleChange}
                 required
                 aria-required="true"
-                aria-invalid={error && (error.includes('café name') || error.includes('name')) ? 'true' : 'false'}
+                aria-invalid={!!(error && formData.name === '')}
                 aria-describedby="name-hint"
-                aria-errormessage={error && (error.includes('café name') || error.includes('name')) ? 'name-error' : undefined}
-                className={`w-full px-4 py-3 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 focus:border-primary-500 ${loading ? 'bg-gray-50 cursor-not-allowed' : ''} ${error && (error.includes('café name') || error.includes('name')) ? 'border-red-300' : ''}`}
-                placeholder="e.g., Coffee & Code"
+                className={`w-full px-4 py-3 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 focus:border-primary-500 ${loading ? 'bg-gray-50 cursor-not-allowed' : ''} ${error && !formData.name.trim() ? 'border-red-300' : ''}`}
+                placeholder={t(dict, 'submit.namePlaceholder')}
                 disabled={loading}
               />
               <p id="name-hint" className="mt-1.5 text-sm text-gray-500 leading-relaxed">
-                Enter the exact name as it appears on the café's signage or website.
+                Enter the exact name as it appears on the café&apos;s signage or website.
               </p>
             </div>
 
             <div>
               <label htmlFor="city" className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
-                City <span className="text-red-500" aria-label="required">*</span>
+                {t(dict, 'submit.cityLabel')} <span className="text-red-500" aria-label="required">*</span>
               </label>
               <input
                 type="text"
@@ -320,21 +280,20 @@ export default function SubmitPage() {
                 onChange={handleChange}
                 required
                 aria-required="true"
-                aria-invalid={error && error.includes('city') ? 'true' : 'false'}
+                aria-invalid={!!(error && !formData.city.trim())}
                 aria-describedby="city-hint"
-                aria-errormessage={error && error.includes('city') ? 'city-error' : undefined}
-                className={`w-full px-4 py-3 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 focus:border-primary-500 ${loading ? 'bg-gray-50 cursor-not-allowed' : ''} ${error && error.includes('city') ? 'border-red-300' : ''}`}
-                placeholder="e.g., Berlin"
+                className={`w-full px-4 py-3 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 focus:border-primary-500 ${loading ? 'bg-gray-50 cursor-not-allowed' : ''} ${error && !formData.city.trim() ? 'border-red-300' : ''}`}
+                placeholder={t(dict, 'submit.cityPlaceholder')}
                 disabled={loading}
               />
               <p id="city-hint" className="mt-1.5 text-sm text-gray-500 leading-relaxed">
-                The city where this café is located. Use the full city name (e.g., "Berlin" not "BER").
+                The city where this café is located. Use the full city name (e.g., &quot;Berlin&quot; not &quot;BER&quot;).
               </p>
             </div>
 
             <div>
               <label htmlFor="address" className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
-                Address <span className="text-red-500" aria-label="required">*</span>
+                {t(dict, 'submit.addressLabel')} <span className="text-red-500" aria-label="required">*</span>
               </label>
               <input
                 type="text"
@@ -344,11 +303,10 @@ export default function SubmitPage() {
                 onChange={handleChange}
                 required
                 aria-required="true"
-                aria-invalid={error && error.includes('address') ? 'true' : 'false'}
+                aria-invalid={!!(error && !formData.address.trim())}
                 aria-describedby="address-hint"
-                aria-errormessage={error && error.includes('address') ? 'address-error' : undefined}
-                className={`w-full px-4 py-3 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 focus:border-primary-500 ${loading ? 'bg-gray-50 cursor-not-allowed' : ''} ${error && error.includes('address') ? 'border-red-300' : ''}`}
-                placeholder="e.g., Hauptstraße 123"
+                className={`w-full px-4 py-3 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 focus:border-primary-500 ${loading ? 'bg-gray-50 cursor-not-allowed' : ''} ${error && !formData.address.trim() ? 'border-red-300' : ''}`}
+                placeholder={t(dict, 'submit.addressPlaceholder')}
                 disabled={loading}
               />
               <p id="address-hint" className="mt-1.5 text-sm text-gray-500 leading-relaxed">
@@ -358,7 +316,7 @@ export default function SubmitPage() {
 
             <div>
               <label htmlFor="website" className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
-                Website <span className="text-gray-500 text-xs sm:text-sm font-normal">(optional)</span>
+                {t(dict, 'submit.websiteLabel')}
               </label>
               <input
                 type="url"
@@ -366,20 +324,20 @@ export default function SubmitPage() {
                 name="website"
                 value={formData.website}
                 onChange={handleChange}
-                aria-invalid={error && error.includes('website') ? 'true' : 'false'}
+                aria-invalid={!!(error && formData.website.length > 0)}
                 aria-describedby="website-hint"
-                className={`w-full px-4 py-3 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 focus:border-primary-500 ${loading ? 'bg-gray-50 cursor-not-allowed' : ''} ${error && error.includes('website') ? 'border-red-300' : ''}`}
-                placeholder="https://example.com"
+                className={`w-full px-4 py-3 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 focus:border-primary-500 ${loading ? 'bg-gray-50 cursor-not-allowed' : ''} ${error && formData.website ? 'border-red-300' : ''}`}
+                placeholder={t(dict, 'submit.websitePlaceholder')}
                 disabled={loading}
               />
               <p id="website-hint" className="mt-1.5 text-sm text-gray-500 leading-relaxed">
-                The café's official website URL. Include "https://" at the beginning.
+                The café&apos;s official website URL. Include &quot;https://&quot; at the beginning.
               </p>
             </div>
 
             <div>
               <label htmlFor="google_maps_url" className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
-                Google Maps URL <span className="text-gray-500 text-xs sm:text-sm font-normal">(optional)</span>
+                {t(dict, 'submit.mapsLabel')}
               </label>
               <input
                 type="url"
@@ -387,10 +345,10 @@ export default function SubmitPage() {
                 name="google_maps_url"
                 value={formData.google_maps_url}
                 onChange={handleChange}
-                aria-invalid={error && error.includes('Google Maps') ? 'true' : 'false'}
+                aria-invalid={!!(error && formData.google_maps_url.length > 0)}
                 aria-describedby="google_maps_url-hint"
-                className={`w-full px-4 py-3 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 focus:border-primary-500 ${loading ? 'bg-gray-50 cursor-not-allowed' : ''} ${error && error.includes('Google Maps') ? 'border-red-300' : ''}`}
-                placeholder="https://maps.google.com/..."
+                className={`w-full px-4 py-3 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 focus:border-primary-500 ${loading ? 'bg-gray-50 cursor-not-allowed' : ''} ${error && formData.google_maps_url ? 'border-red-300' : ''}`}
+                placeholder={t(dict, 'submit.mapsPlaceholder')}
                 disabled={loading}
               />
               <p id="google_maps_url-hint" className="mt-1.5 text-sm text-gray-500 leading-relaxed">
@@ -400,7 +358,7 @@ export default function SubmitPage() {
 
             <div>
               <label htmlFor="submitter_email" className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
-                Your Email <span className="text-gray-500 text-xs sm:text-sm font-normal">(optional)</span>
+                {t(dict, 'submit.emailLabel')}
               </label>
               <input
                 type="email"
@@ -410,11 +368,11 @@ export default function SubmitPage() {
                 onChange={handleChange}
                 aria-describedby="submitter_email-hint"
                 className={`w-full px-4 py-3 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 focus:border-primary-500 ${loading ? 'bg-gray-50 cursor-not-allowed' : ''}`}
-                placeholder="your@email.com"
+                placeholder={t(dict, 'submit.emailPlaceholder')}
                 disabled={loading}
               />
               <p id="submitter_email-hint" className="mt-1.5 text-sm text-gray-500 leading-relaxed">
-                We'll only use this to notify you if your submission is approved. Your email won't be shared publicly.
+                We&apos;ll only use this to notify you if your submission is approved. Your email won&apos;t be shared publicly.
               </p>
             </div>
 
@@ -422,11 +380,10 @@ export default function SubmitPage() {
               <h2 className="text-base sm:text-lg font-medium text-gray-900 mb-4 sm:mb-5">
                 Laptop Friendliness Details <span className="text-gray-500 text-xs sm:text-sm font-normal">(optional)</span>
               </h2>
-              
               <div className="space-y-5 sm:space-y-6">
                 <div>
                   <label htmlFor="wifi_notes" className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
-                    WiFi Notes
+                    {t(dict, 'submit.wifiNotesLabel')}
                   </label>
                   <textarea
                     id="wifi_notes"
@@ -443,10 +400,9 @@ export default function SubmitPage() {
                     Describe the WiFi quality, speed, and whether a password is needed.
                   </p>
                 </div>
-
                 <div>
                   <label htmlFor="power_notes" className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
-                    Power Outlets (Steckdosen)
+                    {t(dict, 'submit.powerNotesLabel')}
                   </label>
                   <textarea
                     id="power_notes"
@@ -460,13 +416,12 @@ export default function SubmitPage() {
                     disabled={loading}
                   />
                   <p id="power_notes-hint" className="mt-1.5 text-sm text-gray-500 leading-relaxed">
-                    Note how many outlets are available and where they're located (tables, walls, etc.).
+                    Note how many outlets are available and where they&apos;re located (tables, walls, etc.).
                   </p>
                 </div>
-
                 <div>
                   <label htmlFor="noise_notes" className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
-                    Noise Level
+                    {t(dict, 'submit.noiseNotesLabel')}
                   </label>
                   <textarea
                     id="noise_notes"
@@ -483,10 +438,9 @@ export default function SubmitPage() {
                     Describe the typical noise level - is it quiet for focused work, moderate with background conversation, or louder?
                   </p>
                 </div>
-
                 <div>
                   <label htmlFor="time_limit_notes" className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
-                    Time Limits
+                    {t(dict, 'submit.timeLimitNotesLabel')}
                   </label>
                   <textarea
                     id="time_limit_notes"
@@ -508,7 +462,7 @@ export default function SubmitPage() {
 
             <div>
               <label htmlFor="notes" className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
-                Additional Notes <span className="text-gray-500 text-xs sm:text-sm font-normal">(optional)</span>
+                {t(dict, 'submit.notesLabel')}
               </label>
               <textarea
                 id="notes"
@@ -518,7 +472,7 @@ export default function SubmitPage() {
                 rows={5}
                 aria-describedby="notes-hint"
                 className={`w-full px-4 py-3 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 focus:border-primary-500 ${loading ? 'bg-gray-50 cursor-not-allowed' : ''}`}
-                placeholder="Any other information about this café..."
+                placeholder={t(dict, 'submit.notesPlaceholder')}
                 disabled={loading}
               />
               <p id="notes-hint" className="mt-1.5 text-sm text-gray-500 leading-relaxed">
@@ -540,23 +494,23 @@ export default function SubmitPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span className="text-base">Submitting your suggestion...</span>
+                    <span className="text-base">{t(dict, 'submit.submitSubmitting')}</span>
                   </span>
                 ) : success ? (
                   <span className="flex items-center justify-center">
                     <svg className="h-5 w-5 text-white mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="text-base">Submitted Successfully!</span>
+                    <span className="text-base">{t(dict, 'submit.submitSuccess')}</span>
                   </span>
                 ) : (
-                  <span className="text-base">Submit Café Suggestion</span>
+                  <span className="text-base">{t(dict, 'submit.submitButton')}</span>
                 )}
               </button>
             </div>
 
             <p className="text-sm text-gray-500 text-center mt-4 sm:mt-5 leading-relaxed px-2">
-              All submissions are reviewed by our team before being added to the directory to ensure quality and accuracy.
+              {t(dict, 'submit.reviewNote')}
             </p>
           </form>
         </div>

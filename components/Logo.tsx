@@ -3,11 +3,17 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
+import { getLocaleFromPathname } from '@/lib/i18n/routing'
+import { withLocale } from '@/lib/i18n/path'
 
 export default function Logo() {
   const [mounted, setMounted] = useState(false)
   const [imageError, setImageError] = useState(false)
   const [loadState, setLoadState] = useState<'idle' | 'loading' | 'loaded' | 'error'>('idle')
+  const pathname = usePathname()
+  const locale = getLocaleFromPathname(pathname)
+  const homeHref = withLocale(locale, '/')
 
   useEffect(() => {
     setMounted(true)
@@ -27,7 +33,7 @@ export default function Logo() {
   }
 
   return (
-    <Link href="/" className="flex items-center" aria-label="Café Directory Home">
+    <Link href={homeHref} className="flex items-center" aria-label="Café Directory Home">
       {!imageError ? (
         <>
           {/* Try regular img tag first to test if file is valid */}
