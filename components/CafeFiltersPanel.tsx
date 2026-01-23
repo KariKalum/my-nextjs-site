@@ -26,11 +26,11 @@ export default function CafeFiltersPanel({
   }
 
   const toggleNoiseLevel = (level: string) => {
-    const currentLevels = filters.noise_level || []
+    const currentLevels = filters.ai_noise_level || []
     const newLevels = currentLevels.includes(level)
       ? currentLevels.filter(l => l !== level)
       : [...currentLevels, level]
-    updateFilter('noise_level', newLevels.length > 0 ? newLevels : undefined)
+    updateFilter('ai_noise_level', newLevels.length > 0 ? newLevels : undefined)
   }
 
   return (
@@ -77,106 +77,53 @@ export default function CafeFiltersPanel({
             </select>
           </div>
 
-          {/* WiFi Filter */}
+          {/* Work Friendly Filter */}
           <div>
             <label className="flex items-center space-x-2 cursor-pointer">
               <input
                 type="checkbox"
-                checked={filters.wifi_available || false}
-                onChange={(e) => updateFilter('wifi_available', e.target.checked || undefined)}
+                checked={filters.is_work_friendly === true}
+                onChange={(e) => updateFilter('is_work_friendly', e.target.checked ? true : undefined)}
                 className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
               />
               <span className="text-sm font-medium text-gray-700">
-                WiFi Available
+                Work Friendly
               </span>
             </label>
-            {filters.wifi_available && (
-              <div className="mt-2 ml-6">
-                <label className="block text-xs text-gray-600 mb-1">
-                  Min WiFi Rating: {filters.min_wifi_rating || 1}
-                </label>
-                <input
-                  type="range"
-                  min="1"
-                  max="5"
-                  value={filters.min_wifi_rating || 1}
-                  onChange={(e) => updateFilter('min_wifi_rating', parseInt(e.target.value))}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>1</span>
-                  <span>5</span>
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Power Outlets Filter */}
-          <div>
-            <label className="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={filters.power_outlets_available || false}
-                onChange={(e) => updateFilter('power_outlets_available', e.target.checked || undefined)}
-                className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-              />
-              <span className="text-sm font-medium text-gray-700">
-                Power Outlets
-              </span>
-            </label>
-            {filters.power_outlets_available && (
-              <div className="mt-2 ml-6">
-                <label className="block text-xs text-gray-600 mb-1">
-                  Min Outlet Rating: {filters.min_outlet_rating || 1}
-                </label>
-                <input
-                  type="range"
-                  min="1"
-                  max="5"
-                  value={filters.min_outlet_rating || 1}
-                  onChange={(e) => updateFilter('min_outlet_rating', parseInt(e.target.value))}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>1</span>
-                  <span>5</span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Noise Level Filter */}
+          {/* Work Score Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Noise Level
+              Min Work Score: {filters.min_work_score || 0}
             </label>
-            <div className="space-y-2">
-              {['quiet', 'moderate', 'loud', 'variable'].map(level => (
-                <label key={level} className="flex items-center space-x-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={filters.noise_level?.includes(level) || false}
-                    onChange={() => toggleNoiseLevel(level)}
-                    className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                  />
-                  <span className="text-sm text-gray-700 capitalize">{level}</span>
-                </label>
-              ))}
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="5"
+              value={filters.min_work_score || 0}
+              onChange={(e) => updateFilter('min_work_score', parseInt(e.target.value))}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>0</span>
+              <span>100</span>
             </div>
           </div>
 
-          {/* Overall Rating Filter */}
+          {/* Google Rating Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Min Overall Rating: {filters.min_overall_rating || 1.0}
+              Min Google Rating: {filters.min_google_rating || 1.0}
             </label>
             <input
               type="range"
               min="1"
               max="5"
               step="0.1"
-              value={filters.min_overall_rating || 1}
-              onChange={(e) => updateFilter('min_overall_rating', parseFloat(e.target.value))}
+              value={filters.min_google_rating || 1}
+              onChange={(e) => updateFilter('min_google_rating', parseFloat(e.target.value))}
               className="w-full"
             />
             <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -185,34 +132,24 @@ export default function CafeFiltersPanel({
             </div>
           </div>
 
-          {/* Time Limit Filter */}
+          {/* Noise Level Filter */}
           <div>
-            <label className="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={filters.no_time_limit || false}
-                onChange={(e) => updateFilter('no_time_limit', e.target.checked || undefined)}
-                className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-              />
-              <span className="text-sm font-medium text-gray-700">
-                No Time Limit
-              </span>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Noise Level
             </label>
-          </div>
-
-          {/* Quiet Only Filter */}
-          <div>
-            <label className="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={filters.quiet_only || false}
-                onChange={(e) => updateFilter('quiet_only', e.target.checked || undefined)}
-                className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-              />
-              <span className="text-sm font-medium text-gray-700">
-                Quiet Only
-              </span>
-            </label>
+            <div className="space-y-2">
+              {['quiet', 'moderate', 'loud'].map(level => (
+                <label key={level} className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={filters.ai_noise_level?.some(l => level.toLowerCase().includes(l.toLowerCase()) || l.toLowerCase().includes(level.toLowerCase())) || false}
+                    onChange={() => toggleNoiseLevel(level)}
+                    className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  />
+                  <span className="text-sm text-gray-700 capitalize">{level}</span>
+                </label>
+              ))}
+            </div>
           </div>
 
           {/* Clear Filters Button */}

@@ -98,86 +98,61 @@ export default function AdminSubmissionsPage() {
         cafeData.description = submission.notes
       }
 
-      // Infer laptop-friendly fields from notes
-      // WiFi
+      // Infer laptop-friendly fields from notes (using new schema)
+      // WiFi (using ai_wifi_quality)
       if (submission.wifi_notes) {
-        cafeData.wifi_available = true
-        // Try to infer rating from notes (e.g., "fast", "excellent", "5/5")
         const wifiLower = submission.wifi_notes.toLowerCase()
         if (wifiLower.includes('excellent') || wifiLower.includes('5') || wifiLower.includes('fast')) {
-          cafeData.wifi_speed_rating = 5
+          cafeData.ai_wifi_quality = 'Excellent'
         } else if (wifiLower.includes('good') || wifiLower.includes('4')) {
-          cafeData.wifi_speed_rating = 4
+          cafeData.ai_wifi_quality = 'Good'
         } else if (wifiLower.includes('ok') || wifiLower.includes('3')) {
-          cafeData.wifi_speed_rating = 3
+          cafeData.ai_wifi_quality = 'Fair'
         } else {
-          cafeData.wifi_speed_rating = 4 // Default to 4 if wifi_notes present
+          cafeData.ai_wifi_quality = 'Good' // Default
         }
-        // Check for password requirement
-        cafeData.wifi_password_required = wifiLower.includes('password') || wifiLower.includes('pass')
-      } else {
-        cafeData.wifi_available = true // Default to true
-        cafeData.wifi_speed_rating = null
       }
 
-      // Power outlets
+      // Power outlets (using ai_power_outlets)
       if (submission.power_notes) {
-        cafeData.power_outlets_available = true
         const powerLower = submission.power_notes.toLowerCase()
-        // Try to infer rating
         if (powerLower.includes('plenty') || powerLower.includes('many') || powerLower.includes('5')) {
-          cafeData.power_outlet_rating = 5
+          cafeData.ai_power_outlets = 'Plenty available'
         } else if (powerLower.includes('some') || powerLower.includes('4')) {
-          cafeData.power_outlet_rating = 4
+          cafeData.ai_power_outlets = 'Some available'
         } else if (powerLower.includes('few') || powerLower.includes('limited') || powerLower.includes('3')) {
-          cafeData.power_outlet_rating = 3
+          cafeData.ai_power_outlets = 'Limited'
         } else {
-          cafeData.power_outlet_rating = 4 // Default
+          cafeData.ai_power_outlets = 'Some available' // Default
         }
-      } else {
-        cafeData.power_outlets_available = false // Default to false
       }
 
-      // Noise level
+      // Noise level (using ai_noise_level)
       if (submission.noise_notes) {
         const noiseLower = submission.noise_notes.toLowerCase()
         if (noiseLower.includes('quiet')) {
-          cafeData.noise_level = 'quiet'
+          cafeData.ai_noise_level = 'Quiet'
         } else if (noiseLower.includes('loud') || noiseLower.includes('noisy')) {
-          cafeData.noise_level = 'loud'
+          cafeData.ai_noise_level = 'Loud'
         } else if (noiseLower.includes('variable') || noiseLower.includes('varies')) {
-          cafeData.noise_level = 'variable'
+          cafeData.ai_noise_level = 'Variable'
         } else {
-          cafeData.noise_level = 'moderate' // Default
+          cafeData.ai_noise_level = 'Moderate' // Default
         }
       } else {
-        cafeData.noise_level = 'moderate' // Default
+        cafeData.ai_noise_level = 'Moderate' // Default
       }
 
-      // Time limit
+      // Laptop policy (using ai_laptop_policy)
       if (submission.time_limit_notes) {
         const timeLower = submission.time_limit_notes.toLowerCase()
-        // Check for time limits mentioned
         if (timeLower.includes('no limit') || timeLower.includes('unlimited') || timeLower.includes('no time')) {
-          cafeData.time_limit_minutes = null
-          cafeData.laptop_policy = 'unlimited'
+          cafeData.ai_laptop_policy = 'Unlimited'
         } else {
-          // Try to extract time limit (e.g., "2h", "90min", "2 hour")
-          const hourMatch = timeLower.match(/(\d+)\s*h/i)
-          const minMatch = timeLower.match(/(\d+)\s*min/i)
-          if (hourMatch) {
-            cafeData.time_limit_minutes = parseInt(hourMatch[1]) * 60
-          } else if (minMatch) {
-            cafeData.time_limit_minutes = parseInt(minMatch[1])
-          } else {
-            // Default to 2 hours if limit mentioned but not specified
-            cafeData.time_limit_minutes = 120
-          }
-          cafeData.laptop_policy = 'restricted'
+          cafeData.ai_laptop_policy = 'Restricted'
         }
       } else {
-        cafeData.time_limit_minutes = null // Default to no limit
-        cafeData.laptop_policy = 'unlimited'
+        cafeData.ai_laptop_policy = 'Unlimited' // Default
       }
 
       // Create cafe entry

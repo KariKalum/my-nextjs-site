@@ -5,11 +5,11 @@ import type { Cafe } from '@/lib/supabase'
  * Detects if address already contains city/zip/country and only appends missing parts.
  */
 export function formatAddress(data: {
-  address?: string | null
-  city?: string | null
-  state?: string | null
-  zip_code?: string | null
-  country?: string | null
+  address: string | null
+  city: string | null
+  state: string | null
+  zip_code: string | null
+  country: string | null
 }): string {
   if (!data.address || !data.address.trim()) {
     // If no address, try to build from available parts
@@ -67,11 +67,11 @@ export function formatAddress(data: {
  * No duplicates — use only in header.
  */
 export function formatAddressLine(cafe: {
-  address: string
-  city?: string | null
-  state?: string | null
-  zip_code?: string | null
-  country?: string | null
+  address: string | null
+  city: string | null
+  state: string | null
+  zip_code: string | null
+  country: string | null
 }): string {
   return formatAddress(cafe)
 }
@@ -121,7 +121,7 @@ export function cleanDomain(url: string): string {
  * "123 Main Street, San Francisco, CA 94102" -> "123 Main Street"
  */
 export function extractStreetAddress(
-  address: string,
+  address: string | null,
   city?: string | null,
   state?: string | null,
   zip_code?: string | null,
@@ -243,6 +243,7 @@ function extractCityFromAddress(address: string | null | undefined): string | nu
  */
 export function buildCafeH1Title(cafe: {
   name: string
+  address: string | null
   city?: string | null
   address?: string | null
   is_work_friendly?: boolean | null
@@ -267,14 +268,14 @@ export function buildCafeH1Title(cafe: {
  * Uses google_maps_url if available, otherwise builds from coordinates or address.
  */
 export function getMapsUrl(cafe: {
-  google_maps_url?: string | null
-  latitude?: number | null
-  longitude?: number | null
-  name?: string
-  address?: string
-  city?: string | null
-  state?: string | null
-  zip_code?: string | null
+  google_maps_url: string | null
+  latitude: number | null
+  longitude: number | null
+  name: string
+  address: string | null
+  city: string | null
+  state: string | null
+  zip_code: string | null
 }): string {
   if (cafe.google_maps_url && cafe.google_maps_url.trim()) {
     return cafe.google_maps_url.trim()

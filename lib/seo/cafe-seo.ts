@@ -8,7 +8,7 @@ import { getAbsoluteUrl } from './metadata'
  * "Rosenthaler Str. 123, Berlin" -> "Rosenthaler Str."
  * "456 Tech Avenue, San Francisco" -> "Tech Avenue"
  */
-export function extractStreetFromAddress(address: string): string | null {
+export function extractStreetFromAddress(address: string | null): string | null {
   if (!address) return null
   
   // Remove city, state, zip, country suffixes

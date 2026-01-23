@@ -116,9 +116,9 @@ export default function CafeDetail({ cafe }: CafeDetailProps) {
               })()}
 
               {/* Noise Level Badge */}
-              {cafe.noise_level && (
+              {cafe.ai_noise_level && (
                 <div className="mb-4">
-                  {getNoiseLevelBadge(cafe.noise_level)}
+                  {getNoiseLevelBadge(cafe.ai_noise_level)}
                 </div>
               )}
             </div>
@@ -197,34 +197,14 @@ export default function CafeDetail({ cafe }: CafeDetailProps) {
             )}
 
             {/* Policies */}
-            {(cafe.time_limit_minutes || cafe.laptop_policy || cafe.reservation_required) && (
+            {cafe.ai_laptop_policy && (
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Policies</h2>
                 <dl className="space-y-3">
-                  {cafe.time_limit_minutes && cafe.time_limit_minutes > 0 && (
-                    <div>
-                      <dt className="text-sm font-medium text-gray-700">Time Limit</dt>
-                      <dd className="text-sm text-gray-600 mt-1">
-                        {cafe.time_limit_minutes} minutes
-                      </dd>
-                    </div>
-                  )}
-                  {!cafe.time_limit_minutes && (
-                    <div>
-                      <dt className="text-sm font-medium text-gray-700">Time Limit</dt>
-                      <dd className="text-sm text-gray-600 mt-1">No time limit</dd>
-                    </div>
-                  )}
-                  {cafe.laptop_policy && (
+                  {cafe.ai_laptop_policy && (
                     <div>
                       <dt className="text-sm font-medium text-gray-700">Laptop Policy</dt>
-                      <dd className="text-sm text-gray-600 mt-1 capitalize">{cafe.laptop_policy.replace(/_/g, ' ')}</dd>
-                    </div>
-                  )}
-                  {cafe.reservation_required && (
-                    <div>
-                      <dt className="text-sm font-medium text-gray-700">Reservations</dt>
-                      <dd className="text-sm text-gray-600 mt-1">Reservation required</dd>
+                      <dd className="text-sm text-gray-600 mt-1">{cafe.ai_laptop_policy}</dd>
                     </div>
                   )}
                 </dl>
@@ -238,28 +218,28 @@ export default function CafeDetail({ cafe }: CafeDetailProps) {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Info</h2>
               <dl className="space-y-3">
-                {cafe.seating_capacity > 0 && (
+                {cafe.ai_wifi_quality && (
                   <div>
                     <dt className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                      <span>🪑</span> Seating Capacity
+                      <span>📶</span> WiFi
                     </dt>
-                    <dd className="text-sm text-gray-600 mt-1 ml-6">{cafe.seating_capacity} seats</dd>
+                    <dd className="text-sm text-gray-600 mt-1 ml-6">{cafe.ai_wifi_quality}</dd>
                   </div>
                 )}
-                {cafe.seating_variety && (
+                {cafe.ai_power_outlets && (
                   <div>
                     <dt className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                      <span>🪑</span> Seating Types
+                      <span>🔌</span> Power Outlets
                     </dt>
-                    <dd className="text-sm text-gray-600 mt-1 ml-6 capitalize">{cafe.seating_variety}</dd>
+                    <dd className="text-sm text-gray-600 mt-1 ml-6">{cafe.ai_power_outlets}</dd>
                   </div>
                 )}
-                {cafe.music_type && (
+                {cafe.ai_noise_level && (
                   <div>
                     <dt className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                      <span>🎵</span> Music
+                      <span>🔊</span> Noise Level
                     </dt>
-                    <dd className="text-sm text-gray-600 mt-1 ml-6 capitalize">{cafe.music_type}</dd>
+                    <dd className="text-sm text-gray-600 mt-1 ml-6">{cafe.ai_noise_level}</dd>
                   </div>
                 )}
               </dl>
@@ -269,52 +249,14 @@ export default function CafeDetail({ cafe }: CafeDetailProps) {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Amenities</h2>
               <div className="space-y-2">
-                {cafe.parking_available && (
+                {cafe.ai_laptop_policy && (
                   <div className="flex items-center text-sm text-gray-700">
-                    <span className="mr-2">🅿️</span>
-                    Parking {cafe.parking_type && `(${cafe.parking_type})`}
+                    <span className="mr-2">💼</span>
+                    {cafe.ai_laptop_policy}
                   </div>
                 )}
-                {cafe.outdoor_seating && (
-                  <div className="flex items-center text-sm text-gray-700">
-                    <span className="mr-2">🌳</span>
-                    Outdoor Seating
-                  </div>
-                )}
-                {cafe.accessible && (
-                  <div className="flex items-center text-sm text-gray-700">
-                    <span className="mr-2">♿</span>
-                    Wheelchair Accessible
-                  </div>
-                )}
-                {cafe.pet_friendly && (
-                  <div className="flex items-center text-sm text-gray-700">
-                    <span className="mr-2">🐾</span>
-                    Pet Friendly
-                  </div>
-                )}
-                {cafe.natural_light && (
-                  <div className="flex items-center text-sm text-gray-700">
-                    <span className="mr-2">☀️</span>
-                    Natural Light
-                  </div>
-                )}
-                {cafe.comfortable_seating && (
-                  <div className="flex items-center text-sm text-gray-700">
-                    <span className="mr-2">🛋️</span>
-                    Comfortable Seating
-                  </div>
-                )}
-                {cafe.conversation_friendly && (
-                  <div className="flex items-center text-sm text-gray-700">
-                    <span className="mr-2">💬</span>
-                    Conversation Friendly
-                  </div>
-                )}
-                {!cafe.parking_available && !cafe.outdoor_seating && !cafe.accessible && 
-                 !cafe.pet_friendly && !cafe.natural_light && !cafe.comfortable_seating && 
-                 !cafe.conversation_friendly && (
-                  <p className="text-sm text-gray-500">No additional amenities listed</p>
+                {!cafe.ai_laptop_policy && (
+                  <p className="text-sm text-gray-500">No additional information listed</p>
                 )}
               </div>
             </div>

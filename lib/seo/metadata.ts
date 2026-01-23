@@ -44,12 +44,10 @@ export function truncateText(text: string, maxLength: number): string {
  */
 export function buildCafeDescription(cafe: {
   description?: string | null
-  wifi_available: boolean
-  wifi_speed_rating?: number | null
-  power_outlets_available: boolean
-  power_outlet_rating?: number | null
-  noise_level?: string | null
-  time_limit_minutes?: number | null
+  ai_wifi_quality?: string | null
+  ai_power_outlets?: string | null
+  ai_noise_level?: string | null
+  work_score?: number | null
   google_rating?: number | null
   google_ratings_total?: number | null
   city?: string | null
@@ -68,36 +66,21 @@ export function buildCafeDescription(cafe: {
   // Add key features concisely
   const features: string[] = []
   
-  if (cafe.wifi_available) {
-    if (cafe.wifi_speed_rating) {
-      features.push(`${cafe.wifi_speed_rating}/5 WiFi`)
-    } else {
-      features.push('WiFi')
-    }
+  if (cafe.ai_wifi_quality) {
+    features.push(`WiFi: ${cafe.ai_wifi_quality}`)
   }
   
-  if (cafe.power_outlets_available) {
-    if (cafe.power_outlet_rating) {
-      features.push(`${cafe.power_outlet_rating}/5 outlets`)
-    } else {
-      features.push('outlets')
-    }
+  if (cafe.ai_power_outlets) {
+    features.push(`Outlets: ${cafe.ai_power_outlets}`)
   }
   
-  if (cafe.noise_level) {
-    features.push(cafe.noise_level)
+  if (cafe.ai_noise_level) {
+    features.push(cafe.ai_noise_level)
   }
   
-  if (cafe.time_limit_minutes && cafe.time_limit_minutes > 0) {
-    const hours = Math.floor(cafe.time_limit_minutes / 60)
-    const mins = cafe.time_limit_minutes % 60
-    if (hours > 0) {
-      features.push(`${hours}h limit`)
-    } else {
-      features.push(`${mins}min limit`)
-    }
-  } else if (!cafe.time_limit_minutes) {
-    features.push('no time limit')
+  // Add work score if available
+  if (cafe.work_score != null) {
+    features.push(`Work score: ${cafe.work_score}/100`)
   }
   
   // Build description parts

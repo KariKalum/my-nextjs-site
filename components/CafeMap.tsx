@@ -1,18 +1,21 @@
 'use client'
 
 interface CafeMapProps {
-  latitude: number
-  longitude: number
+  latitude: number | null
+  longitude: number | null
   name: string
-  address: string
+  address: string | null
 }
 
 export default function CafeMap({ latitude, longitude, name, address }: CafeMapProps) {
+  if (!latitude || !longitude) return null
+  
   // Google Maps Embed API - no API key required for basic embeds
   const mapUrl = `https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}&q=${latitude},${longitude}&zoom=15`
   
   // Fallback to iframe with Google Maps search if no API key
-  const fallbackUrl = `https://www.google.com/maps?q=${encodeURIComponent(name + ', ' + address)}&output=embed`
+  const addressPart = address ? `, ${address}` : ''
+  const fallbackUrl = `https://www.google.com/maps?q=${encodeURIComponent(name + addressPart)}&output=embed`
 
   return (
     <div className="w-full h-96 relative">

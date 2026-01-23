@@ -28,21 +28,12 @@ export default function CafeForm({ cafe, mode }: CafeFormProps) {
     website: cafe?.website || '',
     latitude: cafe?.latitude?.toString() || '',
     longitude: cafe?.longitude?.toString() || '',
-    wifi_available: cafe?.wifi_available ?? true,
-    wifi_speed_rating: cafe?.wifi_speed_rating?.toString() || '',
-    wifi_password_required: cafe?.wifi_password_required ?? true,
-    wifi_password: cafe?.wifi_password || '',
-    power_outlets_available: cafe?.power_outlets_available ?? false,
-    power_outlet_rating: cafe?.power_outlet_rating?.toString() || '',
-    seating_capacity: cafe?.seating_capacity?.toString() || '0',
-    comfortable_seating: cafe?.comfortable_seating ?? false,
-    seating_variety: cafe?.seating_variety || '',
-    noise_level: cafe?.noise_level || 'moderate',
-    music_type: cafe?.music_type || '',
-    conversation_friendly: cafe?.conversation_friendly ?? true,
-    table_space_rating: cafe?.table_space_rating?.toString() || '',
-    natural_light: cafe?.natural_light ?? false,
-    lighting_rating: cafe?.lighting_rating?.toString() || '',
+    place_id: cafe?.place_id || '',
+    google_maps_url: cafe?.google_maps_url || '',
+    google_rating: cafe?.google_rating?.toString() || '',
+    google_ratings_total: cafe?.google_ratings_total?.toString() || '',
+    price_level: cafe?.price_level?.toString() || '',
+    business_status: cafe?.business_status || '',
     hours: cafe?.hours ? JSON.stringify(cafe.hours, null, 2) : JSON.stringify({
       monday: '8:00 AM - 6:00 PM',
       tuesday: '8:00 AM - 6:00 PM',
@@ -52,14 +43,14 @@ export default function CafeForm({ cafe, mode }: CafeFormProps) {
       saturday: '9:00 AM - 8:00 PM',
       sunday: '9:00 AM - 6:00 PM',
     }, null, 2),
-    time_limit_minutes: cafe?.time_limit_minutes?.toString() || '',
-    reservation_required: cafe?.reservation_required ?? false,
-    laptop_policy: cafe?.laptop_policy || 'unlimited',
-    parking_available: cafe?.parking_available ?? false,
-    parking_type: cafe?.parking_type || '',
-    accessible: cafe?.accessible ?? false,
-    pet_friendly: cafe?.pet_friendly ?? false,
-    outdoor_seating: cafe?.outdoor_seating ?? false,
+    work_score: cafe?.work_score?.toString() || '',
+    is_work_friendly: cafe?.is_work_friendly ?? null,
+    ai_score: cafe?.ai_score?.toString() || '',
+    ai_confidence: cafe?.ai_confidence?.toString() || '',
+    ai_wifi_quality: cafe?.ai_wifi_quality || '',
+    ai_power_outlets: cafe?.ai_power_outlets || '',
+    ai_noise_level: cafe?.ai_noise_level || '',
+    ai_laptop_policy: cafe?.ai_laptop_policy || '',
     is_active: cafe?.is_active ?? true,
     is_verified: cafe?.is_verified ?? false,
   })
@@ -89,12 +80,12 @@ export default function CafeForm({ cafe, mode }: CafeFormProps) {
 
       // Parse numeric fields
       const numericFields: Record<string, number | null> = {}
-      const numFields = ['latitude', 'longitude', 'wifi_speed_rating', 'power_outlet_rating', 
-                         'seating_capacity', 'table_space_rating', 'lighting_rating', 'time_limit_minutes']
+      const numFields = ['latitude', 'longitude', 'google_rating', 'google_ratings_total', 
+                         'price_level', 'work_score', 'ai_score']
       
       numFields.forEach(field => {
         const value = formData[field as keyof typeof formData]
-        numericFields[field] = (value && typeof value === 'string') ? parseFloat(value) : null
+        numericFields[field] = (value && typeof value === 'string' && value.trim()) ? parseFloat(value) : null
       })
 
       // Validate lat/lng ranges (required for now, until geocoding is added)
@@ -145,40 +136,31 @@ export default function CafeForm({ cafe, mode }: CafeFormProps) {
       const cafeData = {
         name: formData.name,
         description: formData.description || null,
-        address: formData.address,
-        city: formData.city,
+        address: formData.address || null,
+        city: formData.city || null,
         state: formData.state || null,
         zip_code: formData.zip_code || null,
-        country: formData.country,
+        country: formData.country || null,
         phone: formData.phone || null,
         email: formData.email || null,
         website: formData.website || null,
         latitude: numericFields.latitude,
         longitude: numericFields.longitude,
-        wifi_available: formData.wifi_available,
-        wifi_speed_rating: numericFields.wifi_speed_rating,
-        wifi_password_required: formData.wifi_password_required,
-        wifi_password: formData.wifi_password || null,
-        power_outlets_available: formData.power_outlets_available,
-        power_outlet_rating: numericFields.power_outlet_rating,
-        seating_capacity: numericFields.seating_capacity || 0,
-        comfortable_seating: formData.comfortable_seating,
-        seating_variety: formData.seating_variety || null,
-        noise_level: formData.noise_level || null,
-        music_type: formData.music_type || null,
-        conversation_friendly: formData.conversation_friendly,
-        table_space_rating: numericFields.table_space_rating,
-        natural_light: formData.natural_light,
-        lighting_rating: numericFields.lighting_rating,
-        hours,
-        time_limit_minutes: numericFields.time_limit_minutes,
-        reservation_required: formData.reservation_required,
-        laptop_policy: formData.laptop_policy || null,
-        parking_available: formData.parking_available,
-        parking_type: formData.parking_type || null,
-        accessible: formData.accessible,
-        pet_friendly: formData.pet_friendly,
-        outdoor_seating: formData.outdoor_seating,
+        place_id: formData.place_id || null,
+        google_maps_url: formData.google_maps_url || null,
+        google_rating: numericFields.google_rating,
+        google_ratings_total: numericFields.google_ratings_total,
+        price_level: numericFields.price_level,
+        business_status: formData.business_status || null,
+        hours: hours || null,
+        work_score: numericFields.work_score,
+        is_work_friendly: formData.is_work_friendly,
+        ai_score: numericFields.ai_score,
+        ai_confidence: formData.ai_confidence || null,
+        ai_wifi_quality: formData.ai_wifi_quality || null,
+        ai_power_outlets: formData.ai_power_outlets || null,
+        ai_noise_level: formData.ai_noise_level || null,
+        ai_laptop_policy: formData.ai_laptop_policy || null,
         is_active: formData.is_active,
         is_verified: formData.is_verified,
       }
@@ -406,250 +388,181 @@ export default function CafeForm({ cafe, mode }: CafeFormProps) {
         </div>
       </div>
 
-      {/* WiFi */}
+      {/* Google Maps & Place ID */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">WiFi</h2>
-        <div className="space-y-4">
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              name="wifi_available"
-              checked={formData.wifi_available}
-              onChange={handleChange}
-              className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-            />
-            <span className="text-sm font-medium text-gray-700">WiFi Available</span>
-          </label>
-          {formData.wifi_available && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">WiFi Speed Rating (1-5)</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="5"
-                  name="wifi_speed_rating"
-                  value={formData.wifi_speed_rating}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                />
-              </div>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  name="wifi_password_required"
-                  checked={formData.wifi_password_required}
-                  onChange={handleChange}
-                  className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                />
-                <span className="text-sm font-medium text-gray-700">Password Required</span>
-              </label>
-              {formData.wifi_password_required && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">WiFi Password</label>
-                  <input
-                    type="text"
-                    name="wifi_password"
-                    value={formData.wifi_password}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                  />
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Power Outlets */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Power Outlets</h2>
-        <div className="space-y-4">
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              name="power_outlets_available"
-              checked={formData.power_outlets_available}
-              onChange={handleChange}
-              className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-            />
-            <span className="text-sm font-medium text-gray-700">Power Outlets Available</span>
-          </label>
-          {formData.power_outlets_available && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Outlet Rating (1-5)</label>
-              <input
-                type="number"
-                min="1"
-                max="5"
-                name="power_outlet_rating"
-                value={formData.power_outlet_rating}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-              />
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Seating */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Seating</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Google Maps</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Seating Capacity</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Place ID</label>
             <input
-              type="number"
-              min="0"
-              name="seating_capacity"
-              value={formData.seating_capacity}
+              type="text"
+              name="place_id"
+              value={formData.place_id}
               onChange={handleChange}
+              placeholder="ChIJ..."
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Table Space Rating (1-5)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Google Maps URL</label>
+            <input
+              type="url"
+              name="google_maps_url"
+              value={formData.google_maps_url}
+              onChange={handleChange}
+              placeholder="https://maps.google.com/..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Google Rating (1-5)</label>
             <input
               type="number"
               min="1"
               max="5"
-              name="table_space_rating"
-              value={formData.table_space_rating}
+              step="0.1"
+              name="google_rating"
+              value={formData.google_rating}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
             />
           </div>
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Seating Variety</label>
-            <input
-              type="text"
-              name="seating_variety"
-              value={formData.seating_variety}
-              onChange={handleChange}
-              placeholder="e.g., tables, couches, bar seating"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-            />
-          </div>
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              name="comfortable_seating"
-              checked={formData.comfortable_seating}
-              onChange={handleChange}
-              className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-            />
-            <span className="text-sm font-medium text-gray-700">Comfortable Seating</span>
-          </label>
-        </div>
-      </div>
-
-      {/* Environment */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Environment</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Noise Level</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Total Reviews</label>
+            <input
+              type="number"
+              min="0"
+              name="google_ratings_total"
+              value={formData.google_ratings_total}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Price Level (1-4)</label>
+            <input
+              type="number"
+              min="1"
+              max="4"
+              name="price_level"
+              value={formData.price_level}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Business Status</label>
             <select
-              name="noise_level"
-              value={formData.noise_level}
+              name="business_status"
+              value={formData.business_status}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
             >
               <option value="">Select...</option>
-              <option value="quiet">Quiet</option>
-              <option value="moderate">Moderate</option>
-              <option value="loud">Loud</option>
-              <option value="variable">Variable</option>
+              <option value="OPERATIONAL">Operational</option>
+              <option value="CLOSED_TEMPORARILY">Closed Temporarily</option>
+              <option value="CLOSED_PERMANENTLY">Closed Permanently</option>
             </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Music Type</label>
-            <input
-              type="text"
-              name="music_type"
-              value={formData.music_type}
-              onChange={handleChange}
-              placeholder="e.g., instrumental, jazz"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Lighting Rating (1-5)</label>
-            <input
-              type="number"
-              min="1"
-              max="5"
-              name="lighting_rating"
-              value={formData.lighting_rating}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                name="natural_light"
-                checked={formData.natural_light}
-                onChange={handleChange}
-                className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-              />
-              <span className="text-sm font-medium text-gray-700">Natural Light</span>
-            </label>
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                name="conversation_friendly"
-                checked={formData.conversation_friendly}
-                onChange={handleChange}
-                className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-              />
-              <span className="text-sm font-medium text-gray-700">Conversation Friendly</span>
-            </label>
           </div>
         </div>
       </div>
 
-      {/* Policies */}
+      {/* Work Score & AI Fields */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Policies</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Work Score & AI Assessment</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Time Limit (minutes)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Work Score (0-100)</label>
             <input
               type="number"
               min="0"
-              name="time_limit_minutes"
-              value={formData.time_limit_minutes}
+              max="100"
+              name="work_score"
+              value={formData.work_score}
               onChange={handleChange}
-              placeholder="Leave empty for no limit"
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
             />
-            <p className="text-xs text-gray-500 mt-1">Leave empty or 0 for unlimited</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Laptop Policy</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Is Work Friendly</label>
             <select
-              name="laptop_policy"
-              value={formData.laptop_policy}
-              onChange={handleChange}
+              name="is_work_friendly"
+              value={formData.is_work_friendly === null ? '' : formData.is_work_friendly ? 'true' : 'false'}
+              onChange={(e) => setFormData(prev => ({ ...prev, is_work_friendly: e.target.value === '' ? null : e.target.value === 'true' }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
             >
-              <option value="unlimited">Unlimited</option>
-              <option value="peak_hours_only">Peak Hours Only</option>
-              <option value="restricted">Restricted</option>
+              <option value="">Not set</option>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
             </select>
           </div>
-          <label className="flex items-center space-x-2">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">AI Score (0-100)</label>
             <input
-              type="checkbox"
-              name="reservation_required"
-              checked={formData.reservation_required}
+              type="number"
+              min="0"
+              max="100"
+              name="ai_score"
+              value={formData.ai_score}
               onChange={handleChange}
-              className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
             />
-            <span className="text-sm font-medium text-gray-700">Reservation Required</span>
-          </label>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">AI Confidence</label>
+            <input
+              type="text"
+              name="ai_confidence"
+              value={formData.ai_confidence}
+              onChange={handleChange}
+              placeholder="e.g., high, medium, low, or percentage"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">AI WiFi Quality</label>
+            <input
+              type="text"
+              name="ai_wifi_quality"
+              value={formData.ai_wifi_quality}
+              onChange={handleChange}
+              placeholder="e.g., Excellent, Good, Fair"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">AI Power Outlets</label>
+            <input
+              type="text"
+              name="ai_power_outlets"
+              value={formData.ai_power_outlets}
+              onChange={handleChange}
+              placeholder="e.g., Plenty available, Limited"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">AI Noise Level</label>
+            <input
+              type="text"
+              name="ai_noise_level"
+              value={formData.ai_noise_level}
+              onChange={handleChange}
+              placeholder="e.g., Quiet, Moderate, Loud"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">AI Laptop Policy</label>
+            <input
+              type="text"
+              name="ai_laptop_policy"
+              value={formData.ai_laptop_policy}
+              onChange={handleChange}
+              placeholder="e.g., Unlimited, Peak hours only"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
         </div>
       </div>
 
@@ -668,65 +581,6 @@ export default function CafeForm({ cafe, mode }: CafeFormProps) {
         </p>
       </div>
 
-      {/* Amenities */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Amenities</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              name="parking_available"
-              checked={formData.parking_available}
-              onChange={handleChange}
-              className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-            />
-            <span className="text-sm font-medium text-gray-700">Parking Available</span>
-          </label>
-          {formData.parking_available && (
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Parking Type</label>
-              <input
-                type="text"
-                name="parking_type"
-                value={formData.parking_type}
-                onChange={handleChange}
-                placeholder="e.g., street, lot, garage"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-              />
-            </div>
-          )}
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              name="accessible"
-              checked={formData.accessible}
-              onChange={handleChange}
-              className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-            />
-            <span className="text-sm font-medium text-gray-700">Wheelchair Accessible</span>
-          </label>
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              name="pet_friendly"
-              checked={formData.pet_friendly}
-              onChange={handleChange}
-              className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-            />
-            <span className="text-sm font-medium text-gray-700">Pet Friendly</span>
-          </label>
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              name="outdoor_seating"
-              checked={formData.outdoor_seating}
-              onChange={handleChange}
-              className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-            />
-            <span className="text-sm font-medium text-gray-700">Outdoor Seating</span>
-          </label>
-        </div>
-      </div>
 
       {/* Status */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
