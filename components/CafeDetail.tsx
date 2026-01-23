@@ -104,7 +104,7 @@ export default function CafeDetail({ cafe }: CafeDetailProps) {
                 <div className="mb-4">
                   {getRatingStars(cafe.overall_laptop_rating)}
                   <p className="text-sm text-gray-600 mt-2">
-                    {cafe.total_reviews} {cafe.total_reviews === 1 ? 'review' : 'reviews'} • {cafe.total_visits} {cafe.total_visits === 1 ? 'visit' : 'visits'}
+                    {cafe.google_ratings_total ? `${cafe.google_ratings_total.toLocaleString()} ${cafe.google_ratings_total === 1 ? 'review' : 'reviews'}` : 'No reviews yet'}
                   </p>
                 </div>
               )}

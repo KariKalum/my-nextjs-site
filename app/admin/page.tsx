@@ -172,7 +172,7 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-lg shadow p-6">
           <p className="text-sm font-medium text-gray-600">With Reviews</p>
           <p className="text-3xl font-bold text-purple-600 mt-2">
-            {cafes.filter(c => c.total_reviews > 0).length}
+            {cafes.filter(c => (c.google_ratings_total ?? 0) > 0).length}
           </p>
         </div>
       </div>
@@ -223,7 +223,7 @@ export default function AdminDashboard() {
                         <div>
                           <div className="text-sm font-medium text-gray-900">{cafe.name}</div>
                           <div className="text-sm text-gray-500">
-                            {cafe.total_reviews} reviews • {cafe.total_visits} visits
+                            {cafe.google_ratings_total ? `${cafe.google_ratings_total.toLocaleString()} Google reviews` : 'No reviews yet'}
                           </div>
                         </div>
                       </div>
@@ -351,10 +351,10 @@ function getMockCafes(): Cafe[] {
       accessible: true,
       pet_friendly: false,
       outdoor_seating: true,
-      overall_laptop_rating: 4.8,
-      coffee_quality: 'high',
-      total_reviews: 127,
-      total_visits: 450,
+      google_rating: 4.8,
+      google_ratings_total: 127,
+      price_level: 2,
+      business_status: 'OPERATIONAL',
       is_active: true,
       is_verified: true,
       created_at: new Date().toISOString(),

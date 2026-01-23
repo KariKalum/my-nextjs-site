@@ -50,8 +50,8 @@ export function buildCafeDescription(cafe: {
   power_outlet_rating?: number | null
   noise_level?: string | null
   time_limit_minutes?: number | null
-  overall_laptop_rating?: number | null
-  total_reviews?: number
+  google_rating?: number | null
+  google_ratings_total?: number | null
   city?: string | null
 }): string {
   const parts: string[] = []
@@ -108,9 +108,9 @@ export function buildCafeDescription(cafe: {
   }
   
   // Add rating if available (keep concise)
-  if (cafe.overall_laptop_rating) {
-    const rating = cafe.overall_laptop_rating.toFixed(1)
-    const reviews = cafe.total_reviews || 0
+  if (cafe.google_rating) {
+    const rating = cafe.google_rating.toFixed(1)
+    const reviews = cafe.google_ratings_total || 0
     if (reviews > 0 && reviews < 1000) {
       parts.push(`${rating}/5 (${reviews} reviews)`)
     } else if (reviews >= 1000) {
