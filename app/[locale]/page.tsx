@@ -8,6 +8,7 @@ import ValueProps from '@/components/home/ValueProps'
 import FeaturedCities from '@/components/home/FeaturedCities'
 import NearbySection from '@/components/home/NearbySection'
 import HomepageData from '@/components/home/HomepageData'
+import HomepageFAQ from '@/components/home/HomepageFAQ'
 import CommunityCTA from '@/components/home/CommunityCTA'
 import { getLocaleFromParams, type Locale } from '@/lib/i18n/config'
 import { getDictionary } from '@/lib/i18n/getDictionary'
@@ -116,6 +117,9 @@ export default function Home({
 
       {/* Recently Added & Top Rated Cafés */}
       <HomepageData params={{ locale }} dict={dict} />
+
+      {/* FAQ Section */}
+      <HomepageFAQ dict={dict} />
 
       {/* Community CTA */}
       <CommunityCTA dict={dict} locale={locale} />

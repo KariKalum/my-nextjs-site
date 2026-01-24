@@ -48,7 +48,7 @@ export default function CafeSectionClient({
     return (
       <Section spacing="md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-8">
+          <div className="mb-6">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
               {title}
             </h2>
@@ -79,7 +79,7 @@ export default function CafeSectionClient({
   return (
     <Section spacing="md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
+        <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div>
               <h2 className="text-3xl font-bold text-gray-900 mb-2">
@@ -107,7 +107,7 @@ export default function CafeSectionClient({
           ))}
         </div>
         {showViewAll && hasMore && (
-          <div className="text-center mt-8">
+          <div className="text-center mt-6">
             <Link
               href={viewAllLink}
               className="text-primary-600 hover:text-primary-700 font-medium"

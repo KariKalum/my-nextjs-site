@@ -2,16 +2,16 @@
   "home": {
     "header": {
       "suggestCafe": "Suggest a Café",
-      "browseByCity": "Browse by City →"
+      "browseByCity": "Browse by City"
     },
     "error": {
       "unauthorizedTitle": "Access Denied:",
       "unauthorizedText": "You do not have admin privileges. Only authorized administrators can access the admin dashboard."
     },
     "hero": {
-      "title": "Find the Best Laptop-Friendly Cafés in Germany ☕💻",
-      "subtitle": "Work remotely with fast Wi-Fi, power outlets, and quiet spaces.",
-      "placeholder": "Search by city or café (e.g. Berlin, Hamburg, coworking café)",
+      "title": "Find the Best Laptop-Friendly Cafés & Cafés to Work From in Germany",
+      "subtitle": "Discover work-friendly cafés and coworking cafés with fast Wi-Fi, power outlets, and quiet spaces perfect for remote work and studying.",
+      "placeholder": "Search by city or café (e.g. Berlin, café with Wi-Fi, coworking café)",
       "useLocationLabel": "Use my location",
       "locationDenied": "Location access denied.",
       "searching": "Searching…",
@@ -53,9 +53,9 @@
       "cafes": "cafés"
     },
     "nearby": {
-      "title": "Cafés near you",
-      "subtitle": "Find laptop-friendly spots within walking distance. We only show cafés from our directory.",
-      "browseAll": "Browse all cities →"
+      "title": "Laptop-friendly cafés to work from near you",
+      "subtitle": "Find cafés with Wi-Fi, power outlets, and quiet spaces within walking distance. We only show cafés from our directory.",
+      "browseAll": "Browse all cities"
     },
     "sections": {
       "topRatedTitle": "Top Rated to Work From",
@@ -64,19 +64,32 @@
       "recentlyAddedTitle": "Recently Added",
       "recentlyAddedDesc": "Discover the newest laptop-friendly cafés added to our directory",
       "recentlyAddedEmpty": "No cafés have been added yet. Be the first to add one!",
-      "viewAll": "View all →",
-      "viewAllCafes": "View all cafés →",
-      "addInAdmin": "Add cafés in admin dashboard →"
+      "viewAll": "View all",
+      "viewAllCafes": "View all cafés",
+      "addInAdmin": "Add cafés in admin dashboard"
     },
     "cta": {
       "title": "Know a great spot? Help others work better.",
       "subtitle": "Share your favorite laptop-friendly café and help the remote work community discover new workspaces.",
       "submitCafe": "Submit a café"
     },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "q1": "What makes a café laptop-friendly or a good café to work from?",
+      "a1": "A laptop-friendly café typically offers fast Wi-Fi, multiple power outlets, comfortable seating, and a quiet or moderate noise level. These cafés welcome remote workers and students who need a productive workspace.",
+      "q2": "How do I find cafés with Wi-Fi and power outlets?",
+      "a2": "Use our search to find cafés by city or browse by features. Each café listing shows Wi-Fi quality, power outlet availability, and noise levels. You can also filter cafés specifically for Wi-Fi and power outlets.",
+      "q3": "Are there quiet cafés for focused work or studying?",
+      "a3": "Yes! We categorize cafés by noise level (quiet, moderate, or variable). Look for cafés marked as 'quiet' for focused work or studying. Many cafés also have designated quiet areas.",
+      "q4": "Do these cafés have time limits?",
+      "a4": "Many cafés in our directory are time-limit friendly, meaning you can work as long as you need. We highlight cafés with no time restrictions so you can stay productive without worrying about time limits.",
+      "q5": "How do I add a new laptop-friendly café to the directory?",
+      "a5": "Click 'Submit a café' in the header or use our submission form. Share details about Wi-Fi, power outlets, noise level, and any time restrictions. Our team reviews submissions to ensure quality."
+    },
     "map": {
       "useLocation": "Use my location",
       "loading": "Loading…",
-      "browseAll": "Browse all cities →",
+      "browseAll": "Browse all cities",
       "activeFilters": "Active filters:",
       "powerOutlets": "Power outlets",
       "quiet": "Quiet",
@@ -101,7 +114,7 @@
       "showingBerlin": "Showing cafés in Berlin. Click \"Use my location\" to see cafés near you.",
       "updatingResults": "Updating results…",
       "viewDetails": "View details",
-      "viewDetailsLink": "View details →",
+      "viewDetailsLink": "View details",
       "noMatchFilters": "No cafés match the selected filters.",
       "mapsKeyMissing": "Maps API key missing",
       "mapsKeyHint": "Set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to enable the map.",
@@ -123,10 +136,10 @@
     "cities": "Cities",
     "allCities": "All Cities",
     "browseAllCities": "Browse all cities",
-    "browseAllCitiesArrow": "Browse all cities →",
+    "browseAllCitiesArrow": "Browse all cities",
     "submitCafe": "Submit a café",
     "viewDetails": "View details",
-    "viewDetailsLink": "View details →",
+    "viewDetailsLink": "View details",
     "unavailable": "Unavailable",
     "verified": "Verified",
     "workScore": "Work Score:",
@@ -154,7 +167,7 @@
     "allCities": "All Cities",
     "laptopFriendlyIn": "Laptop-friendly cafés in",
     "exploreOtherCities": "Explore Other Cities",
-    "viewAllCities": "View All Cities →"
+    "viewAllCities": "View All Cities"
   },
   "searchResults": {
     "noCafesFound": "No cafés found",
@@ -199,7 +212,7 @@
   "find": {
     "featureNotFound": "Feature not found",
     "featureNotFoundDesc": "The requested feature page does not exist.",
-    "backToHomepage": "Back to homepage →",
+      "backToHomepage": "Back to homepage",
     "backToDirectory": "← Back to Directory",
     "useMyLocation": "Use my location",
     "requestingLocation": "Requesting location...",
@@ -228,9 +241,9 @@
     "noCafesFound": "No cafés found",
     "noCafesMatchingFeature": "We couldn't find any cafés matching this feature in your area.",
     "increaseSearchRadius": "Increase search radius",
-    "browseAllCities": "Browse all cities →",
+      "browseAllCities": "Browse all cities",
     "kmAway": "km away",
-    "viewDetailsLink": "View details →",
+    "viewDetailsLink": "View details",
     "wifiTitle": "Find cafés with fast Wi-Fi",
     "wifiIntro": "Discover laptop-friendly cafés with high-speed internet connections. Perfect for video calls, streaming, and productive remote work.",
     "outletsTitle": "Find cafés with power outlets",

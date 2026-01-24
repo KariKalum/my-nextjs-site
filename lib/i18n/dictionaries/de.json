@@ -2,16 +2,16 @@
   "home": {
     "header": {
       "suggestCafe": "Café vorschlagen",
-      "browseByCity": "Nach Stadt durchsuchen →"
+      "browseByCity": "Nach Stadt durchsuchen"
     },
     "error": {
       "unauthorizedTitle": "Zugriff verweigert:",
       "unauthorizedText": "Sie haben keine Admin-Rechte. Nur autorisierte Administratoren können auf das Admin-Dashboard zugreifen."
     },
     "hero": {
-      "title": "Die besten laptopfreundlichen Cafés in Deutschland finden ☕💻",
-      "subtitle": "Remote arbeiten mit schnellem WLAN, Steckdosen und ruhigen Plätzen.",
-      "placeholder": "Nach Stadt oder Café suchen (z. B. Berlin, Hamburg, Coworking-Café)",
+      "title": "Die besten Cafés zum Arbeiten & laptopfreundlichen Cafés in Deutschland finden",
+      "subtitle": "Entdecken Sie Cafés zum Arbeiten und Coworking-Cafés mit schnellem WLAN, Steckdosen und ruhigen Plätzen – perfekt für Remote-Arbeit und Lernen.",
+      "placeholder": "Nach Stadt oder Café suchen (z. B. Berlin, Café mit WLAN, Café zum Arbeiten)",
       "useLocationLabel": "Meinen Standort nutzen",
       "locationDenied": "Standortzugriff verweigert.",
       "searching": "Suche…",
@@ -53,9 +53,9 @@
       "cafes": "Cafés"
     },
     "nearby": {
-      "title": "Cafés in Ihrer Nähe",
-      "subtitle": "Laptopfreundliche Spots in Laufnähe. Wir zeigen nur Cafés aus unserem Verzeichnis.",
-      "browseAll": "Alle Städte durchsuchen →"
+      "title": "Cafés zum Arbeiten in Ihrer Nähe",
+      "subtitle": "Finden Sie Cafés mit WLAN, Steckdosen und ruhigen Plätzen in Laufnähe. Wir zeigen nur Cafés aus unserem Verzeichnis.",
+      "browseAll": "Alle Städte durchsuchen"
     },
     "sections": {
       "topRatedTitle": "Am besten bewertet zum Arbeiten",
@@ -64,19 +64,32 @@
       "recentlyAddedTitle": "Kürzlich hinzugefügt",
       "recentlyAddedDesc": "Die neuesten laptopfreundlichen Cafés in unserem Verzeichnis",
       "recentlyAddedEmpty": "Noch keine Cafés hinzugefügt. Seien Sie der Erste!",
-      "viewAll": "Alle anzeigen →",
-      "viewAllCafes": "Alle Cafés anzeigen →",
-      "addInAdmin": "Cafés im Admin-Dashboard hinzufügen →"
+      "viewAll": "Alle anzeigen",
+      "viewAllCafes": "Alle Cafés anzeigen",
+      "addInAdmin": "Cafés im Admin-Dashboard hinzufügen"
     },
     "cta": {
       "title": "Kennen Sie ein gutes Café? Helfen Sie anderen.",
       "subtitle": "Teilen Sie Ihr liebstes laptopfreundliches Café und helfen Sie der Remote-Work-Community, neue Arbeitsplätze zu entdecken.",
       "submitCafe": "Café einreichen"
     },
+    "faq": {
+      "title": "Häufig gestellte Fragen",
+      "q1": "Was macht ein Café zum Arbeiten oder ein laptopfreundliches Café aus?",
+      "a1": "Ein Café zum Arbeiten bietet typischerweise schnelles WLAN, mehrere Steckdosen, bequeme Sitzplätze und eine ruhige oder moderate Lautstärke. Diese Cafés heißen Remote-Arbeiter und Studierende willkommen, die einen produktiven Arbeitsplatz benötigen.",
+      "q2": "Wie finde ich Cafés mit WLAN und Steckdosen?",
+      "a2": "Nutzen Sie unsere Suche, um Cafés nach Stadt zu finden oder nach Funktionen zu filtern. Jeder Café-Eintrag zeigt WLAN-Qualität, Steckdosen-Verfügbarkeit und Lautstärke. Sie können auch speziell nach Cafés mit WLAN und Steckdosen filtern.",
+      "q3": "Gibt es ruhige Cafés zum Lernen oder für konzentriertes Arbeiten?",
+      "a3": "Ja! Wir kategorisieren Cafés nach Lautstärke (ruhig, moderat oder variabel). Suchen Sie nach als 'ruhig' markierten Cafés zum Lernen oder für konzentriertes Arbeiten. Viele Cafés haben auch ausgewiesene ruhige Bereiche.",
+      "q4": "Gibt es Cafés zum Arbeiten ohne Zeitlimit?",
+      "a4": "Viele Cafés in unserem Verzeichnis sind Cafés zum Arbeiten ohne Zeitlimit, das heißt, Sie können so lange arbeiten, wie Sie möchten. Wir heben Cafés ohne Zeitbegrenzung hervor, damit Sie produktiv bleiben können, ohne sich um Zeitlimits sorgen zu müssen.",
+      "q5": "Wie füge ich ein neues Café zum Arbeiten zum Verzeichnis hinzu?",
+      "a5": "Klicken Sie auf 'Café einreichen' im Header oder nutzen Sie unser Formular. Teilen Sie Details zu WLAN, Steckdosen, Lautstärke und Zeitbegrenzungen mit. Unser Team prüft Einreichungen, um Qualität sicherzustellen."
+    },
     "map": {
       "useLocation": "Meinen Standort nutzen",
       "loading": "Laden…",
-      "browseAll": "Alle Städte durchsuchen →",
+      "browseAll": "Alle Städte durchsuchen",
       "activeFilters": "Aktive Filter:",
       "powerOutlets": "Steckdosen",
       "quiet": "Ruhig",
@@ -101,7 +114,7 @@
       "showingBerlin": "Cafés in Berlin. Klicken Sie auf „Meinen Standort nutzen“ für Cafés in Ihrer Nähe.",
       "updatingResults": "Ergebnisse werden aktualisiert…",
       "viewDetails": "Details anzeigen",
-      "viewDetailsLink": "Details anzeigen →",
+      "viewDetailsLink": "Details anzeigen",
       "noMatchFilters": "Keine Cafés entsprechen den gewählten Filtern.",
       "mapsKeyMissing": "Maps-API-Schlüssel fehlt",
       "mapsKeyHint": "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY setzen, um die Karte zu aktivieren.",
@@ -123,10 +136,10 @@
     "cities": "Städte",
     "allCities": "Alle Städte",
     "browseAllCities": "Alle Städte durchsuchen",
-    "browseAllCitiesArrow": "Alle Städte durchsuchen →",
+    "browseAllCitiesArrow": "Alle Städte durchsuchen",
     "submitCafe": "Café einreichen",
     "viewDetails": "Details anzeigen",
-    "viewDetailsLink": "Details anzeigen →",
+    "viewDetailsLink": "Details anzeigen",
     "unavailable": "Nicht verfügbar",
     "verified": "Verifiziert",
     "workScore": "Arbeits-Score:",
@@ -154,7 +167,7 @@
     "allCities": "Alle Städte",
     "laptopFriendlyIn": "Laptopfreundliche Cafés in",
     "exploreOtherCities": "Andere Städte entdecken",
-    "viewAllCities": "Alle Städte anzeigen →"
+    "viewAllCities": "Alle Städte anzeigen"
   },
   "searchResults": {
     "noCafesFound": "Keine Cafés gefunden",
@@ -199,7 +212,7 @@
   "find": {
     "featureNotFound": "Funktion nicht gefunden",
     "featureNotFoundDesc": "Die angeforderte Funktionsseite existiert nicht.",
-    "backToHomepage": "Zurück zur Startseite →",
+      "backToHomepage": "Zurück zur Startseite",
     "backToDirectory": "← Zurück zum Verzeichnis",
     "useMyLocation": "Meinen Standort nutzen",
     "requestingLocation": "Standort wird abgefragt…",
@@ -228,9 +241,9 @@
     "noCafesFound": "Keine Cafés gefunden",
     "noCafesMatchingFeature": "Wir konnten keine Cafés mit dieser Funktion in Ihrer Nähe finden.",
     "increaseSearchRadius": "Suchradius vergrößern",
-    "browseAllCities": "Alle Städte durchsuchen →",
+      "browseAllCities": "Alle Städte durchsuchen",
     "kmAway": "km entfernt",
-    "viewDetailsLink": "Details anzeigen →",
+    "viewDetailsLink": "Details anzeigen",
     "wifiTitle": "Cafés mit schnellem WLAN finden",
     "wifiIntro": "Laptopfreundliche Cafés mit Highspeed-Internet. Perfekt für Videocalls, Streaming und produktives Remote-Arbeiten.",
     "outletsTitle": "Cafés mit Steckdosen finden",

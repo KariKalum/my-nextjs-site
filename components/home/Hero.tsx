@@ -221,7 +221,7 @@ export default function Hero({ dict, onSearchChange }: HeroProps) {
   }
 
   return (
-    <section className="bg-gradient-to-br from-primary-50 via-white to-primary-50 py-20 md:py-28">
+    <section className="bg-gradient-to-br from-primary-50 via-white to-primary-50 pt-10 md:pt-16 pb-12 md:pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">

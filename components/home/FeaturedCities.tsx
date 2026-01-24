@@ -22,7 +22,7 @@ export default async function FeaturedCities({
       {topCities.length > 0 && (
         <Section spacing="md">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="mb-8">
+            <div className="mb-6">
               <h2 className="text-3xl font-bold text-gray-900 mb-2">
                 {t(dict, 'home.featured.title')}
               </h2>

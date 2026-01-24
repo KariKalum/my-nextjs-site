@@ -26,7 +26,7 @@ export default function Section({
       : spacing === 'sm'
       ? 'py-8'
       : spacing === 'md'
-      ? 'py-12 md:py-16'
+      ? 'py-10 md:py-12'
       : 'py-16 md:py-20'
 
   return (
