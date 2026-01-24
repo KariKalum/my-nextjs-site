@@ -692,7 +692,7 @@ export default function NearbyMapClient({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-0">
       {/* Controls - constrained width */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3">
@@ -824,30 +824,13 @@ export default function NearbyMapClient({
                   {t(dict, 'home.map.clear')}
                 </button>
               )}
-
-              <div className="flex items-center gap-2 ml-auto">
-                <label htmlFor="sort-select" className="text-xs text-gray-600 font-medium">
-                  {t(dict, 'home.map.sort')}
-                </label>
-                <select
-                  id="sort-select"
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as 'distance' | 'rating' | 'laptopFriendly' | 'recentlyAdded')}
-                  className="px-3 py-1 text-xs border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                >
-                  <option value="distance">{t(dict, 'home.map.nearest')}</option>
-                  <option value="rating">{t(dict, 'home.map.highestRated')}</option>
-                  <option value="laptopFriendly">{t(dict, 'home.map.mostLaptopFriendly')}</option>
-                  <option value="recentlyAdded">{t(dict, 'home.map.recentlyAdded')}</option>
-                </select>
-              </div>
             </div>
           </div>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Map container - takes more space on desktop */}
-          <div className="w-full lg:flex-1 relative">
+          <div className="w-full lg:flex-1 relative lg:h-[600px]">
             {/* Floating "Search this area" button */}
             {hasMapMoved && !autoUpdate && (
               <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
@@ -874,7 +857,7 @@ export default function NearbyMapClient({
               </button>
             </div>
 
-            <div className="w-full h-96 lg:h-[600px] rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+            <div className="w-full h-96 lg:h-full rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
               {mapStatus === 'error' ? (
                 <div className="h-full flex flex-col items-center justify-center text-center px-4">
                   <p className="text-red-800 font-semibold mb-2">{t(dict, 'home.map.failedToLoadMap')}</p>
@@ -925,14 +908,35 @@ export default function NearbyMapClient({
 
           {/* Results list - sidebar on desktop, below on mobile */}
           {filteredCafes.length > 0 ? (
-            <div className="w-full lg:w-80 lg:flex-shrink-0">
+            <div className="w-full lg:w-80 lg:flex-shrink-0 lg:h-[600px] flex flex-col">
               {isUpdatingResults && (
-                <div className="mb-4 flex items-center gap-2 text-sm text-gray-600">
+                <div className="mb-3 flex items-center gap-2 text-sm text-gray-600 shrink-0">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
                   <span>{t(dict, 'home.map.updatingResults')}</span>
                 </div>
               )}
-              <div className="space-y-4">
+              {/* Results header with Sort dropdown */}
+              <div className="flex items-center justify-between mb-3 shrink-0 pb-2 border-b border-gray-200">
+                <h3 className="text-sm font-semibold text-gray-900">Results</h3>
+                <div className="flex items-center gap-2">
+                  <label htmlFor="sort-select-results" className="text-xs text-gray-600 font-medium">
+                    {t(dict, 'home.map.sort')}
+                  </label>
+                  <select
+                    id="sort-select-results"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as 'distance' | 'rating' | 'laptopFriendly' | 'recentlyAdded')}
+                    className="px-2 py-1 text-xs border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  >
+                    <option value="distance">{t(dict, 'home.map.nearest')}</option>
+                    <option value="rating">{t(dict, 'home.map.highestRated')}</option>
+                    <option value="laptopFriendly">{t(dict, 'home.map.mostLaptopFriendly')}</option>
+                    <option value="recentlyAdded">{t(dict, 'home.map.recentlyAdded')}</option>
+                  </select>
+                </div>
+              </div>
+              {/* Scrollable results list */}
+              <div className="flex-1 overflow-y-auto space-y-4 pr-2 -mr-2">
                 {filteredCafes.slice(0, 6).map((cafe) => (
                   <div
                     key={cafe.id}
@@ -985,9 +989,14 @@ export default function NearbyMapClient({
               </div>
             </div>
           ) : cafes.length > 0 ? (
-            <div className="w-full lg:w-80 lg:flex-shrink-0">
-              <div className="text-center py-8 text-sm text-gray-600">
-                {t(dict, 'home.map.noMatchFilters')}
+            <div className="w-full lg:w-80 lg:flex-shrink-0 lg:h-[600px] flex flex-col">
+              <div className="flex items-center justify-between mb-3 shrink-0 pb-2 border-b border-gray-200">
+                <h3 className="text-sm font-semibold text-gray-900">Results</h3>
+              </div>
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center py-8 text-sm text-gray-600">
+                  {t(dict, 'home.map.noMatchFilters')}
+                </div>
               </div>
             </div>
           ) : null}

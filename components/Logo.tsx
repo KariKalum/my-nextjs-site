@@ -38,7 +38,7 @@ export default function Logo() {
         <>
           {/* Try regular img tag first to test if file is valid */}
           <img
-            src="/logo.svg"
+            src="/logo2.svg"
             alt="Café Directory"
             className="h-14 md:h-12 w-auto object-contain"
             width={192}
