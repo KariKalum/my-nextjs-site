@@ -5,15 +5,15 @@ import { supabaseService } from '@/lib/supabase-service'
 export const dynamic = 'force-dynamic'
 
 /**
- * API Route using SERVICE_ROLE_KEY
+ * API Route using SUPABASE_SERVICE_ROLE_KEY
  * 
  * This route demonstrates server-only operations that bypass RLS.
  * 
  * ⚠️ IMPORTANT SECURITY NOTES:
  * 1. This route runs ONLY on the server - never exposed to the browser
- * 2. Uses SERVICE_ROLE_KEY which bypasses all RLS policies
+ * 2. Uses SUPABASE_SERVICE_ROLE_KEY which bypasses all RLS policies
  * 3. Should be protected by additional authentication (e.g., admin check)
- * 4. Never expose the SERVICE_ROLE_KEY in client-side code
+ * 4. Never expose the SUPABASE_SERVICE_ROLE_KEY in client-side code
  */
 
 /**
@@ -22,7 +22,7 @@ export const dynamic = 'force-dynamic'
  */
 export async function GET() {
   try {
-    // ⚠️ This operation bypasses RLS because we're using SERVICE_ROLE_KEY
+    // ⚠️ This operation bypasses RLS because we're using SUPABASE_SERVICE_ROLE_KEY
     // In production, add admin authentication check here
     // Example: const user = await getAuthenticatedUser()
     //          if (!await isAdmin(user.id)) return unauthorized response

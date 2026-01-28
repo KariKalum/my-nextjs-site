@@ -1,13 +1,13 @@
 /**
- * Server-only Supabase client using SERVICE_ROLE_KEY
+ * Server-only Supabase client using SUPABASE_SERVICE_ROLE_KEY
  * 
- * SECURITY WARNING: This client uses the SERVICE_ROLE_KEY which has ADMIN privileges.
+ * SECURITY WARNING: This client uses the SUPABASE_SERVICE_ROLE_KEY which has ADMIN privileges.
  * 
  * DO NOT:
  * - Import this in client components ('use client')
  * - Expose this key to the browser
  * - Use this in any client-side code
- * - Commit the SERVICE_ROLE_KEY to git
+ * - Commit the SUPABASE_SERVICE_ROLE_KEY to git
  * 
  * ONLY USE IN:
  * - API routes (app/api routes)
@@ -15,7 +15,7 @@
  * - Server Actions
  * - Middleware (with caution)
  * 
- * The SERVICE_ROLE_KEY bypasses ALL Row Level Security (RLS) policies
+ * The SUPABASE_SERVICE_ROLE_KEY bypasses ALL Row Level Security (RLS) policies
  * and has full database access. Treat it like a database password.
  */
 
@@ -23,7 +23,7 @@ import { createClient } from '@supabase/supabase-js'
 
 /**
  * Get Supabase service role configuration
- * @throws {Error} If SERVICE_ROLE_KEY is missing
+ * @throws {Error} If SUPABASE_SERVICE_ROLE_KEY is missing
  */
 function getServiceRoleConfig(): { url: string; serviceRoleKey: string } {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -61,7 +61,7 @@ function getServiceRoleConfig(): { url: string; serviceRoleKey: string } {
 }
 
 /**
- * Supabase client with SERVICE_ROLE_KEY (server-only)
+ * Supabase client with SUPABASE_SERVICE_ROLE_KEY (server-only)
  * 
  * This client has ADMIN privileges and bypasses all RLS policies.
  * Use only in API routes and server components.
@@ -104,7 +104,7 @@ function createSupabaseServiceInstance() {
 }
 
 // Export a getter function instead of creating instance at module load
-// This allows the build to succeed even if SERVICE_ROLE_KEY is not set
+// This allows the build to succeed even if SUPABASE_SERVICE_ROLE_KEY is not set
 export function getSupabaseService() {
   return createSupabaseServiceInstance()
 }
