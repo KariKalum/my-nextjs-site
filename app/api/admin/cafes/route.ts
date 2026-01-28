@@ -31,19 +31,37 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Step 2: Check if user is admin using is_current_user_admin() function
-    const { data: adminCheck, error: adminError } = await supabase
-      .rpc('is_current_user_admin')
-
-    if (adminError) {
-      console.error('Error checking admin status:', adminError)
-      return NextResponse.json(
-        { error: 'Failed to verify admin status.' },
-        { status: 500 }
-      )
+    // Step 2: Check if user is admin
+    // Option 1: Try checking public.profiles table for role='admin' (if table exists)
+    // Option 2: Use RPC function is_current_user_admin() (easier, already implemented)
+    let isAdmin = false
+    
+    // Try profiles table first (if it exists)
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+    
+    if (!profileError && profileData && profileData.role === 'admin') {
+      isAdmin = true
+    } else {
+      // Fallback to RPC function (checks admin_users table)
+      const { data: adminCheck, error: adminError } = await supabase
+        .rpc('is_current_user_admin')
+      
+      if (adminError) {
+        console.error('Error checking admin status:', adminError)
+        return NextResponse.json(
+          { error: 'Failed to verify admin status.' },
+          { status: 500 }
+        )
+      }
+      
+      isAdmin = adminCheck === true
     }
 
-    if (!adminCheck) {
+    if (!isAdmin) {
       return NextResponse.json(
         { error: 'Access denied. Admin privileges required to create cafés.' },
         { status: 403 }
