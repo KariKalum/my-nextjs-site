@@ -77,11 +77,14 @@ function LoginForm() {
 
     try {
       const supabase = createClient()
-      const redirectTo = `${window.location.origin}/admin`
+      // Use production-safe callback URL
+      const callbackUrl = process.env.NEXT_PUBLIC_SITE_URL
+        ? `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
+        : 'https://workfrom.cafe/auth/callback'
       const { error: magicLinkError } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: redirectTo,
+          emailRedirectTo: callbackUrl,
         },
       })
 
