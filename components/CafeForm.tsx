@@ -203,6 +203,7 @@ export default function CafeForm({ cafe, mode }: CafeFormProps) {
       )
 
       if (mode === 'edit' && cafe) {
+        // Edit mode: keep existing direct Supabase update (works with RLS)
         const { data: updateData, error } = await supabase
           .from('cafes')
           .update(safeCafeData)
@@ -218,30 +219,34 @@ export default function CafeForm({ cafe, mode }: CafeFormProps) {
         setSuccess(true)
         setTimeout(() => router.push('/admin'), 1500)
       } else {
-        const { data, error } = await supabase
-          .from('cafes')
-          .insert([safeCafeData])
-          .select()
-          .single()
+        // Create mode: use API route with admin check
+        const response = await fetch('/api/admin/cafes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(safeCafeData),
+        })
 
-        if (error) {
-          if (process.env.NEXT_PUBLIC_DEBUG_LOGS === 'true') {
-            console.error('Supabase insert error:', error)
-          }
-          // Provide more helpful error messages
-          if (error.code === 'PGRST116') {
-            throw new Error('The cafes table does not exist. Please run the database migrations in your Supabase project.')
-          } else if (error.code === '23505') {
+        const result = await response.json()
+
+        if (!response.ok) {
+          // Handle API route errors
+          if (response.status === 401) {
+            throw new Error('Authentication required. Please log in.')
+          } else if (response.status === 403) {
+            throw new Error('Access denied. Admin privileges required to create cafés.')
+          } else if (response.status === 409) {
             throw new Error('A café with this information already exists.')
-          } else if (error.message?.includes('JWT')) {
-            throw new Error('Invalid Supabase credentials. Please check your .env.local file.')
-          } else if (error.message?.includes('fetch')) {
-            throw new Error('Cannot connect to Supabase. Please check your internet connection and Supabase URL.')
+          } else if (response.status === 400) {
+            throw new Error(result.error || 'Invalid request data.')
+          } else if (response.status === 500) {
+            throw new Error(result.error || 'Server error. Please try again later.')
           }
-          throw new Error(`Failed to create café: ${error.message || 'Database error'}`)
+          throw new Error(result.error || `Failed to create café: ${response.statusText}`)
         }
-        
-        if (!data) {
+
+        if (!result.cafe) {
           throw new Error('Café was created but no data was returned.')
         }
         
