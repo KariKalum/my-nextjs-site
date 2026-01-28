@@ -23,10 +23,16 @@ export async function middleware(request: NextRequest) {
       // Valid locale in path, continue to next middleware logic
     } else {
       // No locale in path - redirect to default locale
-      const newPath = `/${defaultLocale}${pathname === '/' ? '' : pathname}`
+      // Normalize path to avoid redirect chains caused by trailing slashes
+      let normalizedPath = pathname
+      if (normalizedPath !== '/' && normalizedPath.endsWith('/')) {
+        normalizedPath = normalizedPath.slice(0, -1)
+      }
+
+      const newPath = `/${defaultLocale}${normalizedPath === '/' ? '' : normalizedPath}`
       const url = request.nextUrl.clone()
       url.pathname = newPath
-      return NextResponse.redirect(url)
+      return NextResponse.redirect(url, 308)
     }
   }
 

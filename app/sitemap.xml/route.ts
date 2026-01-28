@@ -101,6 +101,27 @@ export async function GET() {
     })
   })
   
+  // Add Berlin district pages for each locale
+  const berlinDistricts = [
+    'mitte',
+    'charlottenburg',
+    'prenzlauer-berg',
+    'neukoelln',
+    'kreuzberg',
+    'friedrichshain',
+    'hbf',
+  ]
+  
+  berlinDistricts.forEach((district) => {
+    locales.forEach((locale) => {
+      urls.push({
+        loc: `${baseUrl}/${locale}/cities/berlin/${district}`,
+        changefreq: 'weekly',
+        priority: '0.75', // Slightly lower than main city page but still high
+      })
+    })
+  })
+  
   // Add cafe detail pages for each locale
   cafes.forEach((cafe) => {
     locales.forEach((locale) => {
