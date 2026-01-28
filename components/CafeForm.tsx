@@ -142,7 +142,6 @@ export default function CafeForm({ cafe, mode }: CafeFormProps) {
         zip_code: formData.zip_code || null,
         country: formData.country || null,
         phone: formData.phone || null,
-        email: formData.email || null,
         website: formData.website || null,
         latitude: numericFields.latitude,
         longitude: numericFields.longitude,
@@ -165,10 +164,48 @@ export default function CafeForm({ cafe, mode }: CafeFormProps) {
         is_verified: formData.is_verified,
       }
 
+      // Safety helper: strip any unknown keys before sending to Supabase
+      const allowedKeys: (keyof typeof cafeData)[] = [
+        'name',
+        'description',
+        'address',
+        'city',
+        'state',
+        'zip_code',
+        'country',
+        'phone',
+        'website',
+        'latitude',
+        'longitude',
+        'place_id',
+        'google_maps_url',
+        'google_rating',
+        'google_ratings_total',
+        'price_level',
+        'business_status',
+        'hours',
+        'work_score',
+        'is_work_friendly',
+        'ai_score',
+        'ai_confidence',
+        'ai_wifi_quality',
+        'ai_power_outlets',
+        'ai_noise_level',
+        'ai_laptop_policy',
+        'is_active',
+        'is_verified',
+      ]
+
+      const safeCafeData = Object.fromEntries(
+        Object.entries(cafeData).filter(([key]) =>
+          allowedKeys.includes(key as keyof typeof cafeData)
+        )
+      )
+
       if (mode === 'edit' && cafe) {
         const { data: updateData, error } = await supabase
           .from('cafes')
-          .update(cafeData)
+          .update(safeCafeData)
           .eq('id', cafe.id)
           .select()
 
@@ -183,7 +220,7 @@ export default function CafeForm({ cafe, mode }: CafeFormProps) {
       } else {
         const { data, error } = await supabase
           .from('cafes')
-          .insert([cafeData])
+          .insert([safeCafeData])
           .select()
           .single()
 
