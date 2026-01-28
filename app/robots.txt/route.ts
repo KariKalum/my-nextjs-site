@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server'
 
 export async function GET() {
   // Get base URL from environment variable or infer from deployment
-  // In production, set NEXT_PUBLIC_SITE_URL in your .env
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+  // Prefer explicit production domain, fallback to NEXT_PUBLIC_SITE_URL, then hardcoded production URL
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    'https://workfrom.cafe'
   const sitemapUrl = `${baseUrl}/sitemap.xml`
   
   // Generate robots.txt
