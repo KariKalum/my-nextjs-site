@@ -45,11 +45,24 @@ export async function GET() {
       })
     }
 
-    // Get base URL from environment variable or infer from deployment
+    // Get base URL from environment variable.
     // In production, set NEXT_PUBLIC_SITE_URL in your .env
-    const baseUrl =
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL
+
+    // If base URL is missing or clearly invalid for production, return 503 with minimal sitemap.
+    if (
+      !baseUrl ||
+      baseUrl.includes('vercel.app') ||
+      baseUrl.includes('localhost')
+    ) {
+      console.error('Invalid or missing NEXT_PUBLIC_SITE_URL for sitemap generation:', baseUrl)
+      const minimalSitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>`
+      return new NextResponse(minimalSitemap, {
+        status: 503,
+        headers: xmlHeaders,
+      })
+    }
 
     const urls: SitemapUrl[] = []
 
