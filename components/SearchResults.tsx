@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { prefixWithLocale } from '@/lib/i18n/routing'
 import { type Locale } from '@/lib/i18n/config'
-import { t } from '@/lib/i18n/t'
+import { t, tmpl } from '@/lib/i18n/t'
 import type { Dictionary } from '@/lib/i18n/getDictionary'
 
 interface SearchResultsProps {
@@ -13,9 +13,12 @@ interface SearchResultsProps {
 }
 
 export default function SearchResults({ cafes, cityName, children, locale, dict }: SearchResultsProps) {
-  if (cafes.length === 0) {
+  // Runtime guard: ensure cafes is always an array
+  const safeCafes = Array.isArray(cafes) ? cafes : []
+  
+  if (safeCafes.length === 0) {
     const emptyDesc = cityName
-      ? t(dict, 'searchResults.noCafesFoundInCity').replace('{city}', cityName)
+      ? tmpl(t(dict, 'searchResults.noCafesFoundInCity'), { city: cityName })
       : t(dict, 'searchResults.noCafesFoundTry')
     return (
       <section>

@@ -166,13 +166,23 @@
     "home": "← Startseite",
     "allCities": "Alle Städte",
     "laptopFriendlyIn": "Laptopfreundliche Cafés in",
+    "berlinH1": "Cafés zum Arbeiten in Berlin (mit WLAN & Steckdosen)",
+    "berlinDistricts": "Berliner Bezirke",
     "exploreOtherCities": "Andere Städte entdecken",
-    "viewAllCities": "Alle Städte anzeigen"
+    "viewAllCities": "Alle Städte anzeigen",
+    "showingCount": "{count} von {total} Cafés angezeigt",
+    "showingAll": "Alle {total} Cafés angezeigt",
+    "showAll": "Alle Cafés in {city} anzeigen",
+    "showTop10": "Nur Top 10 anzeigen",
+    "related": "Verwandt",
+    "relatedWifi": "Café mit WLAN",
+    "relatedOutlets": "Café mit Steckdosen",
+    "relatedQuiet": "Ruhiges Café"
   },
   "searchResults": {
-    "noCafesFound": "Keine Cafés gefunden",
-    "noCafesFoundInCity": "Keine Cafés in {city} gefunden. Probieren Sie eine andere Stadt oder reichen Sie ein Café ein.",
-    "noCafesFoundTry": "Keine Cafés gefunden. Probieren Sie eine andere Stadt oder reichen Sie ein Café ein."
+    "noCafesFound": "Noch keine Cafés gefunden",
+    "noCafesFoundInCity": "Noch keine Cafés in {city} gefunden. Helfen Sie anderen und reichen Sie ein Café ein.",
+    "noCafesFoundTry": "Noch keine Cafés gefunden. Helfen Sie anderen und reichen Sie ein Café ein."
   },
   "cafeCard": {
     "verified": "Verifiziert",
@@ -314,12 +324,74 @@
       "descriptionWithCount": "Entdecken Sie {count} laptopfreundliche Cafés in {city}, Deutschland. Perfekt für Remote-Arbeit und Studium – mit schnellem WLAN, Steckdosen und ruhigen Arbeitsplätzen.",
       "descriptionNoCount": "Laptopfreundliche Cafés in {city}, Deutschland finden. Perfekt für Remote-Arbeit und Studium mit schnellem WLAN, Steckdosen und ruhigen Arbeitsplätzen.",
       "ogAlt": "Laptopfreundliche Cafés in {city}, Deutschland",
+      "berlinTitle": "Cafés zum Arbeiten in Berlin – WLAN, Steckdosen & Laptopfreundlich",
+      "berlinDescription": "Die besten Cafés zum Arbeiten in Berlin finden – mit zuverlässigem WLAN, Steckdosen und laptopfreundlichen Räumen. Perfekt für Remote-Arbeit, Lernen und Meetings. Cafés in Mitte, Kreuzberg, Prenzlauer Berg und mehr.",
       "introBerlin": "Berlin, Deutschlands lebendige Hauptstadt, bietet eine große Auswahl laptopfreundlicher Cafés für Remote-Arbeiter, Freelancer und Digital Nomads. Von trendigen Kreuzberg-Cafés bis zu ruhigen Prenzlauer Berg-Arbeitsplätzen – mit schnellem WLAN, Steckdosen und gemütlichen Sitzplätzen.",
       "introHamburg": "Hamburgs beste laptopfreundliche Cafés: von der historischen Speicherstadt bis zur trendigen Sternschanze. Gutes WLAN, viele Steckdosen und ruhige Arbeitsplätze – ideal für produktives Arbeiten.",
       "introMunich": "Münchens laptopfreundliche Café-Szene verbindet bayerische Tradition mit modernen Arbeitsplätzen. Cafés in Schwabing, Glockenbachviertel und in der Innenstadt – mit schnellem WLAN und einladender Atmosphäre.",
       "introCologne": "Köln hat eine lebendige Café-Kultur für Laptop-Nutzer. Altstadt, Belgisches Viertel und mehr – mit schnellem Internet, Steckdosen und gemütlichen Plätzen zum Arbeiten und Lernen.",
       "introFrankfurt": "Frankfurt, Deutschlands Finanzzentrum, hat zahlreiche laptopfreundliche Cafés für Berufstätige und Remote-Arbeiter. Gutes WLAN, ruhige Arbeitsplätze und moderne Ausstattung in der Innenstadt und den umliegenden Vierteln.",
-      "introLeipzig": "Leipzigs wachsende Tech-Szene trifft auf eine große Auswahl laptopfreundlicher Cafés. Arbeiten Sie in der Innenstadt und in trendigen Vierteln – mit schnellem WLAN, Steckdosen und inspirierender Umgebung."
+      "introLeipzig": "Leipzigs wachsende Tech-Szene trifft auf eine große Auswahl laptopfreundlicher Cafés. Arbeiten Sie in der Innenstadt und in trendigen Vierteln – mit schnellem WLAN, Steckdosen und inspirierender Umgebung.",
+      "introGeneric": "Entdecken Sie die besten Cafés zum Arbeiten und laptopfreundlichen Cafés in {city}. Ob Remote-Arbeiter, Freelancer oder Student – finden Sie Cafés mit schnellem WLAN, Steckdosen und ruhigen Plätzen, perfekt für produktives Arbeiten.",
+      "whatYoullFind": {
+        "title": "Was Sie finden werden",
+        "item1": "Cafés mit zuverlässigem WLAN für Videocalls und Remote-Arbeit",
+        "item2": "Viele Steckdosen, damit Ihre Geräte aufgeladen bleiben",
+        "item3": "Ruhige Cafés ideal für konzentriertes Arbeiten und Lernen",
+        "item4": "Cafés ohne Zeitlimit, in denen Sie so lange arbeiten können, wie Sie möchten",
+        "item5": "Gemütliche Sitzplätze und arbeitsfreundliche Atmosphären"
+      },
+      "nicheSection": {
+        "title": "Spezielle Arbeitsplätze",
+        "description": "Suchen Sie etwas Bestimmtes? {city} bietet auch ruhige Cafés zum Lernen, Cafés zum Arbeiten ohne Zeitlimit für längere Arbeitssessions und laptopfreundliche Räume für Remote-Arbeiter."
+      },
+      "faq": {
+        "title": "Häufig gestellte Fragen",
+        "q1": "Welche Cafés zum Arbeiten gibt es in {city}?",
+        "a1": "Unser Verzeichnis listet die besten Cafés zum Arbeiten in {city}, sortiert nach Arbeits-Score. Diese Cafés bieten zuverlässiges WLAN, Steckdosen und gemütliche Arbeitsplätze für Remote-Arbeit.",
+        "q2": "Wo finde ich ein Café mit WLAN in {city}?",
+        "a2": "Alle Cafés in unserem {city}-Verzeichnis enthalten WLAN-Informationen. Filtern Sie nach WLAN-Qualität, um Cafés mit schnellem Internet für Videocalls und Remote-Arbeit zu finden.",
+        "q3": "Gibt es ein Café mit Steckdosen in {city}?",
+        "a3": "Viele Cafés zum Arbeiten in {city} bieten Steckdosen. Prüfen Sie die einzelnen Café-Listen auf Steckdosen-Verfügbarkeit und Bewertungen, damit Ihre Geräte aufgeladen bleiben.",
+        "q4": "Welche ruhigen Cafés eignen sich zum Lernen in {city}?",
+        "a4": "Ja! {city} hat mehrere ruhige Cafés, perfekt zum Lernen und konzentrierten Arbeiten. Suchen Sie nach als 'ruhig' markierten Cafés in unserem Verzeichnis für die besten Lernumgebungen.",
+        "q5": "Gibt es Cafés zum Arbeiten ohne Zeitlimit in {city}?",
+        "a5": "Viele Cafés in {city} sind ohne Zeitlimit, sodass Sie so lange arbeiten können, wie Sie möchten. Unser Verzeichnis hebt Cafés ohne Zeitbegrenzung für längere Arbeitssessions hervor."
+      },
+      "berlinFaq": {
+        "q1": "Welche Cafés in Berlin eignen sich am besten zum Arbeiten?",
+        "a1": "Berlin bietet eine große Auswahl an Cafés zum Arbeiten, viele davon in beliebten Bezirken wie Mitte, Kreuzberg und Prenzlauer Berg. Unser Verzeichnis listet Cafés nach Arbeits-Score sortiert, mit zuverlässigem WLAN, Steckdosen und gemütlichen Arbeitsplätzen.",
+        "q2": "Haben alle Cafés WLAN und Steckdosen?",
+        "a2": "Die meisten Cafés in unserem Berlin-Verzeichnis bieten WLAN und Steckdosen, wobei die Verfügbarkeit variiert. Jeder Café-Eintrag enthält detaillierte Informationen zu WLAN-Qualität, Steckdosen-Verfügbarkeit und anderen Annehmlichkeiten, damit Sie den perfekten Arbeitsplatz finden.",
+        "q3": "Sind die Cafés in Berlin auch zum Lernen oder für Meetings geeignet?",
+        "a3": "Ja! Viele Berliner Cafés in unserem Verzeichnis eignen sich ideal zum Lernen, konzentrierten Arbeiten und informellen Meetings. Suchen Sie nach als 'ruhig' oder 'moderat' markierten Cafés für die beste Lernumgebung und prüfen Sie die einzelnen Einträge auf Sitzgelegenheiten für kleine Gruppen.",
+        "q4": "Gibt es Cafés in Berlin ohne Zeitlimit?",
+        "a4": "Viele Cafés in Berlin sind ohne Zeitlimit, sodass Sie so lange arbeiten können, wie Sie möchten. Unser Verzeichnis hebt Cafés ohne Zeitbegrenzung hervor, perfekt für längere Arbeitssessions und Remote-Arbeiter, die Flexibilität benötigen.",
+        "q5": "Wie oft wird diese Liste aktualisiert?",
+        "a5": "Wir aktualisieren unser Berlin-Café-Verzeichnis regelmäßig mit neuen Einträgen, aktualisierten Informationen und Nutzerbewertungen. Cafés werden überprüft und verifiziert, um Genauigkeit sicherzustellen, und neue Standorte werden häufig hinzugefügt, damit Sie die besten Arbeitsplätze in der Stadt entdecken können."
+      },
+      "trustParagraph": {
+        "berlin": "Unser Berlin-Café-Verzeichnis bietet {count}+ geprüfte Cafés zum Arbeiten, die jeweils sorgfältig auf WLAN-Qualität, Steckdosen-Verfügbarkeit und arbeitsfreundliche Atmosphäre überprüft wurden. Ob Sie in Mitte arbeiten, Kreuzberg erkunden oder in Prenzlauer Berg lernen – finden Sie Cafés, die Ihren Remote-Arbeitsbedürfnissen entsprechen."
+      },
+      "district": {
+        "introMitte": "Mitte, Berlins zentraler Bezirk, bietet zahlreiche Cafés zum Arbeiten mit exzellentem WLAN und Steckdosen. Perfekt für Remote-Arbeiter und Studierende, die im Herzen der Hauptstadt produktiv arbeiten möchten.",
+        "introCharlottenburg": "Charlottenburg, bekannt für seine elegante Atmosphäre, beherbergt viele laptopfreundliche Cafés mit zuverlässigem WLAN und komfortablen Arbeitsplätzen. Ideal für konzentriertes Arbeiten und Meetings.",
+        "introPrenzlauerBerg": "Prenzlauer Berg, Berlins trendiges Viertel, bietet ruhige Cafés zum Arbeiten mit schnellem WLAN und Steckdosen. Perfekt für Remote-Arbeiter, die eine inspirierende Umgebung suchen.",
+        "introNeukoelln": "Neukölln, Berlins vielfältiger Bezirk, hat eine wachsende Szene laptopfreundlicher Cafés mit gutem WLAN und Steckdosen. Ideal für Remote-Arbeiter und Studierende.",
+        "introKreuzberg": "Kreuzberg, Berlins kreatives Zentrum, bietet viele Cafés zum Arbeiten mit zuverlässigem WLAN und Steckdosen. Perfekt für Remote-Arbeiter, Freelancer und Digital Nomads.",
+        "introFriedrichshain": "Friedrichshain, bekannt für seine lebendige Szene, beherbergt zahlreiche laptopfreundliche Cafés mit schnellem WLAN und Steckdosen. Ideal für produktives Arbeiten und Lernen.",
+        "introHbf": "Rund um den Hauptbahnhof finden Sie praktische Cafés zum Arbeiten mit zuverlässigem WLAN und Steckdosen. Perfekt für Remote-Arbeiter auf der Durchreise oder für kurze Arbeitssessions.",
+        "faqQ1": "Welche Cafés in Berlin {district} eignen sich am besten zum Arbeiten?",
+        "faqA1": "Unser Verzeichnis listet die besten Cafés zum Arbeiten in Berlin {district}, sortiert nach Arbeits-Score. Diese Cafés bieten zuverlässiges WLAN, Steckdosen und gemütliche Arbeitsplätze für Remote-Arbeit.",
+        "faqQ2": "Haben alle Cafés in Berlin {district} WLAN und Steckdosen?",
+        "faqA2": "Die meisten Cafés in unserem Berlin {district}-Verzeichnis bieten WLAN und Steckdosen, wobei die Verfügbarkeit variiert. Jeder Café-Eintrag enthält detaillierte Informationen zu WLAN-Qualität und Steckdosen-Verfügbarkeit.",
+        "faqQ3": "Sind die Cafés in Berlin {district} auch zum Lernen oder für Meetings geeignet?",
+        "faqA3": "Ja! Viele Cafés in Berlin {district} eignen sich ideal zum Lernen, konzentrierten Arbeiten und informellen Meetings. Suchen Sie nach als 'ruhig' oder 'moderat' markierten Cafés für die beste Lernumgebung.",
+        "faqQ4": "Gibt es Cafés in Berlin {district} ohne Zeitlimit?",
+        "faqA4": "Viele Cafés in Berlin {district} sind ohne Zeitlimit, sodass Sie so lange arbeiten können, wie Sie möchten. Unser Verzeichnis hebt Cafés ohne Zeitbegrenzung hervor.",
+        "faqQ5": "Wie oft wird diese Liste für Berlin {district} aktualisiert?",
+        "faqA5": "Wir aktualisieren unser Berlin {district}-Verzeichnis regelmäßig mit neuen Einträgen und aktualisierten Informationen. Cafés werden überprüft und verifiziert, um Genauigkeit sicherzustellen."
+      }
     },
     "find": {
       "featureNotFoundTitle": "Funktion nicht gefunden | {siteName}",

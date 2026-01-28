@@ -166,13 +166,23 @@
     "home": "← Home",
     "allCities": "All Cities",
     "laptopFriendlyIn": "Laptop-friendly cafés in",
+    "berlinH1": "Best Cafés to Work From in Berlin (WiFi & Power Outlets)",
+    "berlinDistricts": "Berlin Districts",
     "exploreOtherCities": "Explore Other Cities",
-    "viewAllCities": "View All Cities"
+    "viewAllCities": "View All Cities",
+    "showingCount": "Showing {count} of {total} cafés",
+    "showingAll": "Showing all {total} cafés",
+    "showAll": "Show all cafés in {city}",
+    "showTop10": "Show top 10 only",
+    "related": "Related",
+    "relatedWifi": "Cafés with Wi-Fi",
+    "relatedOutlets": "Cafés with power outlets",
+    "relatedQuiet": "Quiet cafés"
   },
   "searchResults": {
-    "noCafesFound": "No cafés found",
-    "noCafesFoundInCity": "No cafés found in {city}. Try a nearby city or submit a café.",
-    "noCafesFoundTry": "No cafés found. Try a nearby city or submit a café."
+    "noCafesFound": "No cafés found yet",
+    "noCafesFoundInCity": "No cafés found yet in {city}. Help others by submitting a café.",
+    "noCafesFoundTry": "No cafés found yet. Help others by submitting a café."
   },
   "cafeCard": {
     "verified": "Verified",
@@ -314,12 +324,74 @@
       "descriptionWithCount": "Discover {count} laptop-friendly cafés in {city}, Germany. Perfect for remote work and studying with fast Wi-Fi, power outlets (Steckdosen), and quiet workspaces. Find your ideal café workspace.",
       "descriptionNoCount": "Find laptop-friendly cafés in {city}, Germany. Perfect for remote work and studying with fast Wi-Fi, power outlets, and quiet workspaces.",
       "ogAlt": "Laptop-friendly cafés in {city}, Germany",
+      "berlinTitle": "Cafés to Work From in Berlin – WiFi, Power Outlets & Laptop-Friendly",
+      "berlinDescription": "Discover the best cafés to work from in Berlin with reliable WiFi, power outlets, and laptop-friendly spaces. Perfect for remote work, studying, and meetings. Find cafés in Mitte, Kreuzberg, Prenzlauer Berg, and more.",
       "introBerlin": "Berlin, Germany's vibrant capital, offers an incredible selection of laptop-friendly cafés perfect for remote workers, freelancers, and digital nomads. From trendy Kreuzberg coffee shops to quiet Prenzlauer Berg workspaces, find cafés with fast WiFi, power outlets, and comfortable seating throughout the city.",
       "introHamburg": "Discover Hamburg's best laptop-friendly cafés, from the historic Speicherstadt to trendy Sternschanze. These cafés offer excellent WiFi, plenty of power outlets, and quiet workspaces ideal for productivity. Perfect for remote workers exploring Germany's second-largest city.",
       "introMunich": "Munich's laptop-friendly café scene combines traditional Bavarian charm with modern workspaces. Find cafés in Schwabing, Glockenbachviertel, and throughout the city center with high-speed WiFi, comfortable seating, and a welcoming atmosphere for remote work.",
       "introCologne": "Cologne boasts a thriving café culture perfect for laptop users. Explore cafés in the Altstadt, Belgisches Viertel, and beyond, each offering fast internet, power outlets, and comfortable spaces for remote work and studying.",
       "introFrankfurt": "Frankfurt, Germany's financial hub, is home to numerous laptop-friendly cafés catering to professionals and remote workers. Find excellent WiFi, quiet workspaces, and modern amenities throughout the city center and surrounding neighborhoods.",
-      "introLeipzig": "Leipzig's growing tech scene is matched by its excellent selection of laptop-friendly cafés. Discover workspaces in the city center and trendy neighborhoods with fast WiFi, power outlets, and inspiring environments for remote work and creativity."
+      "introLeipzig": "Leipzig's growing tech scene is matched by its excellent selection of laptop-friendly cafés. Discover workspaces in the city center and trendy neighborhoods with fast WiFi, power outlets, and inspiring environments for remote work and creativity.",
+      "introGeneric": "Discover the best laptop-friendly cafés and cafés to work from in {city}. Whether you're a remote worker, freelancer, or student, find cafés with fast Wi-Fi, power outlets, and quiet spaces perfect for productivity.",
+      "whatYoullFind": {
+        "title": "What you'll find",
+        "item1": "Cafés with reliable Wi-Fi for video calls and remote work",
+        "item2": "Plenty of power outlets to keep your devices charged",
+        "item3": "Quiet cafés ideal for focused work and studying",
+        "item4": "Time-limit friendly spaces where you can work as long as you need",
+        "item5": "Comfortable seating and work-friendly atmospheres"
+      },
+      "nicheSection": {
+        "title": "Specialty Workspaces",
+        "description": "Looking for something specific? {city} also offers quiet cafés perfect for studying, cafés with no time limits for extended work sessions, and laptop-friendly spaces designed for remote workers."
+      },
+      "faq": {
+        "title": "Frequently Asked Questions",
+        "q1": "What are the best cafés to work from in {city}?",
+        "a1": "Our directory lists the top laptop-friendly cafés in {city}, sorted by work score. These cafés offer reliable Wi-Fi, power outlets, and comfortable workspaces perfect for remote work.",
+        "q2": "Where can I find cafés with Wi-Fi in {city}?",
+        "a2": "All cafés in our {city} directory include Wi-Fi information. Filter by Wi-Fi quality to find cafés with fast internet connections ideal for video calls and remote work.",
+        "q3": "Which cafés in {city} have power outlets?",
+        "a3": "Many laptop-friendly cafés in {city} offer power outlets. Check individual café listings for outlet availability and ratings to ensure your devices stay charged.",
+        "q4": "Are there quiet cafés to study in {city}?",
+        "a4": "Yes! {city} has several quiet cafés perfect for studying and focused work. Look for cafés marked as 'quiet' in our directory for the best study environments.",
+        "q5": "Are there time-limit friendly cafés in {city}?",
+        "a5": "Many cafés in {city} are time-limit friendly, allowing you to work as long as you need. Our directory highlights cafés with no time restrictions for extended work sessions."
+      },
+      "berlinFaq": {
+        "q1": "What are the best cafés to work from in Berlin?",
+        "a1": "Berlin offers an excellent selection of cafés perfect for remote work, with many located in popular districts like Mitte, Kreuzberg, and Prenzlauer Berg. Our directory lists cafés sorted by work score, featuring reliable Wi-Fi, power outlets, and comfortable workspaces.",
+        "q2": "Do all cafés offer WiFi and power outlets?",
+        "a2": "Most cafés in our Berlin directory offer WiFi and power outlets, though availability varies. Each café listing includes detailed information about WiFi quality, outlet availability, and other amenities to help you find the perfect workspace.",
+        "q3": "Are these cafés suitable for studying or meetings?",
+        "a3": "Yes! Many Berlin cafés in our directory are ideal for studying, focused work, and casual meetings. Look for cafés marked as 'quiet' or 'moderate' noise level for the best study environments, and check individual listings for seating arrangements suitable for small groups.",
+        "q4": "Are there cafés in Berlin without time limits?",
+        "a4": "Many cafés in Berlin are time-limit friendly, allowing you to work as long as you need. Our directory highlights cafés with no time restrictions, perfect for extended work sessions and remote workers who need flexibility.",
+        "q5": "How often is this list updated?",
+        "a5": "We regularly update our Berlin café directory with new listings, updated information, and user reviews. Cafés are reviewed and verified to ensure accuracy, and new locations are added frequently to help you discover the best workspaces in the city."
+      },
+      "trustParagraph": {
+        "berlin": "Our Berlin café directory features {count}+ verified laptop-friendly cafés, each carefully reviewed for WiFi quality, power outlet availability, and work-friendly atmosphere. Whether you're working from Mitte, exploring Kreuzberg, or studying in Prenzlauer Berg, find cafés that meet your remote work needs."
+      },
+      "district": {
+        "introMitte": "Mitte, Berlin's central district, offers numerous cafés to work from with excellent WiFi and power outlets. Perfect for remote workers and students looking to be productive in the heart of the capital.",
+        "introCharlottenburg": "Charlottenburg, known for its elegant atmosphere, is home to many laptop-friendly cafés with reliable WiFi and comfortable workspaces. Ideal for focused work and meetings.",
+        "introPrenzlauerBerg": "Prenzlauer Berg, Berlin's trendy neighborhood, offers quiet cafés to work from with fast WiFi and power outlets. Perfect for remote workers seeking an inspiring environment.",
+        "introNeukoelln": "Neukölln, Berlin's diverse district, has a growing scene of laptop-friendly cafés with good WiFi and power outlets. Ideal for remote workers and students.",
+        "introKreuzberg": "Kreuzberg, Berlin's creative hub, offers many cafés to work from with reliable WiFi and power outlets. Perfect for remote workers, freelancers, and digital nomads.",
+        "introFriedrichshain": "Friedrichshain, known for its vibrant scene, is home to numerous laptop-friendly cafés with fast WiFi and power outlets. Ideal for productive work and studying.",
+        "introHbf": "Around the main train station, you'll find practical cafés to work from with reliable WiFi and power outlets. Perfect for remote workers passing through or for short work sessions.",
+        "faqQ1": "What are the best cafés to work from in Berlin {district}?",
+        "faqA1": "Our directory lists the top laptop-friendly cafés in Berlin {district}, sorted by work score. These cafés offer reliable Wi-Fi, power outlets, and comfortable workspaces perfect for remote work.",
+        "faqQ2": "Do all cafés in Berlin {district} offer WiFi and power outlets?",
+        "faqA2": "Most cafés in our Berlin {district} directory offer WiFi and power outlets, though availability varies. Each café listing includes detailed information about WiFi quality and outlet availability.",
+        "faqQ3": "Are these cafés in Berlin {district} suitable for studying or meetings?",
+        "faqA3": "Yes! Many cafés in Berlin {district} are ideal for studying, focused work, and casual meetings. Look for cafés marked as 'quiet' or 'moderate' noise level for the best study environments.",
+        "faqQ4": "Are there cafés in Berlin {district} without time limits?",
+        "faqA4": "Many cafés in Berlin {district} are time-limit friendly, allowing you to work as long as you need. Our directory highlights cafés with no time restrictions.",
+        "faqQ5": "How often is this list for Berlin {district} updated?",
+        "faqA5": "We regularly update our Berlin {district} directory with new listings and updated information. Cafés are reviewed and verified to ensure accuracy."
+      }
     },
     "find": {
       "featureNotFoundTitle": "Feature not found | {siteName}",
