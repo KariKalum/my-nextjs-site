@@ -10,6 +10,16 @@ type DecisionBody = {
   review_notes?: string
 }
 
+type SubmissionRow = {
+  id: string
+  status: 'pending' | 'approved' | 'rejected' | string
+  name: string
+  city: string
+  address: string
+  website: string | null
+  google_maps_url: string | null
+}
+
 type Step =
   | 'start'
   | 'auth'
@@ -140,9 +150,9 @@ export async function POST(
       error: loadError,
     } = await service
       .from('submissions')
-      .select('*')
+      .select('id,status,name,city,address,website,google_maps_url')
       .eq('id', submissionId)
-      .single()
+      .single<SubmissionRow>()
 
     if (loadError) {
       // Not found (PostgREST typically uses PGRST116 for no rows)
