@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
 
     // Insert submission (core action - must succeed)
     step = 'insert_submission'
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('submissions')
       .insert([
         {
@@ -193,8 +193,6 @@ export async function POST(request: NextRequest) {
           source: 'web',
         },
       ])
-      .select()
-      .single()
 
     if (error) {
       console.error('[submissions]', { requestId, step, code: error.code, message: error.message, details: error.details, hint: error.hint })
