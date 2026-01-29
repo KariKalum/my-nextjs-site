@@ -20,6 +20,14 @@ type SubmissionRow = {
   google_maps_url: string | null
 }
 
+type SubmissionUpdate = {
+  status?: 'pending' | 'approved' | 'rejected'
+  review_notes?: string | null
+  reviewed_at?: string | null
+  reviewed_by?: string | null
+  cafe_id?: string | null
+}
+
 type Step =
   | 'start'
   | 'auth'
@@ -249,14 +257,16 @@ export async function POST(
     // 5) Handle reject
     if (decision === 'reject') {
       step = 'decision_reject'
+      const rejectPatch: SubmissionUpdate = {
+        status: 'rejected',
+        review_notes: review_notes ?? null,
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: adminUserId,
+      }
+
       const { error: rejectError } = await service
         .from('submissions')
-        .update({
-          status: 'rejected',
-          review_notes: review_notes ?? null,
-          reviewed_at: new Date().toISOString(),
-          reviewed_by: adminUserId,
-        })
+        .update(rejectPatch as any)
         .eq('id', submissionId)
 
       if (rejectError) {
@@ -341,15 +351,17 @@ export async function POST(
     const cafeId: string | undefined = cafeRow?.id
 
     step = 'update_submission'
+    const updatePatch: SubmissionUpdate = {
+      status: 'approved',
+      cafe_id: cafeId ?? null,
+      review_notes: review_notes ?? null,
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: adminUserId,
+    }
+
     const { error: updateError } = await service
       .from('submissions')
-      .update({
-        status: 'approved',
-        cafe_id: cafeId ?? null,
-        review_notes: review_notes ?? null,
-        reviewed_at: new Date().toISOString(),
-        reviewed_by: adminUserId,
-      })
+      .update(updatePatch as any)
       .eq('id', submissionId)
 
     if (updateError) {
