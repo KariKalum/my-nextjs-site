@@ -121,9 +121,10 @@ export default function SubmitPageForm({ dict, locale }: SubmitPageFormProps) {
         throw new Error('NETWORK_ERROR')
       }
       if (!response.ok) {
-        if (response.status === 400) throw new Error(data.error || t(dict, 'submit.errorCheckInfo'))
-        if (response.status === 500) throw new Error(t(dict, 'submit.errorServers'))
-        throw new Error(data.error || t(dict, 'submit.errorProcess'))
+        // Use error and details from API response if available
+        const errorMessage = data.error || t(dict, 'submit.errorProcess')
+        const detailsMessage = data.details ? ` ${data.details}` : ''
+        throw new Error(`${errorMessage}${detailsMessage}`)
       }
       setSuccess(true)
       setIsNetworkError(false)
@@ -148,6 +149,7 @@ export default function SubmitPageForm({ dict, locale }: SubmitPageFormProps) {
         setError(t(dict, 'submit.errorConnect'))
       } else {
         setIsNetworkError(false)
+        // Display the error message from API (includes error + details if available)
         setError(err.message || t(dict, 'submit.errorSubmit'))
       }
     } finally {

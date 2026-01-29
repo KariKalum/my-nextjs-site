@@ -1,3 +1,4 @@
+import crypto from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/src/lib/supabase/server'
 
@@ -5,7 +6,13 @@ import { createClient } from '@/src/lib/supabase/server'
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
+  // Generate requestId for tracking
+  const requestId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `req-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+  let step: 'start' | 'validate' | 'rate_limit' | 'insert_submission' | 'log_consent' | 'success' | 'unknown' = 'start'
+  
   try {
+    console.info('[submissions]', { requestId, step: 'start' })
+    
     const body = await request.json()
     const { 
       name, 
@@ -23,24 +30,41 @@ export async function POST(request: NextRequest) {
       time_limit_notes
     } = body
 
+    step = 'validate'
+    
     // Validation - required fields
     if (!name || !name.trim()) {
       return NextResponse.json(
-        { error: 'Café name is required' },
+        { 
+          ok: false,
+          requestId,
+          step: 'validate',
+          error: { message: 'Café name is required' }
+        },
         { status: 400 }
       )
     }
 
     if (!city || !city.trim()) {
       return NextResponse.json(
-        { error: 'City is required' },
+        { 
+          ok: false,
+          requestId,
+          step: 'validate',
+          error: { message: 'City is required' }
+        },
         { status: 400 }
       )
     }
 
     if (!address || !address.trim()) {
       return NextResponse.json(
-        { error: 'Address is required' },
+        { 
+          ok: false,
+          requestId,
+          step: 'validate',
+          error: { message: 'Address is required' }
+        },
         { status: 400 }
       )
     }
@@ -52,13 +76,23 @@ export async function POST(request: NextRequest) {
         // Reject localhost/127.0.0.1 URLs
         if (url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname.startsWith('127.')) {
           return NextResponse.json(
-            { error: 'Localhost URLs are not allowed. Please provide a public website URL.' },
+            { 
+              ok: false,
+              requestId,
+              step: 'validate',
+              error: { message: 'Localhost URLs are not allowed. Please provide a public website URL.' }
+            },
             { status: 400 }
           )
         }
       } catch {
         return NextResponse.json(
-          { error: 'Please provide a valid website URL' },
+          { 
+            ok: false,
+            requestId,
+            step: 'validate',
+            error: { message: 'Please provide a valid website URL' }
+          },
           { status: 400 }
         )
       }
@@ -70,7 +104,12 @@ export async function POST(request: NextRequest) {
         new URL(google_maps_url)
       } catch {
         return NextResponse.json(
-          { error: 'Please provide a valid Google Maps URL' },
+          { 
+            ok: false,
+            requestId,
+            step: 'validate',
+            error: { message: 'Please provide a valid Google Maps URL' }
+          },
           { status: 400 }
         )
       }
@@ -81,7 +120,12 @@ export async function POST(request: NextRequest) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(submitter_email.trim())) {
         return NextResponse.json(
-          { error: 'Please provide a valid email address' },
+          { 
+            ok: false,
+            requestId,
+            step: 'validate',
+            error: { message: 'Please provide a valid email address' }
+          },
           { status: 400 }
         )
       }
@@ -92,8 +136,9 @@ export async function POST(request: NextRequest) {
 
     // Basic rate limiting: Check for duplicate submissions in last hour
     // (Simple check - same name + city + address)
+    step = 'rate_limit'
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
-    const { data: recentSubmissions } = await supabase
+    const { data: recentSubmissions, error: rateLimitError } = await supabase
       .from('submissions')
       .select('id')
       .eq('name', name.trim())
@@ -102,14 +147,33 @@ export async function POST(request: NextRequest) {
       .gte('created_at', oneHourAgo)
       .limit(1)
 
+    if (rateLimitError) {
+      console.error('[submissions]', { requestId, step, code: rateLimitError.code, message: rateLimitError.message, details: rateLimitError.details, hint: rateLimitError.hint })
+      return NextResponse.json(
+        { 
+          ok: false,
+          requestId,
+          step: 'rate_limit',
+          error: { message: rateLimitError.message || 'Rate limit check failed', code: rateLimitError.code }
+        },
+        { status: 500 }
+      )
+    }
+
     if (recentSubmissions && recentSubmissions.length > 0) {
       return NextResponse.json(
-        { error: 'A similar submission was recently submitted. Please wait before submitting again.' },
+        { 
+          ok: false,
+          requestId,
+          step: 'rate_limit',
+          error: { message: 'A similar submission was recently submitted. Please wait before submitting again.' }
+        },
         { status: 429 }
       )
     }
 
-    // Insert submission
+    // Insert submission (core action - must succeed)
+    step = 'insert_submission'
     const { data, error } = await supabase
       .from('submissions')
       .insert([
@@ -133,63 +197,91 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
-      console.error('[submissions] Error creating submission:', error)
+      console.error('[submissions]', { requestId, step, code: error.code, message: error.message, details: error.details, hint: error.hint })
       return NextResponse.json(
-        { error: 'Failed to submit café suggestion. Please try again.' },
+        { 
+          ok: false,
+          requestId,
+          step: 'insert_submission',
+          error: { message: error.message || 'Submission failed', code: error.code }
+        },
         { status: 500 }
       )
     }
 
     // Handle email consent logging if submitter_email exists and email_consent is true
+    // This is non-blocking - submission already succeeded, so consent logging failures don't fail the request
     if (submitter_email && submitter_email.trim() && email_consent === true) {
-      // Use locale from request body, fallback to Accept-Language header, or default to 'de'
-      let consentLocale = locale || 'de'
-      if (!consentLocale || (consentLocale !== 'en' && consentLocale !== 'de')) {
-        const acceptLanguage = request.headers.get('accept-language') || ''
-        if (acceptLanguage.includes('en')) {
-          consentLocale = 'en'
-        } else {
-          consentLocale = 'de'
+      step = 'log_consent'
+      try {
+        // Use locale from request body, fallback to Accept-Language header, or default to 'de'
+        let consentLocale = locale || 'de'
+        if (!consentLocale || (consentLocale !== 'en' && consentLocale !== 'de')) {
+          const acceptLanguage = request.headers.get('accept-language') || ''
+          if (acceptLanguage.includes('en')) {
+            consentLocale = 'en'
+          } else {
+            consentLocale = 'de'
+          }
         }
+
+        // Get IP address from request
+        const forwarded = request.headers.get('x-forwarded-for')
+        const ip = forwarded ? forwarded.split(',')[0].trim() : request.headers.get('x-real-ip') || 'unknown'
+
+        // Get user agent
+        const userAgent = request.headers.get('user-agent') || 'unknown'
+
+        // Insert into email_consent_log (non-blocking)
+        const { error: consentError } = await supabase
+          .from('email_consent_log')
+          .insert([
+            {
+              purpose: 'notify_submission',
+              consented: true,
+              email: submitter_email.trim(),
+              locale: consentLocale,
+              ip: ip,
+              user_agent: userAgent,
+            },
+          ])
+
+        if (consentError) {
+          console.error('[submissions]', { requestId, step, code: consentError.code, message: consentError.message, details: consentError.details, hint: consentError.hint })
+          // Log the error but don't fail the submission - it was already successfully saved
+        }
+
+        // TODO: send to Brevo list
+      } catch (consentLoggingError) {
+        console.error('[submissions]', { requestId, step: 'log_consent', error: consentLoggingError })
+        // Log the error but don't fail the submission - it was already successfully saved
       }
-
-      // Get IP address from request
-      const forwarded = request.headers.get('x-forwarded-for')
-      const ip = forwarded ? forwarded.split(',')[0].trim() : request.headers.get('x-real-ip') || 'unknown'
-
-      // Get user agent
-      const userAgent = request.headers.get('user-agent') || 'unknown'
-
-      // Insert into email_consent_log
-      const { error: consentError } = await supabase
-        .from('email_consent_log')
-        .insert([
-          {
-            purpose: 'notify_submission',
-            consented: true,
-            email: submitter_email.trim(),
-            locale: consentLocale,
-            ip: ip,
-            user_agent: userAgent,
-          },
-        ])
-
-      if (consentError) {
-        console.error('[submissions] Error logging email consent:', consentError)
-        // Don't fail the submission if consent logging fails
-      }
-
-      // TODO: send to Brevo list
     }
 
+    step = 'success'
     return NextResponse.json(
-      { message: 'Submission received successfully', id: data.id },
+      { ok: true, requestId },
       { status: 201 }
     )
   } catch (error) {
-    console.error('[submissions] Error processing submission:', error)
+    step = 'unknown'
+    console.error('[submissions]', {
+      requestId,
+      step,
+      code: undefined,
+      message: (error as any)?.message ?? 'Unknown server error',
+      details: undefined,
+      hint: undefined,
+    })
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    
     return NextResponse.json(
-      { error: 'An error occurred while processing your submission' },
+      { 
+        ok: false,
+        requestId,
+        step: 'unknown',
+        error: { message: errorMessage }
+      },
       { status: 500 }
     )
   }
