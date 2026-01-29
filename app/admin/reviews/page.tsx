@@ -71,6 +71,8 @@ type CafeReview = {
   review_text: string | null
   kind: string
   status: 'pending' | 'approved' | 'rejected'
+  is_approved: boolean | null
+  is_flagged?: boolean
   review_notes: string | null
   reviewed_at: string | null
   created_at: string
@@ -132,7 +134,12 @@ export default function AdminReviewsPage() {
     fetchReviews()
   }, [fetchReviews])
 
-  const filteredReviews = allReviews.filter((r) => r.status === filter)
+  const filteredReviews = allReviews.filter((r) => {
+    if (filter === 'approved') return r.is_approved === true && (r.is_flagged === false || r.is_flagged == null)
+    if (filter === 'pending') return r.is_approved == null
+    if (filter === 'rejected') return r.is_approved === false
+    return false
+  })
 
   const callDecisionApi = async (
     id: string,
@@ -221,9 +228,9 @@ export default function AdminReviewsPage() {
   }
 
   const tabItems = [
-    { id: 'pending' as const, label: 'Pending', count: allReviews.filter((r) => r.status === 'pending').length },
-    { id: 'approved' as const, label: 'Approved', count: allReviews.filter((r) => r.status === 'approved').length },
-    { id: 'rejected' as const, label: 'Rejected', count: allReviews.filter((r) => r.status === 'rejected').length },
+    { id: 'pending' as const, label: 'Pending', count: allReviews.filter((r) => r.is_approved == null).length },
+    { id: 'approved' as const, label: 'Approved', count: allReviews.filter((r) => r.is_approved === true && (r.is_flagged === false || r.is_flagged == null)).length },
+    { id: 'rejected' as const, label: 'Rejected', count: allReviews.filter((r) => r.is_approved === false).length },
   ]
 
   const emptyMessages: Record<typeof filter, string> = {
@@ -317,7 +324,9 @@ export default function AdminReviewsPage() {
                   )}
                   <p className="text-sm text-gray-700">{snippet(r.review_text)}</p>
                 </div>
-                {r.status === 'pending' && (
+                {(() => {
+                const isPending = r.is_approved == null
+                return isPending && (
                   <div className="flex flex-col sm:flex-row gap-2 shrink-0 sm:pl-4">
                     <button
                       type="button"
@@ -336,7 +345,8 @@ export default function AdminReviewsPage() {
                       Reject
                     </button>
                   </div>
-                )}
+                )
+              })()}
               </div>
             </AdminCard>
           ))}

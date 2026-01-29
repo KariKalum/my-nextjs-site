@@ -140,22 +140,30 @@ async function getNearbyCafes(cafe: Cafe, limit: number = 3): Promise<Cafe[]> {
 
 /**
  * Fetch approved reviews for a cafe (public display; no email/user_id).
+ * Only kind=review, is_approved=true, not flagged, with non-null review_text.
  */
 async function getApprovedReviews(cafeId: string, limit: number = 20): Promise<ApprovedReview[]> {
   try {
     if (!cafeId) return []
     const supabase = await createClient()
-    const { data, error } = await supabase
+    const { data: reviews, error: reviewsError } = await supabase
       .from('cafe_reviews')
-      .select('kind, rating, review_text, created_at')
+      .select('id, rating, review_text, created_at')
       .eq('cafe_id', cafeId)
-      .eq('status', 'approved')
+      .eq('is_approved', true)
+      .eq('is_flagged', false)
+      .eq('kind', 'review')
+      .not('review_text', 'is', null)
       .order('created_at', { ascending: false })
       .limit(limit)
 
-    if (error || !data) return []
-    return data as ApprovedReview[]
-  } catch {
+    if (reviewsError) {
+      console.error('[cafe-reviews]', { cafeId, error: reviewsError.message, code: reviewsError.code })
+      return []
+    }
+    return (reviews ?? []) as ApprovedReview[]
+  } catch (err) {
+    console.error('[cafe-reviews]', { cafeId, err: err instanceof Error ? err.message : err })
     return []
   }
 }

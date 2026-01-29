@@ -147,6 +147,7 @@ export async function POST(
         .from('cafe_reviews')
         .update({
           status: 'rejected',
+          is_approved: false,
           review_notes: review_notes ?? null,
           reviewed_at: reviewedAt,
           reviewed_by: reviewedBy,
@@ -178,6 +179,7 @@ export async function POST(
       .from('cafe_reviews')
       .update({
         status: 'approved',
+        is_approved: true,
         review_notes: review_notes ?? null,
         reviewed_at: reviewedAt,
         reviewed_by: reviewedBy,

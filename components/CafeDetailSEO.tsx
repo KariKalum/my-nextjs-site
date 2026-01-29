@@ -32,7 +32,8 @@ import LanguageSwitcher from './LanguageSwitcher'
 
 /** Approved review for public display (no email/user_id). */
 export type ApprovedReview = {
-  kind: string
+  id?: string
+  kind?: string
   rating: number | null
   review_text: string | null
   created_at: string
@@ -695,39 +696,31 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], approvedReviews 
             </div>
           </section>
 
-          {/* Approved reviews (no email/user_id) */}
-          {approvedReviews.length > 0 && (
-            <section className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-900 mb-3">
-                {t(dict, 'common.reviews')}
-              </h2>
-              <ul className="space-y-4">
-                {approvedReviews.map((rev, idx) => (
-                  <li key={idx} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                      {rev.rating != null && rev.rating >= 1 && rev.rating <= 5 && (
-                        <span className="text-yellow-600 text-sm" aria-label={`${rev.rating} out of 5`}>
-                          {'★'.repeat(Math.round(rev.rating))}{'☆'.repeat(5 - Math.round(rev.rating))} {rev.rating}/5
-                        </span>
-                      )}
-                      <span className="text-xs text-gray-500">
-                        {new Date(rev.created_at).toLocaleDateString(locale === 'de' ? 'de-DE' : 'en-GB', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                        })}
-                      </span>
-                    </div>
-                    {rev.review_text && (
-                      <p className="text-gray-700 text-sm whitespace-pre-wrap">{rev.review_text}</p>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
           <CafeFAQ cafe={cafe} />
+
+          {/* Reviews (approved, kind=review, with review_text) */}
+          <section className="mt-10 bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-sm">
+            <h2 className="text-xl font-semibold text-gray-900">{t(dict, 'common.reviews')}</h2>
+            {!approvedReviews?.length ? (
+              <p className="mt-2 text-sm text-gray-500">No reviews yet.</p>
+            ) : (
+              <div className="mt-4 space-y-4">
+                {approvedReviews.map((r) => (
+                  <div key={r.id ?? r.created_at} className="rounded-xl border border-gray-200 p-4">
+                    <div className="text-sm font-medium text-gray-700">
+                      Rating: {r.rating != null ? r.rating : '—'}/5
+                    </div>
+                    <div className="mt-2 whitespace-pre-wrap text-sm text-gray-700">
+                      {r.review_text}
+                    </div>
+                    <div className="mt-2 text-xs text-gray-500">
+                      {r.created_at ? new Date(r.created_at).toLocaleDateString(locale === 'de' ? 'de-DE' : 'en-GB') : ''}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
 
           {/* Explore more */}
           {(cafe.city || nearbyCafes.length > 0) && (
