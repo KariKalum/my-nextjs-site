@@ -17,7 +17,14 @@ export async function GET(
 ) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
-  const next = requestUrl.searchParams.get('next') || '/admin'
+  const nextParam = requestUrl.searchParams.get('next')
+  
+  // Validate next parameter: must start with / and not start with //
+  // This prevents open-redirect vulnerabilities
+  let next = '/admin' // default
+  if (nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//')) {
+    next = nextParam
+  }
 
   if (code) {
     const supabase = await createClient()
@@ -33,7 +40,7 @@ export async function GET(
       return NextResponse.redirect(loginUrl)
     }
 
-    // Success - redirect to admin (or next param)
+    // Success - redirect to admin (or validated next param)
     // Note: admin route is NOT locale-prefixed (/admin, not /de/admin)
     return NextResponse.redirect(new URL(next, requestUrl.origin))
   }

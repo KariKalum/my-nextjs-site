@@ -77,11 +77,21 @@ function LoginForm() {
 
     try {
       const supabase = createClient()
+      
+      // Get redirect from query params and validate it
+      const redirectParam = searchParams.get('redirect')
+      let redirect = '/admin' // default
+      
+      // Validate redirect: must start with / and not start with //
+      if (redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')) {
+        redirect = redirectParam
+      }
+      
       // Use production-safe callback URL with locale prefix (default: de)
       const defaultLocale = 'de'
-      const callbackUrl = process.env.NEXT_PUBLIC_SITE_URL
-        ? `${process.env.NEXT_PUBLIC_SITE_URL}/${defaultLocale}/auth/callback`
-        : 'https://workfrom.cafe/de/auth/callback'
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://workfrom.cafe'
+      const callbackUrl = `${baseUrl}/${defaultLocale}/auth/callback?next=${encodeURIComponent(redirect)}`
+      
       const { error: magicLinkError } = await supabase.auth.signInWithOtp({
         email,
         options: {
