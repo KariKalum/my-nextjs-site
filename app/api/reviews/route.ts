@@ -107,15 +107,8 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
 
     step = 'insert'
-    const insertPayload: {
-      cafe_id: string
-      kind: string
-      rating?: number | null
-      review_text?: string | null
-      email?: string | null
-      user_id?: string | null
-      evidence?: Record<string, unknown> | null
-    } = {
+    // Build payload with only columns that exist on public.cafe_reviews (never touch cafes table)
+    const insertPayload: Record<string, unknown> = {
       cafe_id: cafe_id.trim(),
       kind: kindVal,
     }
@@ -141,6 +134,7 @@ export async function POST(request: NextRequest) {
       insertPayload.user_id = user.id
     }
 
+    // Insert only into public.cafe_reviews; status uses default 'pending'; do not call .select()
     const { error } = await supabase.from('cafe_reviews').insert([insertPayload])
 
     if (error) {
