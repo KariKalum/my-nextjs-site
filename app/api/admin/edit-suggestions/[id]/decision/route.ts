@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/src/lib/supabase/server'
 import { getSupabaseService } from '@/lib/supabase-service'
 import { ALLOWED_CAFE_FIELDS_SET } from '@/lib/edit-suggestions-fields'
+import { logModerationEvent } from '@/lib/moderation-events'
 
 export const dynamic = 'force-dynamic'
 
@@ -194,6 +195,16 @@ export async function POST(
           { status: 500 }
         )
       }
+      await logModerationEvent({
+        entityType: 'edit_suggestion',
+        entityId: suggestionId,
+        action: 'rejected',
+        actorUserId: user.id,
+        cafeId: suggestion.cafe_id,
+        appliedChanges: null,
+        note: review_notes ?? null,
+        requestId,
+      })
       return NextResponse.json({ ok: true, requestId }, { status: 200 })
     }
 
@@ -231,6 +242,17 @@ export async function POST(
         { status: 500 }
       )
     }
+
+    await logModerationEvent({
+      entityType: 'edit_suggestion',
+      entityId: suggestionId,
+      action: 'approved',
+      actorUserId: user.id,
+      cafeId: suggestion.cafe_id,
+      appliedChanges: effectiveAccepted ?? null,
+      note: review_notes ?? null,
+      requestId,
+    })
 
     return NextResponse.json({ ok: true, requestId }, { status: 200 })
   } catch (err) {

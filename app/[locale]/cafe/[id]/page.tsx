@@ -3,7 +3,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/src/lib/supabase/server'
 import type { Cafe } from '@/src/lib/supabase/types'
-import CafeDetailSEO from '@/components/CafeDetailSEO'
+import CafeDetailSEO, { type ApprovedReview } from '@/components/CafeDetailSEO'
 import { combineDescription } from '@/lib/utils/description-combiner'
 import { getCafeHref, getDetailRouteQueryConfig } from '@/lib/cafeRouting'
 import { devLog } from '@/lib/utils/devLog'
@@ -139,6 +139,28 @@ async function getNearbyCafes(cafe: Cafe, limit: number = 3): Promise<Cafe[]> {
 }
 
 /**
+ * Fetch approved reviews for a cafe (public display; no email/user_id).
+ */
+async function getApprovedReviews(cafeId: string, limit: number = 20): Promise<ApprovedReview[]> {
+  try {
+    if (!cafeId) return []
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('cafe_reviews')
+      .select('kind, rating, review_text, created_at')
+      .eq('cafe_id', cafeId)
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false })
+      .limit(limit)
+
+    if (error || !data) return []
+    return data as ApprovedReview[]
+  } catch {
+    return []
+  }
+}
+
+/**
  * Error component for permission/network errors (not 404)
  */
 function CafeError({
@@ -203,8 +225,17 @@ export default async function CafeDetailPage({
   }
 
   const nearbyCafes = await getNearbyCafes(cafe)
+  const approvedReviews = await getApprovedReviews(cafe.id)
 
-  return <CafeDetailSEO cafe={cafe} nearbyCafes={nearbyCafes} dict={dict} locale={locale} />
+  return (
+    <CafeDetailSEO
+      cafe={cafe}
+      nearbyCafes={nearbyCafes}
+      approvedReviews={approvedReviews}
+      dict={dict}
+      locale={locale}
+    />
+  )
 }
 
 /**

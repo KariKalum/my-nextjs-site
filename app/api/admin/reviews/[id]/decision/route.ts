@@ -2,6 +2,7 @@ import crypto from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/src/lib/supabase/server'
 import { getSupabaseService } from '@/lib/supabase-service'
+import { logModerationEvent } from '@/lib/moderation-events'
 
 export const dynamic = 'force-dynamic'
 
@@ -86,9 +87,9 @@ export async function POST(
       error: loadError,
     } = (await service
       .from('cafe_reviews')
-      .select('id, status')
+      .select('id, status, cafe_id')
       .eq('id', reviewId)
-      .single()) as { data: { id: string; status: string } | null; error: any }
+      .single()) as { data: { id: string; status: string; cafe_id: string } | null; error: any }
 
     if (loadError) {
       if (loadError.code === 'PGRST116') {
@@ -159,6 +160,16 @@ export async function POST(
           { status: 500 }
         )
       }
+      await logModerationEvent({
+        entityType: 'review',
+        entityId: reviewId,
+        action: 'rejected',
+        actorUserId: user.id,
+        cafeId: review.cafe_id,
+        appliedChanges: null,
+        note: review_notes ?? null,
+        requestId,
+      })
       return NextResponse.json({ ok: true, requestId }, { status: 200 })
     }
 
@@ -180,6 +191,17 @@ export async function POST(
         { status: 500 }
       )
     }
+
+    await logModerationEvent({
+      entityType: 'review',
+      entityId: reviewId,
+      action: 'approved',
+      actorUserId: user.id,
+      cafeId: review.cafe_id,
+      appliedChanges: { status: 'approved' },
+      note: review_notes ?? null,
+      requestId,
+    })
 
     return NextResponse.json({ ok: true, requestId }, { status: 200 })
   } catch (err) {

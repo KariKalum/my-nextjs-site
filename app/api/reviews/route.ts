@@ -1,3 +1,9 @@
+/**
+ * POST /api/reviews
+ * ONLY inserts into public.cafe_reviews. ZERO .from('cafes') in this file or any helper.
+ * No .select() after insert. If you see error 42703 overall_laptop_rating on "cafes",
+ * a DB trigger is firing on cafe_reviews insert; run migration 20240128000004_drop_cafe_reviews_triggers_to_cafes.sql.
+ */
 import crypto from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/src/lib/supabase/server'
@@ -107,35 +113,41 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
 
     step = 'insert'
-    // Build payload with only columns that exist on public.cafe_reviews (never touch cafes table)
-    const insertPayload: Record<string, unknown> = {
+    const reviewInsert: {
+      cafe_id: string
+      kind: string
+      rating?: number
+      review_text?: string
+      email?: string
+      user_id?: string
+      evidence?: Record<string, unknown>
+    } = {
       cafe_id: cafe_id.trim(),
       kind: kindVal,
     }
 
     if (kindVal === 'review' && rating != null && typeof rating === 'number' && rating >= 1 && rating <= 5) {
-      insertPayload.rating = Math.floor(rating)
+      reviewInsert.rating = Math.floor(rating)
     }
 
     if (review_text != null && typeof review_text === 'string' && review_text.trim()) {
-      insertPayload.review_text = review_text.trim()
+      reviewInsert.review_text = review_text.trim()
     }
 
     if (email != null && typeof email === 'string' && email.trim()) {
-      insertPayload.email = email.trim()
+      reviewInsert.email = email.trim()
     }
 
     if (evidence != null && typeof evidence === 'object' && !Array.isArray(evidence)) {
-      insertPayload.evidence = evidence as Record<string, unknown>
+      reviewInsert.evidence = evidence as Record<string, unknown>
     }
 
     const { data: { user } } = await supabase.auth.getUser()
     if (user?.id) {
-      insertPayload.user_id = user.id
+      reviewInsert.user_id = user.id
     }
 
-    // Insert only into public.cafe_reviews; status uses default 'pending'; do not call .select()
-    const { error } = await supabase.from('cafe_reviews').insert([insertPayload])
+    const { error } = await supabase.from('cafe_reviews').insert([reviewInsert])
 
     if (error) {
       console.error('[reviews]', {

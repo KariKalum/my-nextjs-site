@@ -2,6 +2,7 @@ import crypto from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/src/lib/supabase/server'
 import { getSupabaseService } from '@/lib/supabase-service'
+import { logModerationEvent } from '@/lib/moderation-events'
 
 export const dynamic = 'force-dynamic'
 
@@ -292,6 +293,17 @@ export async function POST(
         )
       }
 
+      await logModerationEvent({
+        entityType: 'submission',
+        entityId: submissionId,
+        action: 'rejected',
+        actorUserId: user.id,
+        cafeId: null,
+        appliedChanges: null,
+        note: review_notes ?? null,
+        requestId,
+      })
+
       return NextResponse.json(
         {
           ok: true,
@@ -386,6 +398,20 @@ export async function POST(
         { status: 500 }
       )
     }
+
+    await logModerationEvent({
+      entityType: 'submission',
+      entityId: submissionId,
+      action: 'approved',
+      actorUserId: user.id,
+      cafeId: cafeId ?? null,
+      appliedChanges: {
+        created_cafe_id: cafeId,
+        source: 'submission',
+      },
+      note: review_notes ?? null,
+      requestId,
+    })
 
     return NextResponse.json(
       {

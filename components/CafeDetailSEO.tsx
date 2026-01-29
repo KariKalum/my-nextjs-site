@@ -30,14 +30,23 @@ import type { Locale } from '@/lib/i18n/config'
 import { prefixWithLocale } from '@/lib/i18n/routing'
 import LanguageSwitcher from './LanguageSwitcher'
 
+/** Approved review for public display (no email/user_id). */
+export type ApprovedReview = {
+  kind: string
+  rating: number | null
+  review_text: string | null
+  created_at: string
+}
+
 interface CafeDetailSEOProps {
   cafe: Cafe
   nearbyCafes?: Cafe[]
+  approvedReviews?: ApprovedReview[]
   dict: Dictionary
   locale: Locale
 }
 
-export default function CafeDetailSEO({ cafe, nearbyCafes = [], dict, locale }: CafeDetailSEOProps) {
+export default function CafeDetailSEO({ cafe, nearbyCafes = [], approvedReviews = [], dict, locale }: CafeDetailSEOProps) {
   const [toast, setToast] = useState<string | null>(null)
   const [suggestOpen, setSuggestOpen] = useState(false)
   const [suggestHours, setSuggestHours] = useState('')
@@ -685,6 +694,38 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], dict, locale }: 
               )}
             </div>
           </section>
+
+          {/* Approved reviews (no email/user_id) */}
+          {approvedReviews.length > 0 && (
+            <section className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">
+                {t(dict, 'common.reviews')}
+              </h2>
+              <ul className="space-y-4">
+                {approvedReviews.map((rev, idx) => (
+                  <li key={idx} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      {rev.rating != null && rev.rating >= 1 && rev.rating <= 5 && (
+                        <span className="text-yellow-600 text-sm" aria-label={`${rev.rating} out of 5`}>
+                          {'★'.repeat(Math.round(rev.rating))}{'☆'.repeat(5 - Math.round(rev.rating))} {rev.rating}/5
+                        </span>
+                      )}
+                      <span className="text-xs text-gray-500">
+                        {new Date(rev.created_at).toLocaleDateString(locale === 'de' ? 'de-DE' : 'en-GB', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </span>
+                    </div>
+                    {rev.review_text && (
+                      <p className="text-gray-700 text-sm whitespace-pre-wrap">{rev.review_text}</p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           <CafeFAQ cafe={cafe} />
 

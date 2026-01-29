@@ -59,6 +59,22 @@ function formatVal(val: unknown): string {
   return String(val)
 }
 
+/** Render value for Current/Suggested: — for null, text for primitives, scrollable <pre> for JSON. */
+function ValueDisplay({ val }: { val: unknown }) {
+  if (val == null || val === undefined) return <span className="text-gray-400">—</span>
+  if (typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean') {
+    return <span className="whitespace-pre-wrap break-words">{String(val)}</span>
+  }
+  if (typeof val === 'object') {
+    return (
+      <pre className="max-h-32 overflow-auto rounded bg-gray-50 border border-gray-200 p-2 text-xs text-gray-800">
+        {JSON.stringify(val, null, 2)}
+      </pre>
+    )
+  }
+  return <span>{String(val)}</span>
+}
+
 export default function AdminEditSuggestionDetailPage() {
   const params = useParams()
   const router = useRouter()
@@ -72,6 +88,7 @@ export default function AdminEditSuggestionDetailPage() {
   const [successBanner, setSuccessBanner] = useState<string | null>(null)
   const [errorBanner, setErrorBanner] = useState<{ message: string; step?: string; requestId?: string } | null>(null)
   const [applying, setApplying] = useState(false)
+  const [applyingSelective, setApplyingSelective] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -105,6 +122,46 @@ export default function AdminEditSuggestionDetailPage() {
       })
       .then(() => setLoading(false), () => setLoading(false))
   }, [id])
+
+  const handleApplySelected = async () => {
+    if (!suggestion) return
+    const selectedKeys = Object.keys(applyChecked).filter(
+      (key) => applyChecked[key] && ALLOWED_CAFE_FIELDS_SET.has(key) && key in (suggestion.changes || {})
+    )
+    if (selectedKeys.length === 0) return
+    setErrorBanner(null)
+    setSuccessBanner(null)
+    setApplyingSelective(true)
+    try {
+      const res = await fetch('/api/admin/edit-suggestions/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          suggestionId: suggestion.id,
+          cafeId: suggestion.cafe_id,
+          selectedKeys,
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.ok) {
+        const appliedKeys = data.applied && typeof data.applied === 'object' ? Object.keys(data.applied) : selectedKeys
+        setSuccessBanner(`Applied: ${appliedKeys.join(', ')}`)
+        setSuggestion((prev) => (prev ? { ...prev, status: 'approved' } : null))
+        router.refresh()
+        setTimeout(() => setSuccessBanner(null), 4000)
+      } else {
+        setErrorBanner({
+          message: data?.error?.message ?? 'Apply failed',
+          step: data?.step,
+          requestId: data?.requestId,
+        })
+      }
+    } catch (err: unknown) {
+      setErrorBanner({ message: err instanceof Error ? err.message : 'Apply failed' })
+    } finally {
+      setApplyingSelective(false)
+    }
+  }
 
   const handleApply = async () => {
     if (!suggestion) return
@@ -141,8 +198,8 @@ export default function AdminEditSuggestionDetailPage() {
           requestId: data?.requestId,
         })
       }
-    } catch (err: any) {
-      setErrorBanner({ message: err?.message || 'Request failed' })
+    } catch (err: unknown) {
+      setErrorBanner({ message: err instanceof Error ? err.message : 'Request failed' })
     } finally {
       setApplying(false)
     }
@@ -202,39 +259,63 @@ export default function AdminEditSuggestionDetailPage() {
         {suggestion.status === 'pending' && (
           <>
             {applyableKeys.length > 0 && (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-2 text-left font-medium text-gray-700">Field</th>
-                    <th className="px-4 py-2 text-left font-medium text-gray-700">Current</th>
-                    <th className="px-4 py-2 text-left font-medium text-gray-700">Suggested</th>
-                    <th className="px-4 py-2 text-left font-medium text-gray-700 w-20">Apply</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {applyableKeys.map((key) => (
-                    <tr key={key}>
-                      <td className="px-4 py-2 font-medium text-gray-700">{FIELD_LABELS[key] ?? key}</td>
-                      <td className="px-4 py-2 text-gray-600 whitespace-pre-wrap max-w-xs">{formatVal(cafe?.[key])}</td>
-                      <td className="px-4 py-2 text-gray-900 whitespace-pre-wrap max-w-xs">{formatVal(changes[key])}</td>
-                      <td className="px-4 py-2">
-                        {ALLOWED_CAFE_FIELDS_SET.has(key) ? (
-                          <input
-                            type="checkbox"
-                            checked={!!applyChecked[key]}
-                            onChange={(e) => setApplyChecked((prev) => ({ ...prev, [key]: e.target.checked }))}
-                            className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                          />
-                        ) : (
-                          <span className="text-gray-400 text-xs">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+              <div className="px-6 py-4 border-t border-gray-200">
+                <h2 className="text-sm font-semibold text-gray-900 mb-3">Selective apply</h2>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-2 text-left font-medium text-gray-700 w-10">Apply</th>
+                        <th className="px-4 py-2 text-left font-medium text-gray-700">Field</th>
+                        <th className="px-4 py-2 text-left font-medium text-gray-700">Current</th>
+                        <th className="px-4 py-2 text-left font-medium text-gray-700">Suggested</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {applyableKeys.map((key) => (
+                        <tr key={key}>
+                          <td className="px-4 py-2 align-top pt-3">
+                            {ALLOWED_CAFE_FIELDS_SET.has(key) ? (
+                              <input
+                                type="checkbox"
+                                checked={!!applyChecked[key]}
+                                onChange={(e) => setApplyChecked((prev) => ({ ...prev, [key]: e.target.checked }))}
+                                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                              />
+                            ) : (
+                              <span className="text-gray-400 text-xs">—</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-2 font-medium text-gray-700">{FIELD_LABELS[key] ?? key}</td>
+                          <td className="px-4 py-2 text-gray-600 max-w-xs">
+                            <ValueDisplay val={cafe?.[key]} />
+                          </td>
+                          <td className="px-4 py-2 text-gray-900 max-w-xs">
+                            <ValueDisplay val={changes[key]} />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleApplySelected}
+                    disabled={applyingSelective || Object.keys(applyChecked).filter((k) => applyChecked[k] && ALLOWED_CAFE_FIELDS_SET.has(k) && k in changes).length === 0}
+                    className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-md disabled:opacity-50 inline-flex items-center gap-2"
+                  >
+                    {applyingSelective ? (
+                      <>
+                        <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        Applying…
+                      </>
+                    ) : (
+                      'Apply Selected'
+                    )}
+                  </button>
+                </div>
+              </div>
             )}
             {evidenceVal != null && (
               <div className="px-6 py-4 border-t border-gray-200">
