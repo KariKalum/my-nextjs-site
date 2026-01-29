@@ -43,6 +43,7 @@ export default function SubmitPageForm({ dict, locale }: SubmitPageFormProps) {
     website: '',
     google_maps_url: '',
     submitter_email: '',
+    email_consent: false,
     notes: '',
     wifi_notes: '',
     power_notes: '',
@@ -51,8 +52,14 @@ export default function SubmitPageForm({ dict, locale }: SubmitPageFormProps) {
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    const { name, value, type } = e.target
+    const checked = (e.target as HTMLInputElement).checked
+    
+    if (type === 'checkbox') {
+      setFormData(prev => ({ ...prev, [name]: checked }))
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }))
+    }
   }
 
   const handleSubmit = async (e: FormEvent) => {
@@ -101,7 +108,10 @@ export default function SubmitPageForm({ dict, locale }: SubmitPageFormProps) {
       const response = await fetch('/api/submissions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          locale: locale, // Include locale for email consent logging
+        }),
       })
       if (!response) throw new Error('NETWORK_ERROR')
       let data
@@ -124,6 +134,7 @@ export default function SubmitPageForm({ dict, locale }: SubmitPageFormProps) {
         website: '',
         google_maps_url: '',
         submitter_email: '',
+        email_consent: false,
         notes: '',
         wifi_notes: '',
         power_notes: '',
@@ -374,6 +385,24 @@ export default function SubmitPageForm({ dict, locale }: SubmitPageFormProps) {
               <p id="submitter_email-hint" className="mt-1.5 text-sm text-gray-500 leading-relaxed">
                 We&apos;ll only use this to notify you if your submission is approved. Your email won&apos;t be shared publicly.
               </p>
+            </div>
+
+            <div>
+              <label className="flex items-start space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="email_consent"
+                  checked={formData.email_consent}
+                  onChange={handleChange}
+                  required
+                  aria-required="true"
+                  className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  disabled={loading}
+                />
+                <span className="text-sm sm:text-base text-gray-700 leading-relaxed">
+                  {t(dict, 'submit.emailConsentLabel')} <span className="text-red-500" aria-label="required">*</span>
+                </span>
+              </label>
             </div>
 
             <div className="border-t border-gray-200 pt-5 sm:pt-6 mt-5 sm:mt-6">

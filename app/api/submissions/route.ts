@@ -14,6 +14,8 @@ export async function POST(request: NextRequest) {
       website, 
       google_maps_url,
       submitter_email,
+      email_consent,
+      locale,
       notes, 
       wifi_notes,
       power_notes,
@@ -138,6 +140,48 @@ export async function POST(request: NextRequest) {
         { error: 'Failed to submit café suggestion. Please try again.' },
         { status: 500 }
       )
+    }
+
+    // Handle email consent logging if submitter_email exists and email_consent is true
+    if (submitter_email && submitter_email.trim() && email_consent === true) {
+      // Use locale from request body, fallback to Accept-Language header, or default to 'de'
+      let consentLocale = locale || 'de'
+      if (!consentLocale || (consentLocale !== 'en' && consentLocale !== 'de')) {
+        const acceptLanguage = request.headers.get('accept-language') || ''
+        if (acceptLanguage.includes('en')) {
+          consentLocale = 'en'
+        } else {
+          consentLocale = 'de'
+        }
+      }
+
+      // Get IP address from request
+      const forwarded = request.headers.get('x-forwarded-for')
+      const ip = forwarded ? forwarded.split(',')[0].trim() : request.headers.get('x-real-ip') || 'unknown'
+
+      // Get user agent
+      const userAgent = request.headers.get('user-agent') || 'unknown'
+
+      // Insert into email_consent_log
+      const { error: consentError } = await supabase
+        .from('email_consent_log')
+        .insert([
+          {
+            purpose: 'notify_submission',
+            consented: true,
+            email: submitter_email.trim(),
+            locale: consentLocale,
+            ip: ip,
+            user_agent: userAgent,
+          },
+        ])
+
+      if (consentError && process.env.NEXT_PUBLIC_DEBUG_LOGS === 'true') {
+        console.error('Error logging email consent:', consentError)
+        // Don't fail the submission if consent logging fails
+      }
+
+      // TODO: send to Brevo list
     }
 
     return NextResponse.json(

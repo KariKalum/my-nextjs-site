@@ -289,6 +289,7 @@
     "mapsPlaceholder": "https://maps.google.com/...",
     "emailLabel": "Ihre E-Mail (optional)",
     "emailPlaceholder": "sie@beispiel.de",
+    "emailConsentLabel": "Ich möchte E-Mails von workfrom.cafe erhalten (z.B. Updates, neue Cafés).",
     "notesLabel": "Anmerkungen (optional)",
     "notesPlaceholder": "Noch etwas, das wir wissen sollten?",
     "wifiNotesLabel": "WLAN-Anmerkungen (optional)",
