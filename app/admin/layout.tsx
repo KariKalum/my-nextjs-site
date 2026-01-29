@@ -100,6 +100,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 >
                   Submissions
                 </Link>
+                <Link
+                  href="/admin/edit-suggestions"
+                  className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Edit suggestions
+                </Link>
               </nav>
             </div>
             <div className="flex items-center space-x-4">

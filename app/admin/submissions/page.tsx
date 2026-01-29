@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/src/lib/supabase/client'
 import { getCafeHref } from '@/lib/cafeRouting'
 
@@ -27,10 +28,14 @@ interface Submission {
 }
 
 export default function AdminSubmissionsPage() {
+  const router = useRouter()
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending')
+  const [successBanner, setSuccessBanner] = useState<string | null>(null)
+  const [errorBanner, setErrorBanner] = useState<{ message: string; step?: string; requestId?: string } | null>(null)
+  const [actionId, setActionId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchSubmissions()
@@ -64,189 +69,88 @@ export default function AdminSubmissionsPage() {
     }
   }
 
-  const handleApprove = async (submission: Submission) => {
-    if (!confirm(`Approve "${submission.name}" and create a café entry?`)) {
-      return
+  const callDecisionApi = async (
+    submissionId: string,
+    decision: 'approve' | 'reject',
+    reviewNotes?: string
+  ): Promise<{ ok: boolean; requestId?: string; step?: string; error?: { message: string; code?: string } }> => {
+    const res = await fetch(`/api/admin/submissions/${submissionId}/decision`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ decision, review_notes: reviewNotes || undefined }),
+    })
+    const json = await res.json()
+    if (!res.ok) {
+      return {
+        ok: false,
+        requestId: json.requestId,
+        step: json.step,
+        error: json.error,
+      }
     }
+    return { ok: true, requestId: json.requestId }
+  }
 
+  const handleApprove = async (submission: Submission, e?: React.MouseEvent) => {
+    e?.preventDefault()
+    e?.stopPropagation()
+    if (!confirm(`Approve "${submission.name}" and create a café entry?`)) return
+    setErrorBanner(null)
+    setSuccessBanner(null)
+    setActionId(submission.id)
     try {
-      // Build cafe data with intelligent field mapping
-      const cafeData: any = {
-        name: submission.name,
-        city: submission.city,
-        address: submission.address,
-        country: 'DE', // Default to Germany
-        is_active: true,
-        is_verified: false, // Can be verified later
+      const result = await callDecisionApi(submission.id, 'approve')
+      if (!result.ok) {
+        setErrorBanner({
+          message: result.error?.message || 'Approve failed',
+          step: result.step,
+          requestId: result.requestId,
+        })
+        return
       }
-
-      // Add website if available (validate it's not localhost)
-      if (submission.website) {
-        try {
-          const url = new URL(submission.website)
-          if (url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname.startsWith('127.')) {
-            // Skip localhost URLs - don't add website field
-            console.warn(`Skipping localhost website URL for cafe: ${submission.name}`)
-          } else {
-            cafeData.website = submission.website
-          }
-        } catch {
-          // Invalid URL format - skip it
-          console.warn(`Skipping invalid website URL for cafe: ${submission.name}`)
-        }
-      }
-
-      // Add description from notes
-      if (submission.notes) {
-        cafeData.description = submission.notes
-      }
-
-      // Infer laptop-friendly fields from notes (using new schema)
-      // WiFi (using ai_wifi_quality)
-      if (submission.wifi_notes) {
-        const wifiLower = submission.wifi_notes.toLowerCase()
-        if (wifiLower.includes('excellent') || wifiLower.includes('5') || wifiLower.includes('fast')) {
-          cafeData.ai_wifi_quality = 'Excellent'
-        } else if (wifiLower.includes('good') || wifiLower.includes('4')) {
-          cafeData.ai_wifi_quality = 'Good'
-        } else if (wifiLower.includes('ok') || wifiLower.includes('3')) {
-          cafeData.ai_wifi_quality = 'Fair'
-        } else {
-          cafeData.ai_wifi_quality = 'Good' // Default
-        }
-      }
-
-      // Power outlets (using ai_power_outlets)
-      if (submission.power_notes) {
-        const powerLower = submission.power_notes.toLowerCase()
-        if (powerLower.includes('plenty') || powerLower.includes('many') || powerLower.includes('5')) {
-          cafeData.ai_power_outlets = 'Plenty available'
-        } else if (powerLower.includes('some') || powerLower.includes('4')) {
-          cafeData.ai_power_outlets = 'Some available'
-        } else if (powerLower.includes('few') || powerLower.includes('limited') || powerLower.includes('3')) {
-          cafeData.ai_power_outlets = 'Limited'
-        } else {
-          cafeData.ai_power_outlets = 'Some available' // Default
-        }
-      }
-
-      // Noise level (using ai_noise_level)
-      if (submission.noise_notes) {
-        const noiseLower = submission.noise_notes.toLowerCase()
-        if (noiseLower.includes('quiet')) {
-          cafeData.ai_noise_level = 'Quiet'
-        } else if (noiseLower.includes('loud') || noiseLower.includes('noisy')) {
-          cafeData.ai_noise_level = 'Loud'
-        } else if (noiseLower.includes('variable') || noiseLower.includes('varies')) {
-          cafeData.ai_noise_level = 'Variable'
-        } else {
-          cafeData.ai_noise_level = 'Moderate' // Default
-        }
-      } else {
-        cafeData.ai_noise_level = 'Moderate' // Default
-      }
-
-      // Laptop policy (using ai_laptop_policy)
-      if (submission.time_limit_notes) {
-        const timeLower = submission.time_limit_notes.toLowerCase()
-        if (timeLower.includes('no limit') || timeLower.includes('unlimited') || timeLower.includes('no time')) {
-          cafeData.ai_laptop_policy = 'Unlimited'
-        } else {
-          cafeData.ai_laptop_policy = 'Restricted'
-        }
-      } else {
-        cafeData.ai_laptop_policy = 'Unlimited' // Default
-      }
-
-      // Create cafe entry
-      const supabase = createClient()
-      const { data: createdCafe, error: cafeError } = await supabase
-        .from('cafes')
-        .insert([cafeData])
-        .select()
-        .single()
-
-      if (cafeError) {
-        // If error is due to missing columns, try with minimal fields
-        if (cafeError.message?.includes('column') || cafeError.code === '42703') {
-          console.warn('Some fields not available in schema, using minimal fields')
-          const minimalData: any = {
-            name: submission.name,
-            city: submission.city,
-            address: submission.address,
-            country: 'DE',
-            is_active: true,
-            is_verified: false,
-          }
-          if (submission.website) minimalData.website = submission.website
-          if (submission.notes) minimalData.description = submission.notes
-
-          const { data: retryCafe, error: retryError } = await supabase
-            .from('cafes')
-            .insert([minimalData])
-            .select()
-            .single()
-
-          if (retryError) throw retryError
-
-          // Update submission with retry cafe
-          const { error: updateError } = await supabase
-            .from('submissions')
-            .update({
-              status: 'approved',
-              cafe_id: retryCafe.id,
-              reviewed_at: new Date().toISOString(),
-            })
-            .eq('id', submission.id)
-
-          if (updateError) throw updateError
-        } else {
-          throw cafeError
-        }
-      } else {
-        // Update submission status
-        const { error: updateError } = await supabase
-          .from('submissions')
-          .update({
-            status: 'approved',
-            cafe_id: createdCafe.id,
-            reviewed_at: new Date().toISOString(),
-          })
-          .eq('id', submission.id)
-
-        if (updateError) throw updateError
-      }
-
-      // Refresh submissions list
-      fetchSubmissions()
-      alert(`Successfully approved "${submission.name}" and created café entry!`)
+      setSubmissions((prev) => prev.filter((s) => s.id !== submission.id))
+      router.refresh()
+      setSuccessBanner('Approved')
+      setActionId(null)
+      setTimeout(() => setSuccessBanner(null), 4000)
     } catch (err: any) {
-      console.error('Error approving submission:', err)
-      alert(`Failed to approve submission: ${err.message || 'Unknown error'}`)
+      setErrorBanner({
+        message: err?.message || 'Approve failed',
+        requestId: undefined,
+      })
+      setActionId(null)
     }
   }
 
-  const handleReject = async (submissionId: string) => {
+  const handleReject = async (submissionId: string, submissionName: string, e?: React.MouseEvent) => {
+    e?.preventDefault()
+    e?.stopPropagation()
     const notes = prompt('Reason for rejection (optional):')
-    if (notes === null) return // User cancelled
-
+    if (notes === null) return
+    setErrorBanner(null)
+    setSuccessBanner(null)
+    setActionId(submissionId)
     try {
-      const supabase = createClient()
-      const { error } = await supabase
-        .from('submissions')
-        .update({
-          status: 'rejected',
-          reviewed_at: new Date().toISOString(),
-          review_notes: notes || null,
+      const result = await callDecisionApi(submissionId, 'reject', notes || undefined)
+      if (!result.ok) {
+        setErrorBanner({
+          message: result.error?.message || 'Reject failed',
+          step: result.step,
+          requestId: result.requestId,
         })
-        .eq('id', submissionId)
-
-      if (error) throw error
-
-      fetchSubmissions()
+        return
+      }
+      setSubmissions((prev) => prev.filter((s) => s.id !== submissionId))
+      router.refresh()
+      setSuccessBanner('Rejected')
+      setActionId(null)
+      setTimeout(() => setSuccessBanner(null), 4000)
     } catch (err: any) {
-      console.error('Error rejecting submission:', err)
-      alert(`Failed to reject submission: ${err.message || 'Unknown error'}`)
+      setErrorBanner({
+        message: err?.message || 'Reject failed',
+        requestId: undefined,
+      })
+      setActionId(null)
     }
   }
 
@@ -315,6 +219,27 @@ export default function AdminSubmissionsPage() {
         </div>
       )}
 
+      {/* Success banner */}
+      {successBanner && (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm">
+          {successBanner}
+        </div>
+      )}
+
+      {/* Error banner (decision API failure) */}
+      {errorBanner && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm">
+          <p className="font-medium">{errorBanner.message}</p>
+          {(errorBanner.step ?? errorBanner.requestId) && (
+            <p className="mt-1 text-xs opacity-90">
+              {[errorBanner.step && `Step: ${errorBanner.step}`, errorBanner.requestId && `Request: ${errorBanner.requestId}`]
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Submissions List */}
       {filteredSubmissions.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
@@ -327,12 +252,15 @@ export default function AdminSubmissionsPage() {
           {filteredSubmissions.map((submission) => (
             <div
               key={submission.id}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:border-primary-300 transition-colors"
             >
               <div className="flex items-start justify-between">
-                <div className="flex-1">
+                <Link
+                  href={`/admin/submissions/${submission.id}`}
+                  className="flex-1 min-w-0 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset rounded"
+                >
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-xl font-semibold text-gray-900">
+                    <h3 className="text-xl font-semibold text-gray-900 hover:text-primary-600">
                       {submission.name}
                     </h3>
                     <span
@@ -437,19 +365,21 @@ export default function AdminSubmissionsPage() {
                       </p>
                     )}
                   </div>
-                </div>
+                </Link>
 
                 {submission.status === 'pending' && (
-                  <div className="flex gap-2 ml-4">
+                  <div className="flex gap-2 ml-4 shrink-0">
                     <button
-                      onClick={() => handleApprove(submission)}
-                      className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors"
+                      onClick={(e) => handleApprove(submission, e)}
+                      disabled={actionId === submission.id}
+                      className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors disabled:opacity-50"
                     >
                       Approve
                     </button>
                     <button
-                      onClick={() => handleReject(submission.id)}
-                      className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+                      onClick={(e) => handleReject(submission.id, submission.name, e)}
+                      disabled={actionId === submission.id}
+                      className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors disabled:opacity-50"
                     >
                       Reject
                     </button>

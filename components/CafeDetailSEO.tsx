@@ -39,6 +39,11 @@ interface CafeDetailSEOProps {
 
 export default function CafeDetailSEO({ cafe, nearbyCafes = [], dict, locale }: CafeDetailSEOProps) {
   const [toast, setToast] = useState<string | null>(null)
+  const [suggestOpen, setSuggestOpen] = useState(false)
+  const [suggestText, setSuggestText] = useState('')
+  const [suggestEmail, setSuggestEmail] = useState('')
+  const [suggestMessage, setSuggestMessage] = useState<string | null>(null)
+  const [suggestSubmitting, setSuggestSubmitting] = useState(false)
 
   const cafeUrl = getAbsoluteUrl(getCafeHref(cafe, locale))
   const mapsUrl = getMapsUrl(cafe)
@@ -57,6 +62,57 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], dict, locale }: 
       }
     )
   }, [cafeUrl])
+
+  const handleSuggestSubmit = useCallback(async () => {
+    const text = suggestText.trim()
+    if (!text) {
+      setSuggestMessage('Please describe what should be updated.')
+      return
+    }
+    let changes: Record<string, unknown>
+    try {
+      const parsed = JSON.parse(text)
+      if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+        changes = parsed as Record<string, unknown>
+      } else {
+        changes = { note: text }
+      }
+    } catch {
+      changes = { note: text }
+    }
+    setSuggestSubmitting(true)
+    setSuggestMessage(null)
+    try {
+      const res = await fetch('/api/edit-suggestions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cafe_id: cafe.id,
+          changes,
+          email: suggestEmail.trim() || undefined,
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.ok) {
+        setSuggestMessage('Thanks! Edit suggestion sent.')
+        setSuggestText('')
+        setSuggestEmail('')
+        setTimeout(() => {
+          setSuggestOpen(false)
+          setSuggestMessage(null)
+        }, 2000)
+      } else {
+        const err = data?.error?.message || data?.error || 'Request failed'
+        const step = data?.step ? ` (step: ${data.step})` : ''
+        const reqId = data?.requestId ? ` Request: ${data.requestId}` : ''
+        setSuggestMessage(`${err}${step}${reqId}`)
+      }
+    } catch (err) {
+      setSuggestMessage(err instanceof Error ? err.message : 'Request failed')
+    } finally {
+      setSuggestSubmitting(false)
+    }
+  }, [cafe.id, suggestText, suggestEmail])
 
   const whyContent = [
     cafe.ai_evidence,
@@ -162,6 +218,13 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], dict, locale }: 
             >
               🔗 {t(dict, 'cafeDetail.share')}
             </button>
+            <button
+              type="button"
+              onClick={() => { setSuggestOpen((o) => !o); setSuggestMessage(null) }}
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border-2 border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+            >
+              ✏️ Suggest an edit
+            </button>
             {toast && (
               <div
                 role="status"
@@ -172,6 +235,55 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], dict, locale }: 
               </div>
             )}
           </div>
+
+          {suggestOpen && (
+            <section className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">✏️ Suggest an edit</h2>
+              <p className="text-sm text-gray-600 mb-3">
+                Describe what should be updated, or paste JSON (e.g. {`{"hours": "9–17"}`}).
+              </p>
+              <textarea
+                value={suggestText}
+                onChange={(e) => setSuggestText(e.target.value)}
+                placeholder="What changed? Plain text or JSON..."
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              />
+              <label className="block mt-3 text-sm font-medium text-gray-700 mb-1">Email (optional)</label>
+              <input
+                type="email"
+                value={suggestEmail}
+                onChange={(e) => setSuggestEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              />
+              {suggestMessage && (
+                <p
+                  className={`mt-3 text-sm ${suggestMessage.startsWith('Thanks') ? 'text-green-700' : 'text-red-700'}`}
+                  role="status"
+                >
+                  {suggestMessage}
+                </p>
+              )}
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleSuggestSubmit}
+                  disabled={suggestSubmitting}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-600 text-white font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50"
+                >
+                  {suggestSubmitting ? 'Sending…' : 'Submit'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setSuggestOpen(false); setSuggestMessage(null) }}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                >
+                  Cancel
+                </button>
+              </div>
+            </section>
+          )}
 
           {/* 3) Map - Always render if location data exists */}
           {(cafe.latitude != null && cafe.longitude != null) || cafe.google_maps_url || cafe.address ? (
