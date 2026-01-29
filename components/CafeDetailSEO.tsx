@@ -52,6 +52,14 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], dict, locale }: 
   const [suggestMessage, setSuggestMessage] = useState<string | null>(null)
   const [suggestSubmitting, setSuggestSubmitting] = useState(false)
 
+  const [reviewOpen, setReviewOpen] = useState(false)
+  const [reviewKind, setReviewKind] = useState<'review' | 'report' | 'quick_feedback'>('review')
+  const [reviewRating, setReviewRating] = useState<number | ''>('')
+  const [reviewText, setReviewText] = useState('')
+  const [reviewEmail, setReviewEmail] = useState('')
+  const [reviewMessage, setReviewMessage] = useState<string | null>(null)
+  const [reviewSubmitting, setReviewSubmitting] = useState(false)
+
   const cafeUrl = getAbsoluteUrl(getCafeHref(cafe, locale))
   const mapsUrl = getMapsUrl(cafe)
   const addressLine = formatAddress(cafe)
@@ -198,6 +206,60 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], dict, locale }: 
     suggestEmail,
   ])
 
+  const handleReviewSubmit = useCallback(async () => {
+    if (reviewKind === 'review') {
+      const hasRating = reviewRating !== '' && Number(reviewRating) >= 1 && Number(reviewRating) <= 5
+      const hasText = reviewText.trim().length > 0
+      if (!hasRating && !hasText) {
+        setReviewMessage('Please add a rating (1–5) or some text for your review.')
+        return
+      }
+    } else if (!reviewText.trim()) {
+      setReviewMessage('Please add some text.')
+      return
+    }
+
+    setReviewSubmitting(true)
+    setReviewMessage(null)
+    try {
+      const payload: { cafe_id: string; kind: string; rating?: number; review_text?: string; email?: string } = {
+        cafe_id: cafe.id,
+        kind: reviewKind,
+      }
+      if (reviewKind === 'review' && reviewRating !== '' && Number(reviewRating) >= 1 && Number(reviewRating) <= 5) {
+        payload.rating = Number(reviewRating)
+      }
+      if (reviewText.trim()) payload.review_text = reviewText.trim()
+      if (reviewEmail.trim()) payload.email = reviewEmail.trim()
+
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.ok) {
+        setReviewMessage('Thanks! Your review was submitted and will be reviewed.')
+        setReviewRating('')
+        setReviewText('')
+        setReviewEmail('')
+        setTimeout(() => {
+          setReviewOpen(false)
+          setReviewMessage(null)
+        }, 2500)
+      } else {
+        const err = data?.error?.message || data?.error || 'Request failed'
+        const step = data?.step ? ` (step: ${data.step})` : ''
+        const reqId = data?.requestId ? ` Request: ${data.requestId}` : ''
+        setReviewMessage(`${err}${step}${reqId}`)
+      }
+    } catch (err) {
+      setReviewMessage(err instanceof Error ? err.message : 'Request failed')
+    } finally {
+      setReviewSubmitting(false)
+    }
+  }, [cafe.id, reviewKind, reviewRating, reviewText, reviewEmail])
+
   const whyContent = [
     cafe.ai_evidence,
     cafe.ai_reasons,
@@ -309,6 +371,13 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], dict, locale }: 
             >
               ✏️ Suggest an edit
             </button>
+            <button
+              type="button"
+              onClick={() => { setReviewOpen((o) => !o); setReviewMessage(null) }}
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border-2 border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+            >
+              ✍️ Write a review / Report
+            </button>
             {toast && (
               <div
                 role="status"
@@ -362,6 +431,87 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], dict, locale }: 
                   {suggestSubmitting ? 'Sending…' : 'Submit'}
                 </button>
                 <button type="button" onClick={() => { setSuggestOpen(false); setSuggestMessage(null) }} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
+                  Cancel
+                </button>
+              </div>
+            </section>
+          )}
+
+          {reviewOpen && (
+            <section className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">✍️ Write a review / Report</h2>
+              <p className="text-sm text-gray-600 mb-4">Choose type and add your feedback. Reviews are moderated before being shown.</p>
+              <div className="flex gap-3 mb-4">
+                {(['review', 'quick_feedback', 'report'] as const).map((k) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => setReviewKind(k)}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg ${
+                      reviewKind === k
+                        ? 'bg-primary-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {k === 'review' ? 'Review' : k === 'quick_feedback' ? 'Quick feedback' : 'Report'}
+                  </button>
+                ))}
+              </div>
+              {reviewKind === 'review' && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Rating (1–5, optional)</label>
+                  <select
+                    value={reviewRating === '' ? '' : String(reviewRating)}
+                    onChange={(e) => setReviewRating(e.target.value === '' ? '' : Number(e.target.value))}
+                    className="w-full max-w-[120px] px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="">—</option>
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <option key={n} value={n}>{n} star{n > 1 ? 's' : ''}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {reviewKind === 'review' ? 'Your review (optional if you set a rating)' : 'Your message'}
+              </label>
+              <textarea
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
+                placeholder={reviewKind === 'review' ? 'How was working here?' : 'Describe the issue or feedback…'}
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+              <label className="block mt-3 text-sm font-medium text-gray-700 mb-1">Email (optional)</label>
+              <input
+                type="email"
+                value={reviewEmail}
+                onChange={(e) => setReviewEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+              {reviewMessage && (
+                <p
+                  className={`mt-3 text-sm ${reviewMessage.startsWith('Thanks') ? 'text-green-700' : 'text-red-700'}`}
+                  role="status"
+                >
+                  {reviewMessage}
+                </p>
+              )}
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleReviewSubmit}
+                  disabled={reviewSubmitting}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-600 text-white font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50"
+                >
+                  {reviewSubmitting ? 'Sending…' : 'Submit'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setReviewOpen(false); setReviewMessage(null) }}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                >
                   Cancel
                 </button>
               </div>

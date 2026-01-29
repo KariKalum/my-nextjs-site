@@ -106,6 +106,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 >
                   Edit suggestions
                 </Link>
+                <Link
+                  href="/admin/reviews"
+                  className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Reviews
+                </Link>
               </nav>
             </div>
             <div className="flex items-center space-x-4">
