@@ -2,12 +2,14 @@ import crypto from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/src/lib/supabase/server'
 import { getSupabaseService } from '@/lib/supabase-service'
+import { ALLOWED_CAFE_FIELDS_SET } from '@/lib/edit-suggestions-fields'
 
 export const dynamic = 'force-dynamic'
 
 type DecisionBody = {
   decision: 'approve' | 'reject'
   review_notes?: string
+  accepted_changes?: Record<string, unknown>
 }
 
 type EditSuggestionRow = {
@@ -27,25 +29,10 @@ type Step =
   | 'approve_update_suggestion'
   | 'unknown'
 
-// Writable columns on public.cafes (exclude id, created_at, place_id, location)
-const CAFE_PATCH_ALLOWLIST = new Set([
-  'name', 'description', 'address', 'city', 'state', 'zip_code', 'country',
-  'phone', 'email', 'website', 'latitude', 'longitude', 'hours',
-  'google_maps_url', 'google_rating', 'google_ratings_total', 'price_level',
-  'business_status', 'google_reviews', 'google_reviews_fetched_at',
-  'work_score', 'is_work_friendly', 'ai_score', 'ai_confidence',
-  'ai_wifi_quality', 'ai_power_outlets', 'ai_noise_level', 'ai_laptop_policy',
-  'ai_signals', 'ai_evidence', 'ai_reasons', 'ai_structured_json',
-  'ai_human_summary', 'ai_inference_notes', 'ai_rated_at',
-  'is_active', 'is_verified', 'updated_at',
-  'wifi_available', 'wifi_speed_rating', 'power_outlets_available',
-  'seating_capacity', 'noise_level', 'table_space_rating', 'total_reviews', 'total_visits',
-])
-
 function buildCafePatch(changes: Record<string, unknown>): Record<string, unknown> {
   const patch: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(changes)) {
-    if (CAFE_PATCH_ALLOWLIST.has(key)) {
+    if (ALLOWED_CAFE_FIELDS_SET.has(key)) {
       patch[key] = value
     }
   }
@@ -168,7 +155,7 @@ export async function POST(
       )
     }
 
-    const { decision, review_notes } = body
+    const { decision, review_notes, accepted_changes } = body
     if (decision !== 'approve' && decision !== 'reject') {
       return NextResponse.json(
         { ok: false, requestId, step: 'validate_status', error: { message: 'Invalid decision' } },
@@ -179,7 +166,16 @@ export async function POST(
     const reviewedAt = new Date().toISOString()
     const reviewedBy = user.id
 
-    if (decision === 'reject') {
+    const effectiveAccepted =
+      accepted_changes && typeof accepted_changes === 'object' && Object.keys(accepted_changes).length > 0
+        ? accepted_changes
+        : decision === 'approve' && suggestion.changes && typeof suggestion.changes === 'object'
+          ? (suggestion.changes as Record<string, unknown>)
+          : {}
+    const cafePatch = buildCafePatch(effectiveAccepted)
+    const hasAcceptedFields = Object.keys(cafePatch).filter((k) => k !== 'updated_at').length > 0
+
+    if (decision === 'reject' || !hasAcceptedFields) {
       step = 'reject'
       const { error: updateError } = await service
         .from('cafe_edit_suggestions')
@@ -202,10 +198,6 @@ export async function POST(
     }
 
     step = 'approve_patch_cafe'
-    const changes = suggestion.changes && typeof suggestion.changes === 'object'
-      ? (suggestion.changes as Record<string, unknown>)
-      : {}
-    const cafePatch = buildCafePatch(changes)
     if (Object.keys(cafePatch).length > 0) {
       const { error: cafeUpdateError } = await service
         .from('cafes')

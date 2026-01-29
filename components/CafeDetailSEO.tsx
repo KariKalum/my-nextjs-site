@@ -40,7 +40,14 @@ interface CafeDetailSEOProps {
 export default function CafeDetailSEO({ cafe, nearbyCafes = [], dict, locale }: CafeDetailSEOProps) {
   const [toast, setToast] = useState<string | null>(null)
   const [suggestOpen, setSuggestOpen] = useState(false)
-  const [suggestText, setSuggestText] = useState('')
+  const [suggestHours, setSuggestHours] = useState('')
+  const [suggestWebsite, setSuggestWebsite] = useState('')
+  const [suggestNoiseLevel, setSuggestNoiseLevel] = useState('')
+  const [suggestTimeLimit, setSuggestTimeLimit] = useState('')
+  const [suggestLaptopFriendly, setSuggestLaptopFriendly] = useState('')
+  const [suggestWifiQuality, setSuggestWifiQuality] = useState('')
+  const [suggestPowerOutlets, setSuggestPowerOutlets] = useState('')
+  const [suggestEvidence, setSuggestEvidence] = useState('')
   const [suggestEmail, setSuggestEmail] = useState('')
   const [suggestMessage, setSuggestMessage] = useState<string | null>(null)
   const [suggestSubmitting, setSuggestSubmitting] = useState(false)
@@ -63,23 +70,82 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], dict, locale }: 
     )
   }, [cafeUrl])
 
+  const NOISE_LEVEL_OPTIONS = ['', 'quiet', 'moderate', 'loud', 'variable']
+  const TIME_LIMIT_OPTIONS = ['', 'Unlimited', 'Restricted', 'Unknown']
+  const LAPTOP_FRIENDLY_OPTIONS = ['', 'true', 'false'] // values for API; display as (unchanged), Yes, No
+
+  function formatHoursDisplay(hours: unknown): string {
+    if (hours == null) return '—'
+    if (typeof hours === 'string') return hours.trim() || '—'
+    if (typeof hours === 'object' && hours !== null && Array.isArray((hours as { weekday_text?: string[] }).weekday_text)) {
+      return ((hours as { weekday_text: string[] }).weekday_text).join('\n')
+    }
+    return '—'
+  }
+
+  function formatCurrentDisplay(val: unknown): string {
+    if (val == null || val === '') return '—'
+    if (typeof val === 'string' && val.toLowerCase() === 'unknown') return '—'
+    if (typeof val === 'boolean') return val ? 'Yes' : 'No'
+    return String(val)
+  }
+
   const handleSuggestSubmit = useCallback(async () => {
-    const text = suggestText.trim()
-    if (!text) {
-      setSuggestMessage('Please describe what should be updated.')
+    const changes: Record<string, unknown> = {}
+
+    const hoursVal = suggestHours.trim()
+    if (hoursVal !== '') changes.hours = hoursVal
+
+    const websiteVal = suggestWebsite.trim()
+    if (websiteVal !== '') {
+      try {
+        new URL(websiteVal)
+        changes.website = websiteVal
+      } catch {
+        setSuggestMessage('Please enter a valid URL for website.')
+        return
+      }
+    }
+
+    if (suggestNoiseLevel !== '') {
+      if (!NOISE_LEVEL_OPTIONS.includes(suggestNoiseLevel)) {
+        setSuggestMessage('Invalid noise level.')
+        return
+      }
+      changes.ai_noise_level = suggestNoiseLevel
+    }
+
+    if (suggestTimeLimit !== '') {
+      if (!TIME_LIMIT_OPTIONS.includes(suggestTimeLimit)) {
+        setSuggestMessage('Invalid time limit.')
+        return
+      }
+      changes.ai_laptop_policy = suggestTimeLimit
+    }
+
+    if (suggestLaptopFriendly !== '') {
+      if (suggestLaptopFriendly === 'true') changes.is_work_friendly = true
+      else if (suggestLaptopFriendly === 'false') changes.is_work_friendly = false
+      else {
+        setSuggestMessage('Invalid laptop friendly value.')
+        return
+      }
+    }
+
+    const wifiVal = suggestWifiQuality.trim()
+    if (wifiVal !== '') changes.ai_wifi_quality = wifiVal
+
+    const powerVal = suggestPowerOutlets.trim()
+    if (powerVal !== '') changes.ai_power_outlets = powerVal
+
+    const evidenceVal = suggestEvidence.trim()
+    if (evidenceVal !== '') changes.evidence = evidenceVal
+
+    if (Object.keys(changes).length === 0) {
+      setSuggestMessage('Please fill in at least one field or add evidence/comment.')
       return
     }
-    let changes: Record<string, unknown>
-    try {
-      const parsed = JSON.parse(text)
-      if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
-        changes = parsed as Record<string, unknown>
-      } else {
-        changes = { note: text }
-      }
-    } catch {
-      changes = { note: text }
-    }
+
     setSuggestSubmitting(true)
     setSuggestMessage(null)
     try {
@@ -95,7 +161,14 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], dict, locale }: 
       const data = await res.json().catch(() => ({}))
       if (res.ok && data.ok) {
         setSuggestMessage('Thanks! Edit suggestion sent.')
-        setSuggestText('')
+        setSuggestHours('')
+        setSuggestWebsite('')
+        setSuggestNoiseLevel('')
+        setSuggestTimeLimit('')
+        setSuggestLaptopFriendly('')
+        setSuggestWifiQuality('')
+        setSuggestPowerOutlets('')
+        setSuggestEvidence('')
         setSuggestEmail('')
         setTimeout(() => {
           setSuggestOpen(false)
@@ -112,7 +185,18 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], dict, locale }: 
     } finally {
       setSuggestSubmitting(false)
     }
-  }, [cafe.id, suggestText, suggestEmail])
+  }, [
+    cafe.id,
+    suggestHours,
+    suggestWebsite,
+    suggestNoiseLevel,
+    suggestTimeLimit,
+    suggestLaptopFriendly,
+    suggestWifiQuality,
+    suggestPowerOutlets,
+    suggestEvidence,
+    suggestEmail,
+  ])
 
   const whyContent = [
     cafe.ai_evidence,
@@ -239,46 +323,45 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], dict, locale }: 
           {suggestOpen && (
             <section className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-sm">
               <h2 className="text-lg font-semibold text-gray-900 mb-3">✏️ Suggest an edit</h2>
-              <p className="text-sm text-gray-600 mb-3">
-                Describe what should be updated, or paste JSON (e.g. {`{"hours": "9–17"}`}).
-              </p>
-              <textarea
-                value={suggestText}
-                onChange={(e) => setSuggestText(e.target.value)}
-                placeholder="What changed? Plain text or JSON..."
-                rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              />
+              <p className="text-sm text-gray-600 mb-4">Current values and your suggested values. Only filled fields are submitted.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-3 text-sm items-center">
+                <div className="font-medium text-gray-500 hidden sm:block sm:col-span-1" aria-hidden>Label</div>
+                <div className="font-medium text-gray-500 hidden sm:block sm:col-span-1">Current</div>
+                <div className="font-medium text-gray-500 hidden sm:block sm:col-span-1">Suggested</div>
+                <div className="font-medium text-gray-700 sm:col-span-1">Hours</div>
+                <div className="text-gray-700 whitespace-pre-wrap sm:col-span-1">{formatHoursDisplay(cafe.hours)}</div>
+                <div className="sm:col-span-1"><textarea value={suggestHours} onChange={(e) => setSuggestHours(e.target.value)} placeholder="Hours (e.g. Mon–Fri 8–18)" rows={2} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500" /></div>
+                <div className="font-medium text-gray-700 sm:col-span-1">Website</div>
+                <div className="text-gray-700 sm:col-span-1">{formatCurrentDisplay(cafe.website)}</div>
+                <div className="sm:col-span-1"><input type="url" value={suggestWebsite} onChange={(e) => setSuggestWebsite(e.target.value)} placeholder="Website URL" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500" /></div>
+                <div className="font-medium text-gray-700 sm:col-span-1">Noise level</div>
+                <div className="text-gray-700 sm:col-span-1">{formatCurrentDisplay(cafe.ai_noise_level)}</div>
+                <div className="sm:col-span-1"><select value={suggestNoiseLevel} onChange={(e) => setSuggestNoiseLevel(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500">{NOISE_LEVEL_OPTIONS.map((o) => <option key={o || '_'} value={o}>{o ? o : '(unchanged)'}</option>)}</select></div>
+                <div className="font-medium text-gray-700 sm:col-span-1">Time limit</div>
+                <div className="text-gray-700 sm:col-span-1">{formatCurrentDisplay(cafe.ai_laptop_policy)}</div>
+                <div className="sm:col-span-1"><select value={suggestTimeLimit} onChange={(e) => setSuggestTimeLimit(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500">{TIME_LIMIT_OPTIONS.map((o) => <option key={o || '_'} value={o}>{o ? o : '(unchanged)'}</option>)}</select></div>
+                <div className="font-medium text-gray-700 sm:col-span-1">Laptop friendly</div>
+                <div className="text-gray-700 sm:col-span-1">{formatCurrentDisplay(cafe.is_work_friendly)}</div>
+                <div className="sm:col-span-1"><select value={suggestLaptopFriendly} onChange={(e) => setSuggestLaptopFriendly(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500">{LAPTOP_FRIENDLY_OPTIONS.map((o) => <option key={o || '_'} value={o}>{o === '' ? '(unchanged)' : o === 'true' ? 'Yes' : 'No'}</option>)}</select></div>
+                <div className="font-medium text-gray-700 sm:col-span-1">WiFi quality</div>
+                <div className="text-gray-700 sm:col-span-1">{formatCurrentDisplay(cafe.ai_wifi_quality)}</div>
+                <div className="sm:col-span-1"><input type="text" value={suggestWifiQuality} onChange={(e) => setSuggestWifiQuality(e.target.value)} placeholder="WiFi quality" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500" /></div>
+                <div className="font-medium text-gray-700 sm:col-span-1">Power outlets</div>
+                <div className="text-gray-700 sm:col-span-1">{formatCurrentDisplay(cafe.ai_power_outlets)}</div>
+                <div className="sm:col-span-1"><input type="text" value={suggestPowerOutlets} onChange={(e) => setSuggestPowerOutlets(e.target.value)} placeholder="Power outlets" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500" /></div>
+              </div>
+              <label className="block mt-4 text-sm font-medium text-gray-700 mb-1">Evidence / comment (optional, not applied to listing)</label>
+              <textarea value={suggestEvidence} onChange={(e) => setSuggestEvidence(e.target.value)} placeholder="Optional note for reviewers…" rows={2} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
               <label className="block mt-3 text-sm font-medium text-gray-700 mb-1">Email (optional)</label>
-              <input
-                type="email"
-                value={suggestEmail}
-                onChange={(e) => setSuggestEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              />
+              <input type="email" value={suggestEmail} onChange={(e) => setSuggestEmail(e.target.value)} placeholder="you@example.com" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
               {suggestMessage && (
-                <p
-                  className={`mt-3 text-sm ${suggestMessage.startsWith('Thanks') ? 'text-green-700' : 'text-red-700'}`}
-                  role="status"
-                >
-                  {suggestMessage}
-                </p>
+                <p className={`mt-3 text-sm ${suggestMessage.startsWith('Thanks') ? 'text-green-700' : 'text-red-700'}`} role="status">{suggestMessage}</p>
               )}
               <div className="mt-3 flex gap-2">
-                <button
-                  type="button"
-                  onClick={handleSuggestSubmit}
-                  disabled={suggestSubmitting}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-600 text-white font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50"
-                >
+                <button type="button" onClick={handleSuggestSubmit} disabled={suggestSubmitting} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-600 text-white font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50">
                   {suggestSubmitting ? 'Sending…' : 'Submit'}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => { setSuggestOpen(false); setSuggestMessage(null) }}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-                >
+                <button type="button" onClick={() => { setSuggestOpen(false); setSuggestMessage(null) }} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
                   Cancel
                 </button>
               </div>

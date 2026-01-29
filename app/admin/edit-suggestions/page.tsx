@@ -229,18 +229,21 @@ export default function AdminEditSuggestionsPage() {
           {filteredSuggestions.map((s) => (
             <div
               key={s.id}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:border-primary-300 transition-colors"
             >
               <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
+                <div
+                  role="link"
+                  tabIndex={0}
+                  onClick={() => router.push(`/admin/edit-suggestions/${s.id}`)}
+                  onKeyDown={(e) => e.key === 'Enter' && router.push(`/admin/edit-suggestions/${s.id}`)}
+                  className="flex-1 min-w-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset rounded"
+                >
                   <div className="flex items-center gap-3 mb-2 flex-wrap">
                     <span className="text-sm font-medium text-gray-500">Café</span>
-                    <Link
-                      href={getCafeHref({ id: s.cafe_id })}
-                      className="text-primary-600 hover:text-primary-700 font-medium"
-                    >
+                    <span className="text-primary-600 font-medium">
                       {cafeNames[s.cafe_id] || s.cafe_id}
-                    </Link>
+                    </span>
                     <span
                       className={`px-2 py-1 text-xs font-medium rounded-full ${
                         s.status === 'pending'
@@ -257,7 +260,7 @@ export default function AdminEditSuggestionsPage() {
                     Created: {new Date(s.created_at).toLocaleString()}
                   </p>
                   {s.email && (
-                    <p className="text-sm text-gray-600 mb-2">
+                    <p className="text-sm text-gray-600 mb-2" onClick={(e) => e.stopPropagation()}>
                       Email: <a href={`mailto:${s.email}`} className="text-primary-600 hover:text-primary-700">{s.email}</a>
                     </p>
                   )}
