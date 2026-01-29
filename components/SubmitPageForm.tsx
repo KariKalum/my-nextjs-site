@@ -394,13 +394,11 @@ export default function SubmitPageForm({ dict, locale }: SubmitPageFormProps) {
                   name="email_consent"
                   checked={formData.email_consent}
                   onChange={handleChange}
-                  required
-                  aria-required="true"
                   className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                   disabled={loading}
                 />
                 <span className="text-sm sm:text-base text-gray-700 leading-relaxed">
-                  {t(dict, 'submit.emailConsentLabel')} <span className="text-red-500" aria-label="required">*</span>
+                  {t(dict, 'submit.emailConsentLabel')}
                 </span>
               </label>
             </div>

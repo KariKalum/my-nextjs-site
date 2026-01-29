@@ -42,18 +42,13 @@ export async function middleware(request: NextRequest) {
     },
   })
 
-  // Protect /admin routes - require authentication
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    // If Supabase is not configured, allow access (for development)
+  // Helper function to check authentication
+  const checkAuth = async (pathname: string): Promise<{ user: any; supabase: any } | null> => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     
     if (!supabaseUrl || !supabaseAnonKey) {
-      // If no Supabase config, redirect to login (they can't authenticate anyway)
-      const url = request.nextUrl.clone()
-      url.pathname = '/login'
-      url.searchParams.set('redirect', request.nextUrl.pathname)
-      return NextResponse.redirect(url)
+      return null
     }
     
     const supabase = createServerClient(
@@ -102,16 +97,48 @@ export async function middleware(request: NextRequest) {
       }
     )
 
-    // Check if user is authenticated
     const {
       data: { user },
     } = await supabase.auth.getUser()
 
-    // If no user and trying to access admin, redirect to login
-    if (!user) {
+    return { user, supabase }
+  }
+
+  // Protect /admin routes - require authentication
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    const authResult = await checkAuth(request.nextUrl.pathname)
+    
+    if (!authResult) {
+      // If no Supabase config, redirect to login (they can't authenticate anyway)
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       url.searchParams.set('redirect', request.nextUrl.pathname)
+      return NextResponse.redirect(url)
+    }
+
+    // If no user and trying to access admin, redirect to login
+    if (!authResult.user) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      url.searchParams.set('redirect', request.nextUrl.pathname)
+      return NextResponse.redirect(url)
+    }
+  }
+
+  // Protect /{locale}/submit routes - require authentication
+  const pathnameParts = pathname.split('/').filter(Boolean)
+  if (pathnameParts.length === 2 && pathnameParts[1] === 'submit' && isValidLocale(pathnameParts[0])) {
+    const locale = pathnameParts[0]
+    const authResult = await checkAuth(pathname)
+    
+    if (!authResult) {
+      // If no Supabase config, allow access (for development)
+      // In production, this should redirect to login
+    } else if (!authResult.user) {
+      // User not authenticated - redirect to login with locale-preserved redirect
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      url.searchParams.set('redirect', `/${locale}/submit`)
       return NextResponse.redirect(url)
     }
   }

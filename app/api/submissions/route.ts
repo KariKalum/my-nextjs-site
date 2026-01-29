@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       website, 
       google_maps_url,
       submitter_email,
-      email_consent,
+      email_consent = false, // Default to false if not provided
       locale,
       notes, 
       wifi_notes,
@@ -133,9 +133,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
-      if (process.env.NEXT_PUBLIC_DEBUG_LOGS === 'true') {
-        console.error('Error creating submission:', error)
-      }
+      console.error('[submissions] Error creating submission:', error)
       return NextResponse.json(
         { error: 'Failed to submit café suggestion. Please try again.' },
         { status: 500 }
@@ -176,8 +174,8 @@ export async function POST(request: NextRequest) {
           },
         ])
 
-      if (consentError && process.env.NEXT_PUBLIC_DEBUG_LOGS === 'true') {
-        console.error('Error logging email consent:', consentError)
+      if (consentError) {
+        console.error('[submissions] Error logging email consent:', consentError)
         // Don't fail the submission if consent logging fails
       }
 
@@ -189,9 +187,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error) {
-    if (process.env.NEXT_PUBLIC_DEBUG_LOGS === 'true') {
-      console.error('Error processing submission:', error)
-    }
+    console.error('[submissions] Error processing submission:', error)
     return NextResponse.json(
       { error: 'An error occurred while processing your submission' },
       { status: 500 }
