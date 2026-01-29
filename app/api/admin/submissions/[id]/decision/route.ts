@@ -147,7 +147,7 @@ export async function POST(
     }
 
     // 2) Load submission using service-role client
-    const service = getSupabaseService()
+    const service = getSupabaseService() as any
     console.info('[admin-submissions]', {
       requestId,
       step: 'service_role_ready',
@@ -156,11 +156,11 @@ export async function POST(
     const {
       data: submission,
       error: loadError,
-    } = await service
+    } = (await service
       .from('submissions')
       .select('id,status,name,city,address,website,google_maps_url')
       .eq('id', submissionId)
-      .single<SubmissionRow>()
+      .single()) as { data: SubmissionRow | null; error: any }
 
     if (loadError) {
       // Not found (PostgREST typically uses PGRST116 for no rows)
