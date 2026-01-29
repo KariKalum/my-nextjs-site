@@ -77,10 +77,11 @@ function LoginForm() {
 
     try {
       const supabase = createClient()
-      // Use production-safe callback URL
+      // Use production-safe callback URL with locale prefix (default: de)
+      const defaultLocale = 'de'
       const callbackUrl = process.env.NEXT_PUBLIC_SITE_URL
-        ? `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
-        : 'https://workfrom.cafe/auth/callback'
+        ? `${process.env.NEXT_PUBLIC_SITE_URL}/${defaultLocale}/auth/callback`
+        : 'https://workfrom.cafe/de/auth/callback'
       const { error: magicLinkError } = await supabase.auth.signInWithOtp({
         email,
         options: {
