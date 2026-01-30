@@ -3,37 +3,31 @@
 import { usePathname, useRouter } from 'next/navigation'
 import { getLocaleFromPathname } from '@/lib/i18n/routing'
 import { switchLocale } from '@/lib/i18n/path'
-import { type Locale, locales } from '@/lib/i18n/config'
+import { type Locale } from '@/lib/i18n/config'
 
 export default function LanguageSwitcher() {
   const pathname = usePathname()
   const router = useRouter()
   const currentLocale = getLocaleFromPathname(pathname)
-  
-  const handleLocaleChange = (newLocale: Locale) => {
-    if (newLocale === currentLocale) return
-    
+
+  const handleToggle = () => {
+    const newLocale: Locale = currentLocale === 'en' ? 'de' : 'en'
     const newPath = switchLocale(pathname, newLocale)
     router.push(newPath)
   }
 
+  const label = currentLocale === 'en' ? 'Deutsch' : 'English'
+  const currentLabel = currentLocale === 'en' ? 'English' : 'Deutsch'
+
   return (
-    <div className="flex items-center gap-2">
-      {locales.map((locale) => (
-        <button
-          key={locale}
-          onClick={() => handleLocaleChange(locale)}
-          className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-            currentLocale === locale
-              ? 'bg-primary-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-          aria-label={`Switch to ${locale === 'en' ? 'English' : 'German'}`}
-          aria-pressed={currentLocale === locale}
-        >
-          {locale.toUpperCase()}
-        </button>
-      ))}
-    </div>
+    <button
+      type="button"
+      onClick={handleToggle}
+      className="text-gray-500 hover:text-gray-700 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 rounded px-1.5 py-1 transition-colors"
+      aria-label={`Current language: ${currentLabel}. Switch to ${label}`}
+      title={`Switch to ${label}`}
+    >
+      <span className="tabular-nums">EN ⇄ DE</span>
+    </button>
   )
 }

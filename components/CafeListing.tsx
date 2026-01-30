@@ -86,13 +86,6 @@ export default function CafeListing() {
       )
     }
 
-    // Filter by Google rating
-    if (filters.min_google_rating) {
-      filtered = filtered.filter(cafe => 
-        cafe.google_rating && cafe.google_rating >= filters.min_google_rating!
-      )
-    }
-
     // Filter by noise level (using ai_noise_level)
     if (filters.ai_noise_level && filters.ai_noise_level.length > 0) {
       filtered = filtered.filter(cafe => 

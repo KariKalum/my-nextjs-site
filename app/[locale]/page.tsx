@@ -1,8 +1,6 @@
 import { Metadata } from 'next'
-import Link from 'next/link'
 import Logo from '@/components/Logo'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
-import CommunityNotice from '@/components/CommunityNotice'
 import Hero from '@/components/home/Hero'
 import ValueProps from '@/components/home/ValueProps'
 import FeaturedCities from '@/components/home/FeaturedCities'
@@ -64,32 +62,39 @@ export default function Home({
     <main className="min-h-screen">
       {/* Header */}
       <header className="bg-white shadow-sm border-b sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-center md:justify-between">
-            <div className="flex-1 md:flex-none">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[var(--header-row-height)] flex items-center">
+          <div className="flex items-center justify-between gap-4 w-full h-full">
+            <div className="flex-shrink-0 h-full flex items-center">
               <Logo />
             </div>
-            <div className="hidden md:flex items-center gap-3">
+            <div className="flex items-center gap-3 md:gap-4">
               <LanguageSwitcher />
-              <Link
-                href={`/${locale}/submit`}
-                className="px-4 py-2 border border-primary-300 rounded-md text-sm font-medium text-primary-700 bg-primary-50 hover:bg-primary-100"
+              {/* Desktop: secondary button with tooltip */}
+              <a
+                href="https://www.buymeacoffee.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Yes, we know. Ironic."
+                aria-label="Buy me a coffee. Yes, we know. Ironic."
+                className="hidden md:inline-flex items-center px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 border border-gray-200 rounded-md hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 transition-colors"
               >
-                {t(dict, 'home.header.suggestCafe')}
-              </Link>
-              <Link
-                href={`/${locale}/cities`}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                ☕ Buy me a coffee
+              </a>
+              {/* Mobile: two-line micro text, no tooltip */}
+              <a
+                href="https://www.buymeacoffee.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Buy me a coffee. Yes, we know. Ironic."
+                className="md:hidden flex flex-col items-end text-right leading-tight focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 rounded"
               >
-                {t(dict, 'home.header.browseByCity')}
-              </Link>
+                <span className="text-xs text-gray-600">☕ Buy me a coffee</span>
+                <span className="text-[10px] text-gray-400">Yes, we know. Ironic.</span>
+              </a>
             </div>
           </div>
         </div>
       </header>
-
-      {/* Community Notice */}
-      <CommunityNotice dict={dict} />
 
       {/* Error Message */}
       {searchParams?.error === 'unauthorized' && (

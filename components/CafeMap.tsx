@@ -51,7 +51,7 @@ export default function CafeMap({ latitude, longitude, name, address }: CafeMapP
               rel="noopener noreferrer"
               className="text-primary-600 hover:text-primary-700 font-medium"
             >
-              Open in Google Maps →
+              Open in Google Maps ›
             </a>
           </div>
         </>

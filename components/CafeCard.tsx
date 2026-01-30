@@ -65,6 +65,11 @@ export default function CafeCard({ cafe, locale, dict }: CafeCardProps) {
             <p className="text-sm text-gray-600">
               {cafe.address}, {cafe.city}{cafe.state ? `, ${cafe.state}` : ''}
             </p>
+            {(cafe as Cafe & { distance?: number }).distance != null && (
+              <p className="text-xs text-gray-500 mt-0.5">
+                {((cafe as Cafe & { distance: number }).distance / 1000).toFixed(1)} {t(d, 'home.map.kmAway')}
+              </p>
+            )}
           </div>
           {cafe.is_verified && (
             <span className="ml-2 text-primary-600" title={t(d, 'cafeCard.verified')}>

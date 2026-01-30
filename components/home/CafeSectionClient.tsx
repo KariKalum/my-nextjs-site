@@ -30,9 +30,9 @@ export default function CafeSectionClient({
   locale,
   dict,
 }: CafeSectionClientProps) {
-  const viewAll = dict ? t(dict, 'home.sections.viewAll') : 'View all →'
-  const viewAllCafes = dict ? t(dict, 'home.sections.viewAllCafes') : 'View all cafés →'
-  const addInAdmin = dict ? t(dict, 'home.sections.addInAdmin') : 'Add cafés in admin dashboard →'
+  const viewAll = dict ? t(dict, 'home.sections.viewAll') : 'View all ›'
+  const viewAllCafes = dict ? t(dict, 'home.sections.viewAllCafes') : 'View all cafés ›'
+  const addInAdmin = dict ? t(dict, 'home.sections.addInAdmin') : 'Add cafés in admin dashboard ›'
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {

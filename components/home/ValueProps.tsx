@@ -48,6 +48,14 @@ export default function ValueProps({ dict }: { dict: Dictionary }) {
           <p className="text-gray-600">
             {t(dict, 'home.valueProps.subtitle')}
           </p>
+          <p className="mt-2 text-sm text-gray-500">
+            <Link
+              href={prefixWithLocale('/find/wifi', locale)}
+              className="text-primary-600 hover:text-primary-700 font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded"
+            >
+              {t(dict, 'home.valueProps.browseByFeature')}
+            </Link>
+          </p>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
           {props.map((prop, index) => (

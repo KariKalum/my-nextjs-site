@@ -292,7 +292,7 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], approvedReviews 
                     {t(dict, 'common.home')}
                   </Link>
                 </li>
-                <li aria-hidden>→</li>
+                <li aria-hidden>›</li>
                 <li>
                   <Link
                     href={prefixWithLocale(`/cities/${encodeURIComponent((cafe.city ?? '').toLowerCase())}`, locale)}
@@ -301,7 +301,7 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], approvedReviews 
                     {cafe.city || t(dict, 'common.cities')}
                   </Link>
                 </li>
-                <li aria-hidden>→</li>
+                <li aria-hidden>›</li>
                 <li className="text-gray-900 font-medium" aria-current="page">
                   {cafe.name}
                 </li>
@@ -732,7 +732,7 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], approvedReviews 
                     href={prefixWithLocale(`/cities/${encodeURIComponent((cafe.city ?? '').toLowerCase())}`, locale)}
                     className="block text-primary-600 hover:text-primary-700 font-medium"
                   >
-                    → {t(dict, 'cafeDetail.moreCafesIn')} {cafe.city}
+                    › {t(dict, 'cafeDetail.moreCafesIn')} {cafe.city}
                   </Link>
                 )}
                 {nearbyCafes.length > 0 && (

@@ -62,7 +62,7 @@ export default function CityPageTemplate({ cafes, config }: CityPageTemplateProp
               >
                 {t(dict, 'city.home')}
               </Link>
-              <span className="text-gray-400">•</span>
+              <span className="text-gray-400" aria-hidden>›</span>
               <Link
                 href={prefixWithLocale('/cities', locale)}
                 className="text-primary-600 hover:text-primary-700 font-medium text-sm"
@@ -71,7 +71,7 @@ export default function CityPageTemplate({ cafes, config }: CityPageTemplateProp
               </Link>
               {districtSlug && (
                 <>
-                  <span className="text-gray-400">•</span>
+                  <span className="text-gray-400" aria-hidden>›</span>
                   <Link
                     href={prefixWithLocale(`/cities/${citySlug}`, locale)}
                     className="text-primary-600 hover:text-primary-700 font-medium text-sm"

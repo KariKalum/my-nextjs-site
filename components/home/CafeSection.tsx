@@ -46,7 +46,7 @@ export default function CafeSection({
               href="/admin"
               className="text-primary-600 hover:text-primary-700 font-medium"
             >
-              Add cafés in admin dashboard →
+              Add cafés in admin dashboard ›
             </Link>
           </div>
         </div>
@@ -74,7 +74,7 @@ export default function CafeSection({
                 href={viewAllLink.startsWith('/') ? prefixWithLocale(viewAllLink, locale) : viewAllLink}
                 className="text-sm text-primary-600 hover:text-primary-700 font-medium"
               >
-                View all →
+                View all ›
               </Link>
             )}
           </div>
@@ -92,7 +92,7 @@ export default function CafeSection({
               href={viewAllLink.startsWith('/') ? prefixWithLocale(viewAllLink, locale) : viewAllLink}
               className="text-primary-600 hover:text-primary-700 font-medium"
             >
-              View all cafés →
+              View all cafés ›
             </Link>
           </div>
         )}

@@ -19,11 +19,12 @@ type NearbyApiResponse = {
     lat: number | null
     lng: number | null
     distance: number
-    wifi: { available: boolean; speedRating?: number | null }
-    outlets: { available: boolean; rating?: number | null }
-    noise: string | null
-    timeLimit: number | null
-    rating: number | null
+    workScore?: number | null
+    wifi?: { available: boolean; speedRating?: number | null }
+    outlets?: { available: boolean; rating?: number | null }
+    noise?: string | null
+    timeLimit?: number | null
+    rating?: number | null
     coffeeQuality?: 'unknown' | 'low' | 'medium' | 'high'
     createdAt: string | null
   }>
@@ -35,6 +36,7 @@ type CafeForMap = {
   name: string
   lat: number
   lng: number
+  workScore?: number | null
   wifi?: { available: boolean; speedRating?: number | null }
   outlets?: { available: boolean; rating?: number | null }
   noise?: string | null
@@ -49,9 +51,10 @@ type CafeForMap = {
 type MapStatus = 'idle' | 'loading' | 'ready' | 'error'
 type DataStatus = 'idle' | 'loading' | 'success' | 'error'
 
-const BERLIN_CENTER = { lat: 52.52, lng: 13.405 }
-const BERLIN_RADIUS = 3000 // meters
-const USER_LOCATION_RADIUS = 2000 // meters
+import { BERLIN_CENTER as BERLIN_CENTER_CONST, RADIUS_STEPS, MIN_RESULTS_THRESHOLD, DEFAULT_RADIUS_M } from '@/lib/location-constants'
+
+const BERLIN_CENTER = BERLIN_CENTER_CONST
+const BERLIN_RADIUS = DEFAULT_RADIUS_M
 
 export default function NearbyMapClient({
   dict,
@@ -84,10 +87,10 @@ export default function NearbyMapClient({
     outlets: false,
     quiet: false,
     noTimeLimit: false,
-    minRating: 0,
-    coffeeQuality: false,
+    workscore7Plus: false,
   })
-  const [sortBy, setSortBy] = useState<'distance' | 'rating' | 'laptopFriendly' | 'recentlyAdded'>('distance')
+  const [sortBy, setSortBy] = useState<'distance' | 'workscore' | 'laptopFriendly' | 'recentlyAdded'>('distance')
+  const [locationHint, setLocationHint] = useState<string | null>(null)
   const boundsUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const isUpdatingFromBoundsRef = useRef(false)
 
@@ -96,16 +99,13 @@ export default function NearbyMapClient({
     const outlets = searchParams.get('power') === '1'
     const quiet = searchParams.get('quiet') === '1'
     const noTimeLimit = searchParams.get('noTimeLimit') === '1'
-    const minRatingStr = searchParams.get('minRating')
-    const minRating = minRatingStr ? parseFloat(minRatingStr) : 0
-    const coffeeQuality = searchParams.get('coffee') === '1'
+    const workscore7Plus = searchParams.get('workscore7') === '1'
 
     setFilters({
       outlets,
       quiet,
       noTimeLimit,
-      minRating: minRating >= 0 && minRating <= 5 ? minRating : 0,
-      coffeeQuality,
+      workscore7Plus,
     })
   }, [searchParams]) // Re-run if searchParams change
 
@@ -273,6 +273,7 @@ export default function NearbyMapClient({
             name: c.name,
             lat: c.lat!,
             lng: c.lng!,
+            workScore: c.workScore ?? null,
             wifi: c.wifi,
             outlets: c.outlets,
             noise: c.noise,
@@ -324,6 +325,7 @@ export default function NearbyMapClient({
             name: c.name,
             lat: c.lat!,
             lng: c.lng!,
+            workScore: c.workScore ?? null,
             wifi: c.wifi,
             outlets: c.outlets,
             noise: c.noise,
@@ -455,30 +457,62 @@ export default function NearbyMapClient({
 
   const handleUseLocation = () => {
     setError(null)
-    setDataStatus('loading')
+    setLocationHint(null)
     setHasMapMoved(false)
     if (!navigator.geolocation) {
-      setDataStatus('error')
-      setError(t(dict, 'home.map.geolocationUnsupported'))
+      setLocationHint(t(dict, 'home.map.geolocationUnsupported'))
+      setTimeout(() => setLocationHint(null), 3000)
       return
     }
+    setDataStatus('loading')
+    isUpdatingFromBoundsRef.current = true
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords
-        // Disable bounds updates during user location fetch
-        isUpdatingFromBoundsRef.current = true
-        await fetchNearby(latitude, longitude, USER_LOCATION_RADIUS)
+        let lastCafes: CafeForMap[] = []
+        for (const r of RADIUS_STEPS) {
+          const res = await fetch(`/api/cafes/nearby?lat=${latitude}&lng=${longitude}&radius=${r}`)
+          if (!res.ok) break
+          const data = (await res.json()) as NearbyApiResponse
+          const mapped: CafeForMap[] = (data.cafes ?? [])
+            .filter((c) => c.lat != null && c.lng != null)
+            .map((c) => ({
+              id: c.id,
+              place_id: c.place_id,
+              name: c.name,
+              lat: c.lat!,
+              lng: c.lng!,
+              workScore: c.workScore ?? null,
+              wifi: c.wifi,
+              outlets: c.outlets,
+              noise: c.noise,
+              timeLimit: c.timeLimit,
+              rating: c.rating,
+              coffeeQuality: c.coffeeQuality,
+              distance: c.distance,
+              createdAt: c.createdAt,
+            }))
+          lastCafes = mapped
+          setCafes(mapped)
+          setCenter({ lat: latitude, lng: longitude })
+          setDataStatus('success')
+          if (mapped.length >= MIN_RESULTS_THRESHOLD) break
+        }
         setIsUserLocation(true)
-        // Re-enable after a short delay
-        setTimeout(() => {
-          isUpdatingFromBoundsRef.current = false
-        }, 1000)
+        const map = mapInstanceRef.current
+        if (map) {
+          map.panTo({ lat: latitude, lng: longitude })
+          placeMarkers(map, lastCafes)
+        }
+        setTimeout(() => { isUpdatingFromBoundsRef.current = false }, 1000)
       },
       () => {
-        setDataStatus('error')
-        setError('Location permission denied. Please allow location or browse all cafés.')
+        setDataStatus('success')
         setIsUserLocation(false)
+        setLocationHint(t(dict, 'home.map.locationDenied'))
+        setTimeout(() => setLocationHint(null), 4000)
+        isUpdatingFromBoundsRef.current = false
       },
       { enableHighAccuracy: true, timeout: 10000 }
     )
@@ -514,16 +548,10 @@ export default function NearbyMapClient({
       params.delete('noTimeLimit')
     }
 
-    if (newFilters.minRating > 0) {
-      params.set('minRating', newFilters.minRating.toString())
+    if (newFilters.workscore7Plus) {
+      params.set('workscore7', '1')
     } else {
-      params.delete('minRating')
-    }
-
-    if (newFilters.coffeeQuality) {
-      params.set('coffee', '1')
-    } else {
-      params.delete('coffee')
+      params.delete('workscore7')
     }
 
     // Update URL without page reload
@@ -590,12 +618,8 @@ export default function NearbyMapClient({
     if (filters.quiet) {
       filtered = filtered.filter((c) => c.noise === 'quiet')
     }
-    if (filters.minRating > 0) {
-      filtered = filtered.filter((c) => (c.rating || 0) >= filters.minRating)
-    }
-    if (filters.coffeeQuality) {
-      // Filter by coffee quality: only show high or medium quality cafes
-      filtered = filtered.filter((c) => c.coffeeQuality === 'high' || c.coffeeQuality === 'medium')
+    if (filters.workscore7Plus) {
+      filtered = filtered.filter((c) => (c.workScore ?? 0) > 7)
     }
 
     // Apply sorting
@@ -603,8 +627,11 @@ export default function NearbyMapClient({
       switch (sortBy) {
         case 'distance':
           return (a.distance || 0) - (b.distance || 0)
-        case 'rating':
-          return (b.rating || 0) - (a.rating || 0)
+        case 'workscore': {
+          const wsDiff = (b.workScore ?? 0) - (a.workScore ?? 0)
+          if (wsDiff !== 0) return wsDiff
+          return (a.distance || 0) - (b.distance || 0)
+        }
         case 'laptopFriendly':
           return computeLaptopFriendlyScore(b) - computeLaptopFriendlyScore(a)
         case 'recentlyAdded':
@@ -626,8 +653,7 @@ export default function NearbyMapClient({
     if (filters.outlets) count++
     if (filters.quiet) count++
     if (filters.noTimeLimit) count++
-    if (filters.minRating > 0) count++
-    if (filters.coffeeQuality) count++
+    if (filters.workscore7Plus) count++
     return count
   }, [filters])
 
@@ -639,8 +665,7 @@ export default function NearbyMapClient({
       outlets: false,
       quiet: false,
       noTimeLimit: false,
-      minRating: 0,
-      coffeeQuality: false,
+      workscore7Plus: false,
     }
     setFilters(clearedFilters)
     updateURLParams(clearedFilters)
@@ -693,27 +718,6 @@ export default function NearbyMapClient({
 
   return (
     <div className="space-y-4 pb-0">
-      {/* Controls - constrained width */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleUseLocation}
-            disabled={dataStatus === 'loading' || mapStatus === 'loading'}
-            className="px-5 py-3 rounded-lg bg-primary-600 text-white font-semibold shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {dataStatus === 'loading' || mapStatus === 'loading'
-              ? t(dict, 'home.map.loading')
-              : t(dict, 'home.map.useLocation')}
-          </button>
-          <Link
-            href={prefixWithLocale('/cities', locale)}
-            className="text-sm text-primary-600 hover:text-primary-700"
-          >
-            {t(dict, 'home.map.browseAll')}
-          </Link>
-        </div>
-      </div>
-
       {/* Map + Results Layout */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Sticky Filter Bar */}
@@ -766,53 +770,18 @@ export default function NearbyMapClient({
                 >
                   {t(dict, 'home.map.noTimeLimit')}
                 </button>
-                <div className="flex items-center gap-1">
-                  <label htmlFor="rating-filter" className="text-xs text-gray-600">
-                    {t(dict, 'home.map.rating')}
-                  </label>
-                  <select
-                    id="rating-filter"
-                    value={filters.minRating}
-                    onChange={(e) => setFilters({ ...filters, minRating: parseFloat(e.target.value) })}
-                    aria-label="Filter by minimum rating"
-                    className={`px-2 py-1 text-xs border-2 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors ${
-                      filters.minRating > 0
-                        ? 'border-primary-500 bg-primary-50'
-                        : 'border-gray-300'
-                    }`}
-                  >
-                    <option value="0">{t(dict, 'home.map.any')}</option>
-                    <option value="3.0">3.0+</option>
-                    <option value="3.5">3.5+</option>
-                    <option value="4.0">4.0+</option>
-                    <option value="4.5">4.5+</option>
-                  </select>
-                </div>
-                {(() => {
-                  // Check if all cafes have unknown coffee quality
-                  const allUnknown = cafes.length > 0 && cafes.every(
-                    (c) => !c.coffeeQuality || c.coffeeQuality === 'unknown'
-                  )
-                  
-                  if (allUnknown) {
-                    return null // Hide the filter if all cafes are unknown
-                  }
-                  
-                  return (
-                    <button
-                      onClick={() => setFilters({ ...filters, coffeeQuality: !filters.coffeeQuality })}
-                      aria-pressed={filters.coffeeQuality}
-                      aria-label={`Filter by coffee quality. ${filters.coffeeQuality ? 'Active' : 'Inactive'}`}
-                      className={`px-3 py-1 text-xs font-medium rounded-full border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 ${
-                        filters.coffeeQuality
-                          ? 'bg-primary-600 border-primary-600 text-white hover:bg-primary-700'
-                          : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
-                      }`}
-                    >
-                      {t(dict, 'home.map.coffeeQuality')}
-                    </button>
-                  )
-                })()}
+                <button
+                  onClick={() => setFilters({ ...filters, workscore7Plus: !filters.workscore7Plus })}
+                  aria-pressed={filters.workscore7Plus}
+                  aria-label={`Filter by Workscore 7+. ${filters.workscore7Plus ? 'Active' : 'Inactive'}`}
+                  className={`px-3 py-1 text-xs font-medium rounded-full border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 ${
+                    filters.workscore7Plus
+                      ? 'bg-primary-600 border-primary-600 text-white hover:bg-primary-700'
+                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+                  }`}
+                >
+                  {t(dict, 'home.map.workscore7Plus')}
+                </button>
               </div>
 
               {hasActiveFilters && (
@@ -843,7 +812,7 @@ export default function NearbyMapClient({
               </div>
             )}
 
-            <div className="absolute top-4 right-4 z-10">
+            <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
               <button
                 onClick={() => {
                   setAutoUpdate(!autoUpdate)
@@ -854,6 +823,19 @@ export default function NearbyMapClient({
                 title={autoUpdate ? t(dict, 'home.map.autoTitle') : t(dict, 'home.map.manualTitle')}
               >
                 {autoUpdate ? t(dict, 'home.map.auto') : t(dict, 'home.map.manual')}
+              </button>
+              <button
+                type="button"
+                onClick={handleUseLocation}
+                disabled={dataStatus === 'loading' || mapStatus === 'loading'}
+                className="p-2 bg-white border border-gray-300 rounded-lg shadow-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label={t(dict, 'home.map.centerOnMyLocation')}
+                title={t(dict, 'home.map.centerOnMyLocation')}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5" aria-hidden>
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41M19.07 4.93l-1.41 1.41M6.34 17.66l-1.41 1.41" />
+                </svg>
               </button>
             </div>
 
@@ -889,7 +871,7 @@ export default function NearbyMapClient({
             {/* Inline messaging */}
             {dataStatus === 'error' && (
               <p className="mt-4 text-sm text-amber-700">
-                {error || t(dict, 'home.map.couldNotFetch')} Showing Berlin if available.
+                {error || t(dict, 'home.map.couldNotFetch')}
               </p>
             )}
 
@@ -899,9 +881,15 @@ export default function NearbyMapClient({
               </p>
             )}
 
-            {dataStatus === 'success' && cafes.length > 0 && !isUserLocation && (
-              <p className="mt-4 text-sm text-gray-600">
-                {t(dict, 'home.map.showingBerlin')}
+            {locationHint && (
+              <p className="mt-4 text-sm text-gray-500" role="status">
+                {locationHint}
+              </p>
+            )}
+
+            {dataStatus === 'success' && cafes.length > 0 && (
+              <p className="mt-4 text-sm text-gray-500">
+                {t(dict, 'home.map.panZoomHint')}
               </p>
             )}
           </div>
@@ -925,11 +913,11 @@ export default function NearbyMapClient({
                   <select
                     id="sort-select-results"
                     value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as 'distance' | 'rating' | 'laptopFriendly' | 'recentlyAdded')}
+                    onChange={(e) => setSortBy(e.target.value as 'distance' | 'workscore' | 'laptopFriendly' | 'recentlyAdded')}
                     className="px-2 py-1 text-xs border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                   >
                     <option value="distance">{t(dict, 'home.map.nearest')}</option>
-                    <option value="rating">{t(dict, 'home.map.highestRated')}</option>
+                    <option value="workscore">{t(dict, 'home.map.highestWorkscore')}</option>
                     <option value="laptopFriendly">{t(dict, 'home.map.mostLaptopFriendly')}</option>
                     <option value="recentlyAdded">{t(dict, 'home.map.recentlyAdded')}</option>
                   </select>

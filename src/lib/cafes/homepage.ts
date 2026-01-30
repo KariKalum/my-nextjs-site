@@ -8,7 +8,37 @@ import type { Cafe } from '@/src/lib/supabase/types'
 import { combineDescription } from '@/lib/utils/description-combiner'
 
 /**
- * Fetch top rated cafés ordered by work_score
+ * Fetch top rated cafés in Berlin ordered by work_score (default state for "Top Rated to Work From").
+ * Tie-breaker: name ascending (deterministic).
+ */
+export async function getTopRatedCafesInBerlin(limit: number = 10): Promise<Cafe[]> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('cafes')
+    .select('*')
+    .or('is_active.is.null,is_active.eq.true')
+    .ilike('city', 'Berlin')
+    .not('work_score', 'is', null)
+    .order('work_score', { ascending: false, nullsFirst: false })
+    .order('name', { ascending: true })
+    .limit(limit)
+
+  if (error) {
+    if (process.env.NEXT_PUBLIC_DEBUG_LOGS === 'true') {
+      console.error('Error fetching top rated cafes in Berlin:', error)
+    }
+    return []
+  }
+
+  return (data || []).map((cafe) => ({
+    ...cafe,
+    descriptionText: combineDescription(cafe.description, cafe.ai_inference_notes),
+  })) as Cafe[]
+}
+
+/**
+ * Fetch top rated cafés ordered by work_score (global; used for fallback if Berlin is empty).
  * Tie-breaker: google_rating (desc), then google_ratings_total (desc)
  */
 export async function getTopRatedCafes(limit: number = 10): Promise<Cafe[]> {
@@ -31,7 +61,6 @@ export async function getTopRatedCafes(limit: number = 10): Promise<Cafe[]> {
     return []
   }
 
-  // Compute descriptionText for each cafe
   return (data || []).map((cafe) => ({
     ...cafe,
     descriptionText: combineDescription(cafe.description, cafe.ai_inference_notes),

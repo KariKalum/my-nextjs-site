@@ -209,7 +209,7 @@ export default function NearbyCafesMap({ center, cafes, className = '' }: Nearby
       ? `${cafe.timeLimit} min`
       : 'No limit'
 
-    const distanceText = cafe.distance ? ` • ${(cafe.distance / 1000).toFixed(2)} km` : ''
+    const distanceText = cafe.distance ? ` › ${(cafe.distance / 1000).toFixed(2)} km` : ''
     const cityText = cafe.city ? `${cafe.city}${distanceText}` : distanceText ? distanceText.slice(3) : ''
     
     // Compute href using routing helper
@@ -248,7 +248,7 @@ export default function NearbyCafesMap({ center, cafes, className = '' }: Nearby
             onmouseover="this.style.backgroundColor='#1d4ed8'"
             onmouseout="this.style.backgroundColor='#2563eb'"
           >
-            View details →
+            View details ›
           </a>
         </div>
       </div>

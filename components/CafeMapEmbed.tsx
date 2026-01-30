@@ -90,7 +90,7 @@ export default function CafeMapEmbed({ cafe }: CafeMapEmbedProps) {
           rel="noopener noreferrer"
           className="text-sm font-medium text-primary-600 hover:text-primary-700 inline-flex items-center gap-1"
         >
-          Open in Maps →
+          Open in Maps ›
         </a>
       </div>
     </div>

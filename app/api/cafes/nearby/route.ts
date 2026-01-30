@@ -94,10 +94,10 @@ export async function GET(req: Request) {
         )
       }
 
-      // Radius: default 2000, clamp to max 10000
+      // Radius: default 2000, allow up to 100km for expansion (small cities)
       radius = parseInt(radiusStr || '2000', 10)
       if (Number.isNaN(radius)) radius = 2000
-      radius = Math.min(radius, 10000)
+      radius = Math.min(Math.max(radius, 500), 100000)
     }
 
     // Validate ranges

@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
@@ -33,23 +32,22 @@ export default function Logo() {
   }
 
   return (
-    <Link href={homeHref} className="flex items-center" aria-label="Café Directory Home">
+    <Link href={homeHref} className="flex items-center h-full [--logo-h:var(--header-logo-height)]" aria-label="Café Directory Home">
       {!imageError ? (
         <>
-          {/* Try regular img tag first to test if file is valid */}
           <img
-            src="/logo2.svg"
+            src="/logo 3.svg"
             alt="Café Directory"
-            className="h-14 md:h-12 w-auto object-contain"
+            className="w-auto h-full object-contain block p-0 m-0"
             width={192}
             height={56}
-            style={{ minWidth: '120px', display: 'block' }}
+            style={{ minWidth: '120px' }}
             onError={handleImageError}
             onLoad={handleLoadComplete}
           />
         </>
       ) : (
-        <span className="text-xl font-bold text-gray-900 h-14 md:h-12 flex items-center">Café Directory</span>
+        <span className="text-xl font-bold text-gray-900 flex items-center h-full">Café Directory</span>
       )}
     </Link>
   )

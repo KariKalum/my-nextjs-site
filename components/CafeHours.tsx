@@ -111,7 +111,7 @@ export default function CafeHours({ hours, lastChecked, google_maps_url }: CafeH
               rel="noopener noreferrer"
               className="text-sm text-primary-600 hover:text-primary-700 font-medium"
             >
-              Check Google Maps →
+              Check Google Maps ›
             </a>
           )}
         </div>

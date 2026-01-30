@@ -251,7 +251,7 @@ export default function AdminEditSuggestionDetailPage() {
         <div className="px-6 py-4 border-b border-gray-200 flex flex-wrap items-center gap-3">
           <h1 className="text-xl font-bold text-gray-900">Edit suggestion</h1>
           <span className={`px-2 py-1 text-xs font-medium rounded-full ${suggestion.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : suggestion.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{suggestion.status}</span>
-          <Link href={getCafeHref({ id: suggestion.cafe_id })} className="text-sm text-primary-600 hover:text-primary-700">View café →</Link>
+          <Link href={getCafeHref({ id: suggestion.cafe_id })} className="text-sm text-primary-600 hover:text-primary-700">View café ›</Link>
           {suggestion.email && <a href={`mailto:${suggestion.email}`} className="text-sm text-gray-600">{suggestion.email}</a>}
           <span className="text-xs text-gray-500">Created: {new Date(suggestion.created_at).toLocaleString()}</span>
         </div>

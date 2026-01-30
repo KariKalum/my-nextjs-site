@@ -102,7 +102,7 @@ export async function GET(req: Request) {
 
     const lat = parseFloat(latStr)
     const lng = parseFloat(lngStr)
-    const radius = Math.min(parseInt(radiusStr, 10) || 5000, 20000) // Max 20km
+    const radius = Math.min(Math.max(parseInt(radiusStr, 10) || 5000, 1000), 100000) // 1km–100km for expansion
     const limit = Math.min(parseInt(limitStr, 10) || 50, 100) // Max 100
 
     // Validate ranges

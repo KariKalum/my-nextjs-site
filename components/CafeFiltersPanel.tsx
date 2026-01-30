@@ -118,26 +118,6 @@ export default function CafeFiltersPanel({
             </div>
           </div>
 
-          {/* Google Rating Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Min Google Rating: {filters.min_google_rating || 1.0}
-            </label>
-            <input
-              type="range"
-              min="1"
-              max="5"
-              step="0.1"
-              value={filters.min_google_rating || 1}
-              onChange={(e) => updateFilter('min_google_rating', parseFloat(e.target.value))}
-              className="w-full"
-            />
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>1.0</span>
-              <span>5.0</span>
-            </div>
-          </div>
-
           {/* Noise Level Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

@@ -279,7 +279,7 @@ export default function AdminSubmissionsPage() {
                         href={getCafeHref({ id: submission.cafe_id })}
                         className="text-xs text-primary-600 hover:text-primary-700"
                       >
-                        View Café →
+                        View Café ›
                       </Link>
                     )}
                   </div>

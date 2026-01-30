@@ -224,8 +224,15 @@ export default function Hero({ dict, onSearchChange }: HeroProps) {
     <section className="bg-gradient-to-br from-primary-50 via-white to-primary-50 pt-10 md:pt-16 pb-12 md:pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
-            {t(dict, 'home.hero.title')}
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 leading-tight">
+            <span className="sr-only">{t(dict, 'home.hero.title')}</span>
+            <span aria-hidden="true">
+              {t(dict, 'home.hero.titleLine1')}
+              <br />
+              {t(dict, 'home.hero.titleLine2')}
+              <br />
+              {t(dict, 'home.hero.titleLine3')}
+            </span>
           </h1>
           <p className="text-lg md:text-xl font-normal text-gray-600 mb-6">
             {t(dict, 'home.hero.subtitle')}
@@ -255,7 +262,7 @@ export default function Hero({ dict, onSearchChange }: HeroProps) {
                     type="button"
                     onClick={handleUseLocation}
                     disabled={locationLoading}
-                    aria-label="Use my location"
+                    aria-label={t(dict, 'home.map.centerOnMyLocation')}
                     className="absolute right-2 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
                   >
                     <svg

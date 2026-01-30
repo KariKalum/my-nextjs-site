@@ -3,6 +3,13 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Header row height: logo and bar match this. */
+    --header-row-height: 3.75rem;  /* 60px – logo fills header */
+    /* Header logo: inherits row height when used with h-full */
+    --header-logo-height: var(--header-row-height);
+    --header-logo-height-md: var(--header-row-height);
+  }
   body {
     @apply bg-gray-50 text-gray-900;
   }

@@ -252,7 +252,7 @@ export default function AdminSubmissionDetailPage() {
                     </a>
                   ) : key === 'cafe_id' && value ? (
                     <Link href={getCafeHref({ id: String(value) })} className="text-primary-600 hover:text-primary-700">
-                      {display} →
+                      {display} ›
                     </Link>
                   ) : (
                     display

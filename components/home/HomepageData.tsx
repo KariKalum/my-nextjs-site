@@ -1,6 +1,7 @@
 import type { Cafe } from '@/src/lib/supabase/types'
 import CafeSectionClient from './CafeSectionClient'
-import { getTopRatedCafes, getRecentlyAddedCafes } from '@/src/lib/cafes/homepage'
+import TopRatedSectionClient from './TopRatedSectionClient'
+import { getTopRatedCafesInBerlin, getTopRatedCafes, getRecentlyAddedCafes } from '@/src/lib/cafes/homepage'
 import { prefixWithLocale } from '@/lib/i18n/routing'
 import { type Locale } from '@/lib/i18n/config'
 import { t } from '@/lib/i18n/t'
@@ -14,17 +15,19 @@ export default async function HomepageData({
   dict: Dictionary
 }) {
   const locale = params.locale
-  const [topRated, recentlyAdded] = await Promise.all([
-    getTopRatedCafes(10),
+  const [berlinTopRated, recentlyAdded] = await Promise.all([
+    getTopRatedCafesInBerlin(10),
     getRecentlyAddedCafes(10),
   ])
+  // Fallback: if Berlin has no cafés, use global top rated so section never renders empty
+  const topRatedFallback = berlinTopRated.length > 0 ? berlinTopRated : await getTopRatedCafes(10)
 
   return (
     <>
-      <CafeSectionClient
+      <TopRatedSectionClient
+        initialCafes={topRatedFallback}
         title={t(dict, 'home.sections.topRatedTitle')}
         description={t(dict, 'home.sections.topRatedDesc')}
-        cafes={topRated}
         emptyMessage={t(dict, 'home.sections.topRatedEmpty')}
         viewAllLink={prefixWithLocale('/cities', locale)}
         locale={locale}
