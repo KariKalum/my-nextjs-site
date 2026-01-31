@@ -39,6 +39,10 @@ export function buildBerlinCityConfig(
   const mapCenter = districtSlug
     ? BERLIN_MAP_CENTERS[districtSlug] || BERLIN_MAP_CENTERS.berlin
     : BERLIN_MAP_CENTERS.berlin
+  // District pages: neighborhood level (14); city page: broader view (12)
+  const mapZoom = isDistrict ? 14 : 12
+  // District pages: keep zoomed-in view on district; city page: fit bounds to all cafes
+  const preserveRegionZoom = isDistrict
   
   // H1 title
   const h1Title = isDistrict
@@ -202,6 +206,8 @@ export function buildBerlinCityConfig(
     nicheSectionTitle,
     nicheSectionDescription,
     mapCenter,
+    mapZoom,
+    preserveRegionZoom,
     dict,
   }
 }

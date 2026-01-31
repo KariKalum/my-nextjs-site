@@ -50,6 +50,10 @@ export interface CityPageConfig {
   
   // Map center coordinates (for showing the region even with 0 cafes)
   mapCenter?: { lat: number; lng: number }
+  // Map zoom level (higher = more zoomed in; districts use ~18, city ~12)
+  mapZoom?: number
+  // When true, keep district center and zoom instead of fitting bounds to markers
+  preserveRegionZoom?: boolean
   
   // Dictionary for translations
   dict: Dictionary

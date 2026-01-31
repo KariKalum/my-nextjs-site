@@ -39,6 +39,8 @@ export default function CityPageTemplate({ cafes, config }: CityPageTemplateProp
     nicheSectionTitle,
     nicheSectionDescription,
     mapCenter,
+    mapZoom,
+    preserveRegionZoom,
     dict,
   } = config
 
@@ -125,7 +127,7 @@ export default function CityPageTemplate({ cafes, config }: CityPageTemplateProp
         )}
 
         {/* Map and Cafe Cards */}
-        <CityMapSection cafes={safeCafes} locale={locale} dict={dict} cityName={displayName} regionCenter={mapCenter} />
+        <CityMapSection cafes={safeCafes} locale={locale} dict={dict} cityName={displayName} regionCenter={mapCenter} regionZoom={mapZoom} preserveRegionZoom={preserveRegionZoom} />
 
         {/* Related links section */}
         {relatedLinks && relatedLinks.length > 0 && (

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import type { Cafe } from '@/src/lib/supabase/types'
-import NearbyCafesMap, { type CafeForMap } from './NearbyCafesMap'
+import NearbyCafesMap, { type CafeForMap, type MapBounds } from './NearbyCafesMap'
 import CafeCard from './CafeCard'
 import { t } from '@/lib/i18n/t'
 import type { Dictionary } from '@/lib/i18n/getDictionary'
@@ -15,12 +15,28 @@ interface CityMapSectionProps {
   cityName: string
   /** Pre-defined map center for the region (used even if no cafes) */
   regionCenter?: { lat: number; lng: number }
+  /** Map zoom level (higher = more zoomed in; districts typically 14, city 12) */
+  regionZoom?: number
+  /** When true, keep district center and zoom instead of fitting bounds to markers */
+  preserveRegionZoom?: boolean
 }
 
 const INITIAL_DISPLAY_COUNT = 8
 
-export default function CityMapSection({ cafes, locale, dict, cityName, regionCenter }: CityMapSectionProps) {
+/** Check if a cafe is within the given bounds */
+function isWithinBounds(cafe: Cafe, bounds: MapBounds): boolean {
+  if (cafe.latitude == null || cafe.longitude == null) return false
+  return (
+    cafe.latitude >= bounds.south &&
+    cafe.latitude <= bounds.north &&
+    cafe.longitude >= bounds.west &&
+    cafe.longitude <= bounds.east
+  )
+}
+
+export default function CityMapSection({ cafes, locale, dict, cityName, regionCenter, regionZoom = 12, preserveRegionZoom = false }: CityMapSectionProps) {
   const [showAll, setShowAll] = useState(false)
+  const [visibleBounds, setVisibleBounds] = useState<MapBounds | null>(null)
 
   // Filter cafes with valid coordinates for the map
   const cafesWithCoords = useMemo(() => 
@@ -67,10 +83,26 @@ export default function CityMapSection({ cafes, locale, dict, cityName, regionCe
     [cafesWithCoords]
   )
 
-  // Use cafes with coordinates for both map and cards (same cafes shown in both)
-  const displayedCafes = showAll ? cafesWithCoords : cafesWithCoords.slice(0, INITIAL_DISPLAY_COUNT)
-  const hasMore = cafesWithCoords.length > INITIAL_DISPLAY_COUNT
-  const cafeCount = cafesWithCoords.length
+  // Handle bounds change from map (for dynamic card filtering)
+  const handleBoundsChange = useCallback((bounds: MapBounds) => {
+    if (preserveRegionZoom) {
+      setVisibleBounds(bounds)
+    }
+  }, [preserveRegionZoom])
+
+  // For district pages (preserveRegionZoom), filter cafes to those visible in map bounds
+  // For city pages, show all cafes
+  const visibleCafes = useMemo(() => {
+    if (preserveRegionZoom && visibleBounds) {
+      return cafesWithCoords.filter((cafe) => isWithinBounds(cafe, visibleBounds))
+    }
+    return cafesWithCoords
+  }, [cafesWithCoords, preserveRegionZoom, visibleBounds])
+
+  // Use visible cafes for cards
+  const displayedCafes = showAll ? visibleCafes : visibleCafes.slice(0, INITIAL_DISPLAY_COUNT)
+  const hasMore = visibleCafes.length > INITIAL_DISPLAY_COUNT
+  const cafeCount = visibleCafes.length
 
   // Show map if we have cafes with coordinates OR a predefined region center
   const showMap = cafesForMap.length > 0 || regionCenter
@@ -87,6 +119,9 @@ export default function CityMapSection({ cafes, locale, dict, cityName, regionCe
             center={mapCenter}
             cafes={cafesForMap}
             className="h-80 md:h-96"
+            zoom={regionZoom}
+            preserveRegionZoom={preserveRegionZoom}
+            onBoundsChange={handleBoundsChange}
           />
         </div>
       )}
@@ -117,7 +152,7 @@ export default function CityMapSection({ cafes, locale, dict, cityName, regionCe
                   onClick={() => setShowAll(true)}
                   className="inline-flex items-center px-6 py-3 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-primary-400 hover:text-primary-600 transition-colors shadow-sm"
                 >
-                  {t(dict, 'common.showMore')} ({cafesWithCoords.length - INITIAL_DISPLAY_COUNT} {t(dict, 'common.more')})
+                  {t(dict, 'common.showMore')} ({visibleCafes.length - INITIAL_DISPLAY_COUNT} {t(dict, 'common.more')})
                 </button>
               </div>
             )}

@@ -27,10 +27,23 @@ export type CafeForMap = {
   distance?: number // meters
 }
 
+export type MapBounds = {
+  north: number
+  south: number
+  east: number
+  west: number
+}
+
 type NearbyCafesMapProps = {
   center: { lat: number; lng: number }
   cafes: CafeForMap[]
   className?: string
+  /** Zoom level (higher = more zoomed in). Default 12. */
+  zoom?: number
+  /** When true, keep center and zoom instead of fitting bounds to markers. Use for district pages. */
+  preserveRegionZoom?: boolean
+  /** Called when map bounds change (after zoom/pan). Use to filter cards by visible area. */
+  onBoundsChange?: (bounds: MapBounds) => void
 }
 
 // Google Maps types (minimal, just what we need)
@@ -46,7 +59,7 @@ type GoogleInfoWindow = google.maps.InfoWindow
 type GoogleLatLng = google.maps.LatLng
 type GoogleLatLngBounds = google.maps.LatLngBounds
 
-export default function NearbyCafesMap({ center, cafes, className = '' }: NearbyCafesMapProps) {
+export default function NearbyCafesMap({ center, cafes, className = '', zoom = 12, preserveRegionZoom = false, onBoundsChange }: NearbyCafesMapProps) {
   const pathname = usePathname()
   const locale = getLocaleFromPathname(pathname)
   const mapRef = useRef<HTMLDivElement>(null)
@@ -60,7 +73,13 @@ export default function NearbyCafesMap({ center, cafes, className = '' }: Nearby
 
   // Load Google Maps script
   useEffect(() => {
-    if (typeof window === 'undefined' || !mapRef.current) return
+    if (typeof window === 'undefined') return
+
+    // Check API key first
+    if (!apiKey) {
+      setLoadError('Google Maps API key is not configured.')
+      return
+    }
 
     // Check if already loaded
     if (window.google?.maps) {
@@ -68,27 +87,47 @@ export default function NearbyCafesMap({ center, cafes, className = '' }: Nearby
       return
     }
 
-    // Check API key
-    if (!apiKey) {
-      setLoadError('Google Maps API key is not configured.')
-      return
+    let isMounted = true
+    let pollInterval: ReturnType<typeof setInterval> | null = null
+
+    const loadScript = () => {
+      // Check if script already exists
+      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]')
+      
+      if (existingScript) {
+        // Poll for google.maps to be available (script may still be loading)
+        const startTime = Date.now()
+        pollInterval = setInterval(() => {
+          if (window.google?.maps) {
+            if (pollInterval) clearInterval(pollInterval)
+            if (isMounted) setIsLoaded(true)
+          } else if (Date.now() - startTime > 15000) {
+            if (pollInterval) clearInterval(pollInterval)
+            if (isMounted) setLoadError('Google Maps took too long to load.')
+          }
+        }, 200)
+      } else {
+        // Create and load the script
+        const script = document.createElement('script')
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`
+        script.async = true
+        script.defer = true
+        script.onload = () => {
+          if (isMounted) setIsLoaded(true)
+        }
+        script.onerror = () => {
+          if (isMounted) setLoadError('Failed to load Google Maps.')
+        }
+        document.head.appendChild(script)
+      }
     }
 
-    // Check if script is already being loaded
-    const existingScript = document.querySelector('script[src*="maps.googleapis.com"]')
-    if (existingScript) {
-      existingScript.addEventListener('load', () => setIsLoaded(true))
-      return
-    }
+    loadScript()
 
-    // Load the script
-    const script = document.createElement('script')
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`
-    script.async = true
-    script.defer = true
-    script.onload = () => setIsLoaded(true)
-    script.onerror = () => setLoadError('Failed to load Google Maps.')
-    document.head.appendChild(script)
+    return () => {
+      isMounted = false
+      if (pollInterval) clearInterval(pollInterval)
+    }
   }, [apiKey])
 
   // Initialize map once
@@ -99,16 +138,35 @@ export default function NearbyCafesMap({ center, cafes, className = '' }: Nearby
 
     const map = new google.maps.Map(mapRef.current, {
       center: { lat: center.lat, lng: center.lng },
-      zoom: 12,
+      zoom,
       mapTypeControl: false,
       fullscreenControl: true,
       streetViewControl: false,
     })
 
     mapInstanceRef.current = map
-  }, [isLoaded, center.lat, center.lng])
 
-  // Update map center smoothly when center prop changes
+    // Report initial bounds and listen for changes
+    const reportBounds = () => {
+      if (!onBoundsChange) return
+      const bounds = map.getBounds()
+      if (bounds) {
+        const ne = bounds.getNorthEast()
+        const sw = bounds.getSouthWest()
+        onBoundsChange({
+          north: ne.lat(),
+          south: sw.lat(),
+          east: ne.lng(),
+          west: sw.lng(),
+        })
+      }
+    }
+
+    // Report bounds after map is ready and on every zoom/pan
+    map.addListener('idle', reportBounds)
+  }, [isLoaded, center.lat, center.lng, zoom, onBoundsChange])
+
+  // Update map center and zoom when center/zoom props change (only when preserving region zoom)
   useEffect(() => {
     if (!isLoaded || !window.google?.maps || !mapInstanceRef.current) return
 
@@ -117,14 +175,14 @@ export default function NearbyCafesMap({ center, cafes, className = '' }: Nearby
     const target = new google.maps.LatLng(center.lat, center.lng)
 
     map.panTo(target)
-    // When user location is used, a slightly closer zoom feels better.
-    // fitBounds (below) will override this when multiple markers exist.
-    if (cafes.length === 0) {
-      map.setZoom(12)
+
+    // Only update zoom here when preserveRegionZoom - otherwise markers effect will override
+    if (preserveRegionZoom || cafes.length === 0) {
+      map.setZoom(zoom)
     } else if (cafes.length === 1) {
       map.setZoom(14)
     }
-  }, [isLoaded, center.lat, center.lng, cafes.length])
+  }, [isLoaded, center.lat, center.lng, zoom, preserveRegionZoom, cafes.length])
 
   // Update markers and fit bounds
   useEffect(() => {
@@ -179,15 +237,17 @@ export default function NearbyCafesMap({ center, cafes, className = '' }: Nearby
     markersRef.current = markers
     infoWindowsRef.current = infoWindows
 
-    if (markers.length === 1) {
-      // Single marker: zoom in a bit around it
+    // When preserveRegionZoom, keep district center and zoom; don't fit bounds
+    if (preserveRegionZoom) {
+      map.setCenter({ lat: center.lat, lng: center.lng })
+      map.setZoom(zoom)
+    } else if (markers.length === 1) {
       map.setCenter(markers[0].getPosition() as google.maps.LatLng)
       map.setZoom(15)
     } else if (markers.length > 1) {
-      // Multiple markers: fit bounds with padding
       map.fitBounds(bounds, 50)
     }
-  }, [isLoaded, cafes])
+  }, [isLoaded, cafes, preserveRegionZoom, center.lat, center.lng, zoom])
 
   // Render info window content
   function createInfoWindowContent(cafe: CafeForMap): string {
@@ -294,9 +354,9 @@ export default function NearbyCafesMap({ center, cafes, className = '' }: Nearby
     )
   }
 
-  // Map container
+  // Map container - className can override height (e.g., h-80 md:h-96)
   return (
-    <div className={`w-full h-96 rounded-lg overflow-hidden border border-gray-200 shadow-sm ${className}`}>
+    <div className={`w-full rounded-lg overflow-hidden border border-gray-200 shadow-sm ${className || 'h-96'}`}>
       <div ref={mapRef} className="w-full h-full" />
     </div>
   )

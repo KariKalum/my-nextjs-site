@@ -9,7 +9,7 @@ import { getLocaleFromParams, type Locale } from '@/lib/i18n/config'
 import { getDictionary } from '@/lib/i18n/getDictionary'
 import { t, tmpl } from '@/lib/i18n/t'
 import CityPageTemplate from '@/components/CityPageTemplate'
-import { getCafesByCityAndDistrict, getDistrictDisplayName } from '@/lib/cities/data'
+import { getCafesByCity, getDistrictDisplayName } from '@/lib/cities/data'
 import { buildBerlinCityConfig } from '@/lib/cities/berlin-config'
 import { getAbsoluteUrl, getHreflangAlternates } from '@/lib/seo/metadata'
 
@@ -85,11 +85,8 @@ export default async function BerlinDistrictPage({
   const districtDisplayName = getDistrictDisplayName(params.district)
   const config = buildBerlinCityConfig(locale, dict, params.district, districtDisplayName)
 
-  // Fetch cafes filtered by district
-  // Use district display name for filtering (handles variations like "Prenzlauer Berg" vs "prenzlauer-berg")
-  // For HBF, use "Hauptbahnhof" for filtering as that's what appears in addresses
-  const filterName = districtDisplayName === 'HBF' ? 'Hauptbahnhof' : districtDisplayName
-  const cafes = await getCafesByCityAndDistrict('Berlin', filterName)
+  // Fetch all Berlin cafes - show on every district page
+  const cafes = await getCafesByCity('Berlin')
   
   // Runtime guard: ensure cafes is always an array
   const safeCafes = Array.isArray(cafes) ? cafes : []
