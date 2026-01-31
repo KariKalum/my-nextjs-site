@@ -3,6 +3,21 @@
  */
 
 /**
+ * Normalize for search matching: lowercase + fold German umlauts (ü→u, ö→o, ä→a, ß→ss).
+ * Use so "dusseldorf" matches "Düsseldorf", "koln" matches "Köln".
+ */
+export function normalizeForSearch(str: string): string {
+  if (!str || typeof str !== 'string') return ''
+  return str
+    .trim()
+    .toLowerCase()
+    .replace(/ü/g, 'u')
+    .replace(/ö/g, 'o')
+    .replace(/ä/g, 'a')
+    .replace(/ß/g, 'ss')
+}
+
+/**
  * Normalize German characters and create URL-friendly slug from city name
  * Examples:
  *   "Frankfurt am Main" -> "frankfurt-am-main"

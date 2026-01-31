@@ -1,12 +1,15 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@/src/lib/supabase/server'
-import type { Cafe } from '@/src/lib/supabase/types'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { getLocaleFromParams, type Locale } from '@/lib/i18n/config'
 import { getDictionary } from '@/lib/i18n/getDictionary'
 import { t, tmpl } from '@/lib/i18n/t'
 import { prefixWithLocale } from '@/lib/i18n/routing'
+import { getCityDisplayName, getCityNameForFetch, getSlugForCityName } from '@/lib/cities/city-config'
+import { getCityNamesToMatch } from '@/lib/cities/data'
+import { getImagesForCitySlugs } from '@/src/lib/cafes/cities'
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -69,6 +72,9 @@ async function getCities(): Promise<Array<{ city: string; count: number }>> {
 }
 
 
+/** Canonical slugs for major cities (match city page URLs and major_cities table) */
+const MAJOR_CITY_SLUGS = ['berlin', 'hamburg', 'muenchen', 'koeln', 'frankfurt', 'leipzig'] as const
+
 export default async function CitiesIndexPage({
   params,
 }: {
@@ -77,23 +83,30 @@ export default async function CitiesIndexPage({
   const locale = getLocaleFromParams(params)
   const dict = getDictionary(locale)
   const cities = await getCities()
+  const imageMap = await getImagesForCitySlugs([...MAJOR_CITY_SLUGS])
 
-  // Major German cities for quick links (always show these 6)
-  const majorCities = ['Berlin', 'Hamburg', 'Munich', 'Cologne', 'Frankfurt', 'Leipzig']
-
-  // Get counts for major cities
-  const majorCitiesWithCounts = majorCities.map((city) => {
-    const cityData = cities.find((c) => c.city === city)
+  // Major cities: canonical slug, display name, count (including alternate DB names), real image
+  const majorCitiesWithCounts = MAJOR_CITY_SLUGS.map((slug) => {
+    const namesToMatch = getCityNamesToMatch(getCityNameForFetch(slug))
+    const count = cities
+      .filter((c) => namesToMatch.some((n) => n.toLowerCase() === (c.city ?? '').toLowerCase()))
+      .reduce((sum, c) => sum + c.count, 0)
     return {
-      name: city,
-      slug: city.toLowerCase(),
-      count: cityData?.count || 0,
+      slug,
+      name: getCityDisplayName(slug, locale),
+      count,
+      imageUrl: imageMap.get(slug) ?? 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400&h=300&fit=crop',
     }
   })
 
-  // Get other cities (not in major list)
+  // Other cities (not in the fixed major 6); link uses canonical slug from DB city name
+  const majorNamesLower = new Set(
+    MAJOR_CITY_SLUGS.flatMap((slug) =>
+      getCityNamesToMatch(getCityNameForFetch(slug)).map((n) => n.toLowerCase())
+    )
+  )
   const otherCities = cities.filter(
-    (c) => !majorCities.includes(c.city)
+    (c) => !majorNamesLower.has((c.city ?? '').toLowerCase())
   )
 
   return (
@@ -135,16 +148,24 @@ export default async function CitiesIndexPage({
               <Link
                 key={city.slug}
                 href={prefixWithLocale(`/cities/${city.slug}`, locale)}
-                className="bg-white rounded-lg p-6 text-center border border-gray-200 hover:shadow-lg hover:border-primary-300 transition-all group"
+                className="bg-white rounded-lg overflow-hidden text-center border border-gray-200 hover:shadow-lg hover:border-primary-300 transition-all group"
               >
-                <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">
-                  🏙️
+                <div className="relative w-full aspect-video mb-3 bg-gray-100">
+                  <Image
+                    src={city.imageUrl}
+                    alt={city.name}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform"
+                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                  />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 group-hover:text-primary-600 transition-colors mb-2">
-                  {city.name}
-                </h3>
-                <div className="text-sm text-gray-600">
-                  {city.count} {city.count === 1 ? t(dict, 'common.cafe') : t(dict, 'common.cafes')}
+                <div className="p-4 pt-0">
+                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-primary-600 transition-colors mb-1">
+                    {city.name}
+                  </h3>
+                  <div className="text-sm text-gray-600">
+                    {city.count} {city.count === 1 ? t(dict, 'common.cafe') : t(dict, 'common.cafes')}
+                  </div>
                 </div>
               </Link>
             ))}
@@ -162,18 +183,21 @@ export default async function CitiesIndexPage({
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {otherCities.map(({ city, count }) => (
-                <Link
-                  key={city}
-                  href={prefixWithLocale(`/cities/${encodeURIComponent(city.toLowerCase())}`, locale)}
-                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-primary-300 transition-all flex items-center justify-between"
-                >
-                  <span className="font-semibold text-gray-900 text-lg">{city}</span>
-                  <span className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full font-medium">
-                    {count} {count === 1 ? t(dict, 'common.cafe') : t(dict, 'common.cafes')}
-                  </span>
-                </Link>
-              ))}
+              {otherCities.map(({ city, count }) => {
+                const slug = getSlugForCityName(city)
+                return (
+                  <Link
+                    key={city}
+                    href={prefixWithLocale(`/cities/${slug}`, locale)}
+                    className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-primary-300 transition-all flex items-center justify-between"
+                  >
+                    <span className="font-semibold text-gray-900 text-lg">{city}</span>
+                    <span className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full font-medium">
+                      {count} {count === 1 ? t(dict, 'common.cafe') : t(dict, 'common.cafes')}
+                    </span>
+                  </Link>
+                )
+              })}
             </div>
           </section>
         )}

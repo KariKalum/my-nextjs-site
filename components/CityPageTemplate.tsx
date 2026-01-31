@@ -38,6 +38,7 @@ export default function CityPageTemplate({ cafes, config, extraCafes, extraCafes
     trustParagraph,
     faqItems,
     districtLinks,
+    districtSectionTitle,
     relatedLinks,
     otherCityLinks,
     showNicheSection,
@@ -111,11 +112,11 @@ export default function CityPageTemplate({ cafes, config, extraCafes, extraCafes
           </section>
         )}
 
-        {/* District Links */}
+        {/* District Links (same template for any city with districts) */}
         {districtLinks && districtLinks.length > 0 && (
           <section className="mb-12">
             <h2 className="text-sm font-semibold text-gray-700 mb-3">
-              {t(dict, 'city.berlinDistricts')}
+              {districtSectionTitle ?? t(dict, 'city.berlinDistricts')}
             </h2>
             <div className="flex flex-wrap gap-2">
               {districtLinks.map((link) => (

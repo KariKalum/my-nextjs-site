@@ -40,6 +40,8 @@ export interface CityPageConfig {
   
   // Internal links
   districtLinks?: CityPageInternalLink[]
+  /** Section title when showing district links (e.g. "Berlin districts"); when undefined, uses city.berlinDistricts */
+  districtSectionTitle?: string
   relatedLinks?: CityPageInternalLink[]
   otherCityLinks?: CityPageInternalLink[]
   

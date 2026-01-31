@@ -6,8 +6,38 @@ import { createClient } from '@/src/lib/supabase/server'
 import type { Cafe } from '@/src/lib/supabase/types'
 import { filterCafesByIntent, type Intent } from './intent'
 
+/** Alternate DB spellings: if primary returns 0 cafes, try these (e.g. Cologne ↔ Köln) */
+const CITY_ALT_NAMES: Record<string, string[]> = {
+  Cologne: ['Köln'],
+  Köln: ['Cologne'],
+  Munich: ['München'],
+  München: ['Munich'],
+  Nuremberg: ['Nürnberg'],
+  Nürnberg: ['Nuremberg'],
+}
+
 /**
- * Get cafes by city name (case-insensitive)
+ * All city names to match when counting (primary + alternates).
+ * Use when summing counts from a list of { city, count } so Cologne + Köln are combined.
+ */
+export function getCityNamesToMatch(primaryCityName: string): string[] {
+  const primary = primaryCityName?.trim()
+  if (!primary) return []
+  const alts = CITY_ALT_NAMES[primary]
+  return alts ? [primary, ...alts] : [primary]
+}
+
+function filterByCity(data: Cafe[], cityName: string): Cafe[] {
+  if (!data || !Array.isArray(data)) return []
+  return data.filter((cafe) => {
+    if (!cafe || typeof cafe !== 'object') return false
+    return cafe.city?.toLowerCase() === cityName.toLowerCase()
+  }) as Cafe[]
+}
+
+/**
+ * Get cafes by city name (case-insensitive).
+ * If the primary name returns 0 cafes, tries alternate spellings (e.g. Cologne → Köln) so DB can use either.
  */
 export async function getCafesByCity(cityName: string): Promise<Cafe[]> {
   // Runtime guard: ensure cityName is valid
@@ -19,7 +49,6 @@ export async function getCafesByCity(cityName: string): Promise<Cafe[]> {
   try {
     const supabase = await createClient()
 
-    // Fetch all active cafes
     const { data, error } = await supabase
       .from('cafes')
       .select('*')
@@ -31,18 +60,21 @@ export async function getCafesByCity(cityName: string): Promise<Cafe[]> {
       return []
     }
 
-    // Runtime guard: ensure data is an array
     if (!Array.isArray(data)) {
       console.warn('getCafesByCity: Data is not an array')
       return []
     }
 
-    // Filter by city name (case-insensitive)
-    const filtered = data.filter((cafe) => {
-      if (!cafe || typeof cafe !== 'object') return false
-      return cafe.city?.toLowerCase() === cityName.toLowerCase()
-    }) as Cafe[]
-
+    let filtered = filterByCity(data, cityName)
+    if (filtered.length === 0) {
+      const alts = CITY_ALT_NAMES[cityName]
+      if (alts?.length) {
+        for (const alt of alts) {
+          filtered = filterByCity(data, alt)
+          if (filtered.length > 0) break
+        }
+      }
+    }
     return filtered
   } catch (error) {
     console.error('Error fetching cafes by city:', error)

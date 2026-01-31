@@ -54,7 +54,8 @@
       "title": "Cities with Most Cafés",
       "subtitle": "Explore cities with the highest number of laptop-friendly cafés",
       "cafe": "café",
-      "cafes": "cafés"
+      "cafes": "cafés",
+      "viewMore": "View more cities"
     },
     "nearby": {
       "title": "Laptop-friendly cafés to work from near you",

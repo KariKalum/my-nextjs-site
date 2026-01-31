@@ -28,6 +28,34 @@ export interface TopCityWithImage {
   imageUrl: string
 }
 
+const FALLBACK_CITY_IMAGE =
+  'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400&h=300&fit=crop'
+
+/**
+ * Fetch image URLs for given city slugs from major_cities table.
+ * Returns a Map of slug -> image_url (or fallback if not in DB).
+ */
+export async function getImagesForCitySlugs(slugs: string[]): Promise<Map<string, string>> {
+  const map = new Map<string, string>()
+  if (!slugs.length) return map
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('major_cities')
+      .select('slug, image_url')
+      .in('slug', slugs)
+
+    if (!error && data) {
+      data.forEach((row) => {
+        if (row.slug && row.image_url) map.set(row.slug, row.image_url)
+      })
+    }
+  } catch (err) {
+    logOnce('getImagesForCitySlugs-error', err)
+  }
+  return map
+}
+
 /**
  * Fetch major cities with café counts
  * @deprecated This function uses the cities table which doesn't exist.
@@ -93,7 +121,6 @@ export async function getTopCitiesWithImages(
   limit: number = 5
 ): Promise<TopCityWithImage[]> {
   const supabase = await createClient()
-  const FALLBACK_IMAGE_URL = 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400&h=300&fit=crop'
 
   try {
     // Query 1: Get top cities from cafes table
@@ -159,7 +186,7 @@ export async function getTopCitiesWithImages(
     // Merge results: output ordered by cafeCount desc, attach imageUrl from major_cities or fallback
     return topCities.map((city) => {
       const slug = slugifyCity(city.name)
-      const imageUrl = imageMap.get(slug) || FALLBACK_IMAGE_URL
+      const imageUrl = imageMap.get(slug) || FALLBACK_CITY_IMAGE
 
       return {
         name: city.name,

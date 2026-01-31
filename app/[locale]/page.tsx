@@ -1,6 +1,8 @@
 import { Metadata } from 'next'
+import Link from 'next/link'
 import Logo from '@/components/Logo'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
+import { prefixWithLocale } from '@/lib/i18n/routing'
 import Hero from '@/components/home/Hero'
 import ValueProps from '@/components/home/ValueProps'
 import FeaturedCities from '@/components/home/FeaturedCities'
@@ -68,6 +70,12 @@ export default function Home({
               <Logo />
             </div>
             <div className="flex items-center gap-3 md:gap-4">
+              <Link
+                href={prefixWithLocale('/how-it-works', locale)}
+                className="text-sm text-gray-600 hover:text-gray-900 font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 rounded"
+              >
+                How this works?
+              </Link>
               <LanguageSwitcher />
               {/* Desktop: secondary button with tooltip */}
               <a

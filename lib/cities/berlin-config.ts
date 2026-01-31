@@ -38,7 +38,9 @@ export function buildBerlinCityConfig(
   dict: Dictionary,
   districtSlug?: string,
   districtDisplayName?: string,
-  intent?: Intent
+  intent?: Intent,
+  /** When provided for main city page, trust paragraph uses this count */
+  cafeCount?: number
 ): CityPageConfig {
   const isDistrict = Boolean(districtSlug && districtDisplayName)
   const citySlug = 'berlin'
@@ -151,9 +153,13 @@ export function buildBerlinCityConfig(
     introText = t(dict, 'meta.city.introBerlin')
   }
   
-  // Trust paragraph (only for main city page)
+  // Trust paragraph (only for main city page); use actual count when provided
   const trustParagraph = !isDistrict
-    ? tmpl(t(dict, 'meta.city.trustParagraph.berlin'), { count: '40+' })
+    ? tmpl(t(dict, 'meta.city.trustParagraph.berlin'), {
+        count: cafeCount !== undefined && cafeCount >= 0
+          ? (cafeCount >= 40 ? '40+' : String(cafeCount))
+          : '40+',
+      })
     : undefined
   
   // FAQ items (Berlin-specific, adapted for districts)

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { createClient } from '@/src/lib/supabase/client'
 import { getCafeHref } from '@/lib/cafeRouting'
 import { getLocaleFromPathname } from '@/lib/i18n/routing'
+import { getSlugForCityFromName, normalizeForSearch } from '@/lib/utils/city-search'
 import { t } from '@/lib/i18n/t'
 import type { Dictionary } from '@/lib/i18n/getDictionary'
 
@@ -34,6 +35,8 @@ export default function Hero({ dict, onSearchChange }: HeroProps) {
   const [locationError, setLocationError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const suggestionsRef = useRef<HTMLDivElement>(null)
+  /** Cache distinct city names so we only fetch once and filter client-side with normalized match */
+  const allCityNamesRef = useRef<Set<string> | null>(null)
 
   // Debounced search
   useEffect(() => {
@@ -54,29 +57,44 @@ export default function Hero({ dict, onSearchChange }: HeroProps) {
     setLoading(true)
     try {
       const supabase = createClient()
-
-      const queryLower = query.toLowerCase()
       const results: Suggestion[] = []
+      const queryTrim = query.trim()
+      if (!queryTrim) {
+        setSuggestions([])
+        setShowSuggestions(false)
+        setLoading(false)
+        return
+      }
 
-      // Fetch cities (distinct)
-      const { data: citiesData } = await supabase
-        .from('cafes')
-        .select('city')
-        .or('is_active.is.null,is_active.eq.true')
-        .ilike('city', `%${query}%`)
-        .limit(5)
+      // 1) Get distinct city names (fetch once, then use cache)
+      if (!allCityNamesRef.current) {
+        const { data: cafesRows } = await supabase
+          .from('cafes')
+          .select('city')
+          .or('is_active.is.null,is_active.eq.true')
+          .not('city', 'is', null)
+          .limit(2000)
+        const set = new Set<string>()
+        cafesRows?.forEach((row) => {
+          if (row.city && typeof row.city === 'string') set.add(row.city)
+        })
+        allCityNamesRef.current = set
+      }
 
-      const uniqueCities = new Set<string>()
-      citiesData?.forEach((item) => {
-        if (item.city && !uniqueCities.has(item.city)) {
-          uniqueCities.add(item.city)
-          results.push({
-            type: 'city',
-            label: item.city,
-            value: item.city,
-            slug: item.city.toLowerCase(),
-          })
-        }
+      // 2) Filter cities client-side with normalized match so "dusseldorf" matches "Düsseldorf"
+      const nq = normalizeForSearch(queryTrim)
+      const matchingCities = Array.from(allCityNamesRef.current)
+        .filter((city) => normalizeForSearch(city).includes(nq) || nq.includes(normalizeForSearch(city)))
+        .sort((a, b) => a.localeCompare(b))
+        .slice(0, 5)
+
+      matchingCities.forEach((city) => {
+        results.push({
+          type: 'city',
+          label: city,
+          value: city,
+          slug: getSlugForCityFromName(city),
+        })
       })
 
       // Fetch cafes by name
