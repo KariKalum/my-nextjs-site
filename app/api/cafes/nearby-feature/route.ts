@@ -1,11 +1,12 @@
 /**
  * API endpoint: Fetch cafés near a location filtered by feature
- * Features: wifi, outlets, quiet, time-limit
+ * Features: wifi, outlets, quiet, time-limit, work-hubs
  * Uses Haversine distance calculation with bounding box pre-filter
  */
 
 import { NextResponse } from 'next/server'
 import { createClient } from '@/src/lib/supabase/server'
+import { WORK_SCORE_THRESHOLD_WORK } from '@/lib/cities/intent'
 
 // Mark as dynamic since we use request.url for query params
 export const dynamic = 'force-dynamic'
@@ -52,7 +53,9 @@ function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 }
 
 /**
- * Build feature filter for Supabase query
+ * Build feature filter for Supabase query.
+ * work-hubs: prefer is_work_friendly === true, else work_score >= WORK_SCORE_THRESHOLD_WORK.
+ * Optional strengthening (wifi or outlets known) is applied in JS after fetch.
  */
 function buildFeatureFilter(feature: string) {
   switch (feature) {
@@ -78,9 +81,37 @@ function buildFeatureFilter(feature: string) {
           .neq('ai_laptop_policy', 'unknown')
           .neq('ai_laptop_policy', '')
           .ilike('ai_laptop_policy', '%unlimited%')
+    case 'work-hubs':
+      return (query: any) =>
+        query.or(
+          `is_work_friendly.eq.true,work_score.gte.${WORK_SCORE_THRESHOLD_WORK}`
+        )
     default:
       return (query: any) => query
   }
+}
+
+/** Post-filter for work-hubs: exclude is_work_friendly=false when score < threshold; require at least wifi or outlets known. */
+function filterWorkHubsCafes<T extends { is_work_friendly: boolean | null; work_score: number | null; ai_wifi_quality: string | null; ai_power_outlets: string | null }>(
+  cafes: T[]
+): T[] {
+  return cafes.filter((cafe) => {
+    const workOk =
+      cafe.is_work_friendly === true ||
+      (typeof cafe.work_score === 'number' &&
+        cafe.work_score >= WORK_SCORE_THRESHOLD_WORK &&
+        cafe.is_work_friendly !== false)
+    if (!workOk) return false
+    const wifiOk =
+      typeof cafe.ai_wifi_quality === 'string' &&
+      cafe.ai_wifi_quality.trim() !== '' &&
+      cafe.ai_wifi_quality.toLowerCase() !== 'unknown'
+    const outletsOk =
+      typeof cafe.ai_power_outlets === 'string' &&
+      cafe.ai_power_outlets.trim() !== '' &&
+      cafe.ai_power_outlets.toLowerCase() !== 'unknown'
+    return wifiOk || outletsOk
+  })
 }
 
 export async function GET(req: Request) {
@@ -120,7 +151,7 @@ export async function GET(req: Request) {
     }
 
     // Validate feature
-    const validFeatures = ['wifi', 'outlets', 'quiet', 'time-limit']
+    const validFeatures = ['wifi', 'outlets', 'quiet', 'time-limit', 'work-hubs']
     if (!validFeatures.includes(feature)) {
       return NextResponse.json(
         { error: `feature must be one of: ${validFeatures.join(', ')}` },
@@ -175,7 +206,10 @@ export async function GET(req: Request) {
       )
     }
 
-    const cafes = (data || []) as CafeRecord[]
+    let cafes = (data || []) as CafeRecord[]
+    if (feature === 'work-hubs') {
+      cafes = filterWorkHubsCafes(cafes)
+    }
 
     // Compute precise distances and filter by radius
     const cafesWithDistance = cafes

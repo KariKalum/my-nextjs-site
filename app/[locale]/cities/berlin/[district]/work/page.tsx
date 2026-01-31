@@ -1,6 +1,6 @@
 /**
- * Berlin district pages
- * Handles all Berlin districts: mitte, charlottenburg, prenzlauer-berg, neukoelln, kreuzberg, friedrichshain, hbf
+ * Berlin district work intent pages
+ * /[locale]/cities/berlin/[district]/work
  */
 
 import { Metadata } from 'next'
@@ -9,11 +9,11 @@ import { getLocaleFromParams, type Locale } from '@/lib/i18n/config'
 import { getDictionary } from '@/lib/i18n/getDictionary'
 import { t, tmpl } from '@/lib/i18n/t'
 import CityPageTemplate from '@/components/CityPageTemplate'
-import { getCafesByCity, getDistrictDisplayName } from '@/lib/cities/data'
+import { getCafesByCityAndDistrict, getDistrictDisplayName } from '@/lib/cities/data'
 import { buildBerlinCityConfig } from '@/lib/cities/berlin-config'
 import { getAbsoluteUrl, getHreflangAlternates } from '@/lib/seo/metadata'
+import { MIN_RESULTS_THIN, EXTRA_CAFES_LIMIT } from '@/lib/location-constants'
 
-// Valid district slugs
 const VALID_DISTRICTS = [
   'mitte',
   'charlottenburg',
@@ -27,7 +27,7 @@ const VALID_DISTRICTS = [
 type DistrictSlug = (typeof VALID_DISTRICTS)[number]
 
 function isValidDistrict(slug: string): slug is DistrictSlug {
-  return VALID_DISTRICTS.includes(slug as DistrictSlug)
+  return (VALID_DISTRICTS as readonly string[]).includes(slug)
 }
 
 export async function generateMetadata({
@@ -43,16 +43,15 @@ export async function generateMetadata({
   }
 
   const districtDisplayName = getDistrictDisplayName(params.district)
-  const config = buildBerlinCityConfig(locale, dict, params.district, districtDisplayName)
+  const config = buildBerlinCityConfig(locale, dict, params.district, districtDisplayName, 'work')
   const { siteName } = await import('@/lib/seo/metadata')
-  const canonicalUrl = getAbsoluteUrl(`/${locale}/cities/berlin/${params.district}`)
+  const canonicalUrl = getAbsoluteUrl(`/${locale}/cities/berlin/${params.district}/work`)
   const ogImage = getAbsoluteUrl('/og-default.jpg')
   const ogAlt = tmpl(t(dict, 'meta.city.ogAlt'), { city: `Berlin ${districtDisplayName}` })
 
   return {
     title: config.seoTitle,
     description: config.seoDescription,
-    robots: { index: false, follow: true },
     openGraph: {
       title: config.seoTitle,
       description: config.seoDescription,
@@ -67,11 +66,11 @@ export async function generateMetadata({
       description: config.seoDescription,
       images: [ogImage],
     },
-    ...getHreflangAlternates(`/cities/berlin/${params.district}`, locale),
+    ...getHreflangAlternates(`/cities/berlin/${params.district}/work`, locale),
   }
 }
 
-export default async function BerlinDistrictPage({
+export default async function BerlinDistrictWorkPage({
   params,
 }: {
   params: { district: string; locale: Locale }
@@ -84,13 +83,32 @@ export default async function BerlinDistrictPage({
   }
 
   const districtDisplayName = getDistrictDisplayName(params.district)
-  const config = buildBerlinCityConfig(locale, dict, params.district, districtDisplayName)
+  const config = buildBerlinCityConfig(locale, dict, params.district, districtDisplayName, 'work')
 
-  // Fetch all Berlin cafes - show on every district page
-  const cafes = await getCafesByCity('Berlin')
-  
-  // Runtime guard: ensure cafes is always an array
+  let cafes = await getCafesByCityAndDistrict('Berlin', districtDisplayName, 'work')
+  // TODO: If dataset has no district in address, district filter may return empty; fallback to all Berlin work cafes.
+  if (!Array.isArray(cafes) || cafes.length === 0) {
+    cafes = await getCafesByCityAndDistrict('Berlin', undefined, 'work')
+  }
   const safeCafes = Array.isArray(cafes) ? cafes : []
 
-  return <CityPageTemplate cafes={safeCafes} config={config} />
+  let extraCafes: typeof safeCafes = []
+  let extraCafesSectionTitle: string | undefined
+  if (safeCafes.length < MIN_RESULTS_THIN) {
+    const allBerlin = await getCafesByCityAndDistrict('Berlin', undefined)
+    const mainIds = new Set(safeCafes.map((c) => c.id))
+    extraCafes = (Array.isArray(allBerlin) ? allBerlin : [])
+      .filter((c) => !mainIds.has(c.id))
+      .slice(0, EXTRA_CAFES_LIMIT)
+    extraCafesSectionTitle = tmpl(t(dict, 'city.moreCafesInCity'), { city: `Berlin ${districtDisplayName}` })
+  }
+
+  return (
+    <CityPageTemplate
+      cafes={safeCafes}
+      config={config}
+      extraCafes={extraCafes.length > 0 ? extraCafes : undefined}
+      extraCafesSectionTitle={extraCafesSectionTitle}
+    />
+  )
 }

@@ -10,6 +10,7 @@ const FEATURE_META_KEYS: Record<string, { title: string; description: string }> 
   outlets: { title: 'meta.find.outletsTitle', description: 'meta.find.outletsDescription' },
   quiet: { title: 'meta.find.quietTitle', description: 'meta.find.quietDescription' },
   'time-limit': { title: 'meta.find.timeLimitTitle', description: 'meta.find.timeLimitDescription' },
+  'work-hubs': { title: 'meta.find.workHubsTitle', description: 'meta.find.workHubsDescription' },
 }
 
 export async function generateMetadata({
@@ -54,7 +55,7 @@ export default function FeaturePage({
 }: {
   params: { feature: string; locale: Locale }
 }) {
-  const validFeatures = ['wifi', 'outlets', 'quiet', 'time-limit']
+  const validFeatures = ['wifi', 'outlets', 'quiet', 'time-limit', 'work-hubs']
 
   if (!validFeatures.includes(params.feature)) {
     notFound()

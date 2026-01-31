@@ -186,7 +186,10 @@
     "cafesOnMap": "Cafés auf der Karte",
     "relatedWifi": "Café mit WLAN",
     "relatedOutlets": "Café mit Steckdosen",
-    "relatedQuiet": "Ruhiges Café"
+    "relatedQuiet": "Ruhiges Café",
+    "moreCafesInCity": "Weitere Cafés in {city}",
+    "allCafesInCity": "Alle Cafés in {city}",
+    "allCafesInDistrict": "Alle Cafés in Berlin {district}"
   },
   "searchResults": {
     "noCafesFound": "Noch keine Cafés gefunden",
@@ -287,6 +290,10 @@
     "nearMeOutlets": "Nutzen Sie die Karte oben, um Cafés mit Steckdosen in Ihrer Nähe zu finden.",
     "nearMeQuiet": "Nutzen Sie die Karte oben, um ruhige Cafés in Ihrer Nähe zu finden.",
     "nearMeTimeLimit": "Nutzen Sie die Karte oben, um Cafés ohne Zeitlimit in Ihrer Nähe zu finden.",
+    "h1WorkHubs": "Arbeitsfreundliche Cafés in Ihrer Nähe (WLAN & Steckdosen)",
+    "descriptionWorkHubs": "Laptopfreundliche Cafés für Remote-Arbeit, Freelancer und Digital Nomads. Zuverlässiges WLAN, Steckdosen und ruhige Optionen in ganz Deutschland.",
+    "workHubsLabel": "arbeitsfreundlich (WLAN & Steckdosen)",
+    "nearMeWorkHubs": "Nutzen Sie die Karte oben, um arbeitsfreundliche Cafés in Ihrer Nähe zu finden.",
     "showMore": "Mehr anzeigen",
     "showMoreAriaLabel": "Mehr Cafés anzeigen",
     "relatedFeatures": "Weitere Kriterien",
@@ -339,6 +346,18 @@
         "a4": "Diese Seite listet Cafés ohne Zeitlimit. Kombinieren Sie mit WLAN oder Steckdosen, wenn Sie das ebenfalls brauchen.",
         "q5": "Listet ihr zeitlimitfreie Cafés in Frankfurt, Hamburg oder München?",
         "a5": "Ja. Wir decken Cafés in ganz Deutschland ab. Nutzen Sie die Karte oder die Städte-Links unten."
+      },
+      "work-hubs": {
+        "q1": "Wo finde ich arbeitsfreundliche Cafés in meiner Nähe in Deutschland?",
+        "a1": "Nutzen Sie die Karte auf dieser Seite, um arbeitsfreundliche Cafés in Ihrer Nähe zu finden. Wir listen Orte mit WLAN, Steckdosen und laptopfreundlichen Richtlinien für Remote-Arbeit.",
+        "q2": "Welche Berliner Cafés eignen sich am besten zum Arbeiten mit dem Laptop?",
+        "a2": "Unsere Berlin-Listungen umfassen arbeitsfreundliche Cafés mit zuverlässigem WLAN und Steckdosen. Verschieben Sie die Karte oder nutzen Sie Ihren Standort.",
+        "q3": "Gibt es Cafés mit gutem WLAN und Steckdosen für Freelancer?",
+        "a3": "Ja. Wir heben Cafés hervor, die sich für Remote-Arbeiter und Freelancer eignen, mit WLAN und Steckdosen für produktives Arbeiten.",
+        "q4": "Wie finde ich ein Café mit WLAN und Steckdosen für Videocalls?",
+        "a4": "Diese Seite zeigt Arbeits-Cafés mit WLAN und Steckdosen. Kombinieren Sie mit dem Ruhig-Filter, wenn Sie eine ruhigere Umgebung für Calls brauchen.",
+        "q5": "Listet ihr arbeitsfreundliche Cafés in München, Hamburg oder Köln?",
+        "a5": "Ja. Wir decken große Städte in Deutschland ab. Nutzen Sie die Karte oder die Städte-Links unten."
       }
     }
   },
@@ -482,7 +501,9 @@
       "quietTitle": "Ruhige Cafés finden | {siteName}",
       "quietDescription": "Ruhige Cafés in Deutschland für konzentriertes Arbeiten. Finden Sie Cafés mit ruhiger Lautstärke in Ihrer Nähe.",
       "timeLimitTitle": "Cafés ohne Zeitbegrenzung finden | {siteName}",
-      "timeLimitDescription": "Cafés ohne Zeitlimit in Deutschland finden. Arbeiten Sie so lange Sie möchten – Optionen in Ihrer Nähe."
+      "timeLimitDescription": "Cafés ohne Zeitlimit in Deutschland finden. Arbeiten Sie so lange Sie möchten – Optionen in Ihrer Nähe.",
+      "workHubsTitle": "Arbeitsfreundliche Cafés (WLAN & Steckdosen) finden | {siteName}",
+      "workHubsDescription": "Arbeitsfreundliche Cafés in Deutschland mit zuverlässigem WLAN, Steckdosen und laptopfreundlichen Räumen. Perfekt für Remote-Arbeit, Freelancer und Digital Nomads."
     },
     "cafe": {
       "notFoundTitle": "Café nicht gefunden | {siteName}",

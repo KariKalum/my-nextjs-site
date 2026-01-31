@@ -6,7 +6,15 @@
 import type { Locale } from '@/lib/i18n/config'
 import type { Dictionary } from '@/lib/i18n/getDictionary'
 import type { CityPageConfig, CityPageFAQ } from './types'
+import type { Intent } from './intent'
 import { t, tmpl } from '@/lib/i18n/t'
+
+// TODO: Add meta.city.intent.* keys to en.json and de.json for Berlin/district work / laptop-friendly.
+// Until then, English fallbacks are used when the key is missing.
+function intentFallback(dict: Dictionary, key: string, fallback: string): string {
+  const v = t(dict, key)
+  return v === key ? fallback : v
+}
 
 /**
  * Build Berlin city page configuration
@@ -29,38 +37,99 @@ export function buildBerlinCityConfig(
   locale: Locale,
   dict: Dictionary,
   districtSlug?: string,
-  districtDisplayName?: string
+  districtDisplayName?: string,
+  intent?: Intent
 ): CityPageConfig {
   const isDistrict = Boolean(districtSlug && districtDisplayName)
   const citySlug = 'berlin'
   const cityDisplayName = 'Berlin'
-  
+
   // Get map center for the district or city
   const mapCenter = districtSlug
     ? BERLIN_MAP_CENTERS[districtSlug] || BERLIN_MAP_CENTERS.berlin
     : BERLIN_MAP_CENTERS.berlin
-  // District pages: neighborhood level (14); city page: broader view (12)
   const mapZoom = isDistrict ? 14 : 12
-  // District pages: keep zoomed-in view on district; city page: fit bounds to all cafes
   const preserveRegionZoom = isDistrict
-  
-  // H1 title
-  const h1Title = isDistrict
-    ? `${t(dict, 'city.laptopFriendlyIn')} ${districtDisplayName}, ${cityDisplayName}`
-    : t(dict, 'city.berlinH1')
-  
-  // SEO metadata
-  const seoTitle = isDistrict && districtDisplayName
-    ? locale === 'de'
-      ? `Cafés zum Arbeiten in Berlin ${districtDisplayName} – WLAN & Steckdosen`
-      : `Cafés to Work From in Berlin ${districtDisplayName} – WiFi & Power Outlets`
-    : t(dict, 'meta.city.berlinTitle')
-  
-  const seoDescription = isDistrict && districtDisplayName
-    ? locale === 'de'
-      ? `Die besten Cafés zum Arbeiten in Berlin ${districtDisplayName} finden – mit zuverlässigem WLAN, Steckdosen und laptopfreundlichen Räumen. Perfekt für Remote-Arbeit und Lernen.`
-      : `Find the best cafés to work from in Berlin ${districtDisplayName} with reliable WiFi, power outlets, and laptop-friendly spaces. Perfect for remote work and studying.`
-    : t(dict, 'meta.city.berlinDescription')
+
+  let h1Title: string
+  let seoTitle: string
+  let seoDescription: string
+
+  if (intent === 'work') {
+    if (isDistrict && districtDisplayName) {
+      h1Title = intentFallback(
+        dict,
+        'meta.city.intent.work.districtH1Title',
+        locale === 'de'
+          ? `Cafés zum Arbeiten in Berlin ${districtDisplayName} (WLAN & Steckdosen)`
+          : `Best Cafés to Work From in Berlin ${districtDisplayName} (WiFi & Power Outlets)`
+      )
+      h1Title = h1Title.includes('{district}') ? tmpl(h1Title, { district: districtDisplayName }) : h1Title
+      seoTitle = intentFallback(
+        dict,
+        'meta.city.intent.work.districtSeoTitle',
+        `Cafés to Work From in Berlin ${districtDisplayName} – WiFi & Power Outlets | ${t(dict, 'meta.siteName')}`
+      )
+      seoTitle = seoTitle.includes('{district}') ? tmpl(seoTitle, { district: districtDisplayName, siteName: t(dict, 'meta.siteName') }) : seoTitle
+      seoDescription = intentFallback(
+        dict,
+        'meta.city.intent.work.districtSeoDescription',
+        `Find the best cafés to work from in Berlin ${districtDisplayName} with reliable WiFi, power outlets, and laptop-friendly spaces. Perfect for remote work and studying.`
+      )
+      seoDescription = seoDescription.includes('{district}') ? tmpl(seoDescription, { district: districtDisplayName }) : seoDescription
+    } else {
+      h1Title = intentFallback(dict, 'meta.city.intent.work.h1Title', `Best Cafés to Work From in Berlin (WiFi & Power Outlets)`)
+      if (h1Title.includes('{city}')) h1Title = tmpl(h1Title, { city: cityDisplayName })
+      seoTitle = intentFallback(dict, 'meta.city.intent.work.seoTitle', `Cafés to Work From in Berlin – WiFi, Power Outlets & Laptop-Friendly | ${t(dict, 'meta.siteName')}`)
+      if (seoTitle.includes('{city}')) seoTitle = tmpl(seoTitle, { city: cityDisplayName, siteName: t(dict, 'meta.siteName') })
+      seoDescription = intentFallback(dict, 'meta.city.intent.work.seoDescription', `Find the best cafés to work from in Berlin with reliable WiFi, power outlets, and laptop-friendly spaces. Perfect for remote work, studying, and meetings.`)
+      if (seoDescription.includes('{city}')) seoDescription = tmpl(seoDescription, { city: cityDisplayName })
+    }
+  } else if (intent === 'laptop-friendly') {
+    if (isDistrict && districtDisplayName) {
+      h1Title = intentFallback(
+        dict,
+        'meta.city.intent.laptopFriendly.districtH1Title',
+        locale === 'de'
+          ? `Laptopfreundliche Cafés in Berlin ${districtDisplayName}`
+          : `Laptop-Friendly Cafés in Berlin ${districtDisplayName}`
+      )
+      h1Title = h1Title.includes('{district}') ? tmpl(h1Title, { district: districtDisplayName }) : h1Title
+      seoTitle = intentFallback(
+        dict,
+        'meta.city.intent.laptopFriendly.districtSeoTitle',
+        `Laptop-Friendly Cafés in Berlin ${districtDisplayName} – WiFi & Power Outlets | ${t(dict, 'meta.siteName')}`
+      )
+      seoTitle = seoTitle.includes('{district}') ? tmpl(seoTitle, { district: districtDisplayName, siteName: t(dict, 'meta.siteName') }) : seoTitle
+      seoDescription = intentFallback(
+        dict,
+        'meta.city.intent.laptopFriendly.districtSeoDescription',
+        `Find laptop-friendly cafés in Berlin ${districtDisplayName} with WiFi, power outlets, and work-friendly policies. Ideal for remote work and studying.`
+      )
+      seoDescription = seoDescription.includes('{district}') ? tmpl(seoDescription, { district: districtDisplayName }) : seoDescription
+    } else {
+      h1Title = intentFallback(dict, 'meta.city.intent.laptopFriendly.h1Title', `Laptop-Friendly Cafés in Berlin`)
+      if (h1Title.includes('{city}')) h1Title = tmpl(h1Title, { city: cityDisplayName })
+      seoTitle = intentFallback(dict, 'meta.city.intent.laptopFriendly.seoTitle', `Laptop-Friendly Cafés in Berlin – WiFi & Power Outlets | ${t(dict, 'meta.siteName')}`)
+      if (seoTitle.includes('{city}')) seoTitle = tmpl(seoTitle, { city: cityDisplayName, siteName: t(dict, 'meta.siteName') })
+      seoDescription = intentFallback(dict, 'meta.city.intent.laptopFriendly.seoDescription', `Find laptop-friendly cafés in Berlin with WiFi, power outlets, and work-friendly policies. Ideal for remote work and studying.`)
+      if (seoDescription.includes('{city}')) seoDescription = tmpl(seoDescription, { city: cityDisplayName })
+    }
+  } else {
+    h1Title = isDistrict
+      ? `${t(dict, 'city.laptopFriendlyIn')} ${districtDisplayName}, ${cityDisplayName}`
+      : t(dict, 'city.berlinH1')
+    seoTitle = isDistrict && districtDisplayName
+      ? locale === 'de'
+        ? `Cafés zum Arbeiten in Berlin ${districtDisplayName} – WLAN & Steckdosen`
+        : `Cafés to Work From in Berlin ${districtDisplayName} – WiFi & Power Outlets`
+      : t(dict, 'meta.city.berlinTitle')
+    seoDescription = isDistrict && districtDisplayName
+      ? locale === 'de'
+        ? `Die besten Cafés zum Arbeiten in Berlin ${districtDisplayName} finden – mit zuverlässigem WLAN, Steckdosen und laptopfreundlichen Räumen. Perfekt für Remote-Arbeit und Lernen.`
+        : `Find the best cafés to work from in Berlin ${districtDisplayName} with reliable WiFi, power outlets, and laptop-friendly spaces. Perfect for remote work and studying.`
+      : t(dict, 'meta.city.berlinDescription')
+  }
   
   // Intro text
   let introText: string | undefined
@@ -147,11 +216,31 @@ export function buildBerlinCityConfig(
       ]
     : undefined
   
-  // Related links
+  // Related links; when intent set include /find/work-hubs + link back to base; when base page add Work (+ Laptop-friendly for city only)
   const relatedLinks = [
-    { href: '/find/wifi', label: t(dict, 'city.relatedWifi') },
-    { href: '/find/outlets', label: t(dict, 'city.relatedOutlets') },
-    { href: '/find/quiet', label: t(dict, 'city.relatedQuiet') },
+    ...(intent === 'work' || intent === 'laptop-friendly'
+      ? [
+          ...(isDistrict && districtSlug
+            ? [{ href: `/cities/berlin/${districtSlug}`, label: tmpl(t(dict, 'city.allCafesInDistrict'), { district: districtDisplayName ?? '' }) }]
+            : [{ href: '/cities/berlin', label: tmpl(t(dict, 'city.allCafesInCity'), { city: cityDisplayName }) }]),
+          { href: '/find/wifi', label: t(dict, 'city.relatedWifi') },
+          { href: '/find/outlets', label: t(dict, 'city.relatedOutlets') },
+          { href: '/find/quiet', label: t(dict, 'city.relatedQuiet') },
+          { href: '/find/work-hubs', label: intentFallback(dict, 'city.relatedWorkHubs', 'Work hubs') },
+        ]
+      : [
+          { href: '/find/wifi', label: t(dict, 'city.relatedWifi') },
+          { href: '/find/outlets', label: t(dict, 'city.relatedOutlets') },
+          { href: '/find/quiet', label: t(dict, 'city.relatedQuiet') },
+          ...(!isDistrict
+            ? [
+                { href: '/cities/berlin/work', label: intentFallback(dict, 'city.relatedWork', 'Work') },
+                { href: '/cities/berlin/laptop-friendly', label: intentFallback(dict, 'city.relatedLaptopFriendly', 'Laptop-friendly') },
+              ]
+            : districtSlug
+              ? [{ href: `/cities/berlin/${districtSlug}/work`, label: intentFallback(dict, 'city.relatedWork', 'Work') }]
+              : []),
+        ]),
   ]
   
   // Other cities (only for main city page)

@@ -75,6 +75,7 @@ export async function GET() {
       { path: '/find/outlets', priority: '0.7', changefreq: 'monthly' },
       { path: '/find/quiet', priority: '0.7', changefreq: 'monthly' },
       { path: '/find/time-limit', priority: '0.7', changefreq: 'monthly' },
+      { path: '/find/work-hubs', priority: '0.7', changefreq: 'monthly' },
     ]
 
     // Add static pages for each locale
@@ -141,6 +142,33 @@ export async function GET() {
           loc: `${baseUrl}/${locale}/cities/berlin/${district}`,
           changefreq: 'weekly',
           priority: '0.75', // Slightly lower than main city page but still high
+        })
+      })
+    })
+
+    // Add city intent pages: /cities/[city]/work and /cities/[city]/laptop-friendly
+    citiesToInclude.forEach((city) => {
+      locales.forEach((locale) => {
+        urls.push({
+          loc: `${baseUrl}/${locale}/cities/${encodeURIComponent(city)}/work`,
+          changefreq: 'weekly',
+          priority: '0.75',
+        })
+        urls.push({
+          loc: `${baseUrl}/${locale}/cities/${encodeURIComponent(city)}/laptop-friendly`,
+          changefreq: 'weekly',
+          priority: '0.75',
+        })
+      })
+    })
+
+    // Add Berlin district work pages: /cities/berlin/[district]/work
+    berlinDistricts.forEach((district) => {
+      locales.forEach((locale) => {
+        urls.push({
+          loc: `${baseUrl}/${locale}/cities/berlin/${district}/work`,
+          changefreq: 'weekly',
+          priority: '0.72',
         })
       })
     })

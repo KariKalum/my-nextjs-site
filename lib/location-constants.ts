@@ -17,3 +17,9 @@ export const RADIUS_STEPS = [5000, 15000, 50000, 100000] as const
 
 /** Minimum number of results to aim for before stopping radius expansion */
 export const MIN_RESULTS_THRESHOLD = 8
+
+/** Below this count, intent pages (work/laptop-friendly) show "More great cafés in {city}" section */
+export const MIN_RESULTS_THIN = 6
+
+/** Max cafés to show in the "More great cafés in {city}" fallback section */
+export const EXTRA_CAFES_LIMIT = 12

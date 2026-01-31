@@ -186,7 +186,10 @@
     "cafesOnMap": "Cafés on Map",
     "relatedWifi": "Cafés with Wi-Fi",
     "relatedOutlets": "Cafés with power outlets",
-    "relatedQuiet": "Quiet cafés"
+    "relatedQuiet": "Quiet cafés",
+    "moreCafesInCity": "More great cafés in {city}",
+    "allCafesInCity": "All cafés in {city}",
+    "allCafesInDistrict": "All cafés in Berlin {district}"
   },
   "searchResults": {
     "noCafesFound": "No cafés found yet",
@@ -287,6 +290,10 @@
     "nearMeOutlets": "Use the map above to find cafés with power outlets near you.",
     "nearMeQuiet": "Use the map above to find quiet cafés near you.",
     "nearMeTimeLimit": "Use the map above to find cafés with no time limit near you.",
+    "h1WorkHubs": "Work-friendly cafés near you (WiFi & Power Outlets)",
+    "descriptionWorkHubs": "Find laptop-friendly cafés ideal for remote work, freelancers, and digital nomads. Reliable WiFi, power outlets, and quiet options across Germany.",
+    "workHubsLabel": "work-friendly (WiFi & outlets)",
+    "nearMeWorkHubs": "Use the map above to find work-friendly cafés near you.",
     "showMore": "Show more",
     "showMoreAriaLabel": "Show more cafés",
     "relatedFeatures": "Related",
@@ -339,6 +346,18 @@
         "a4": "This page lists cafés with no time limit. Combine with Wi-Fi or power outlets if you need those as well.",
         "q5": "Do you list time-limit friendly cafés in Frankfurt, Hamburg or Munich?",
         "a5": "Yes. We cover cafés across Germany. Use the map or the city links below to find options in your city."
+      },
+      "work-hubs": {
+        "q1": "Where can I find work-friendly cafés near me in Germany?",
+        "a1": "Use the map on this page to see work-friendly cafés near you. We list spots with WiFi, power outlets, and laptop-friendly policies ideal for remote work.",
+        "q2": "Which Berlin cafés are best for working with a laptop?",
+        "a2": "Our Berlin listings include work-friendly cafés with reliable WiFi and outlets. Pan the map or use your location to find one near you.",
+        "q3": "Are there cafés with good WiFi and sockets for freelancers?",
+        "a3": "Yes. We highlight cafés suited to remote workers and freelancers, with WiFi and power outlets so you can work productively.",
+        "q4": "How do I find a café with WiFi and power outlets for video calls?",
+        "a4": "This page shows work-hub cafés with WiFi and outlets. Combine with the quiet filter if you need a calmer environment for calls.",
+        "q5": "Do you list work-friendly cafés in Munich, Hamburg or Cologne?",
+        "a5": "Yes. We cover major cities across Germany. Use the map or the city links below to find work-friendly cafés in your city."
       }
     }
   },
@@ -482,7 +501,9 @@
       "quietTitle": "Find quiet cafés | {siteName}",
       "quietDescription": "Find quiet cafés in Germany for deep work. Discover cafés with quiet or moderate noise levels near you.",
       "timeLimitTitle": "Find time-limit friendly cafés | {siteName}",
-      "timeLimitDescription": "Find cafés with no time limit in Germany. Work as long as you need—explore options near you."
+      "timeLimitDescription": "Find cafés with no time limit in Germany. Work as long as you need—explore options near you.",
+      "workHubsTitle": "Find work-friendly cafés (WiFi & Power Outlets) | {siteName}",
+      "workHubsDescription": "Discover work-friendly cafés in Germany with reliable WiFi, power outlets, and laptop-friendly spaces. Perfect for remote work, freelancers, and digital nomads."
     },
     "cafe": {
       "notFoundTitle": "Café not found | {siteName}",

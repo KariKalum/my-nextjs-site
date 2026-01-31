@@ -7,18 +7,23 @@ import Link from 'next/link'
 import type { Cafe } from '@/src/lib/supabase/types'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import CityMapSection from '@/components/CityMapSection'
+import CafeCard from '@/components/CafeCard'
 import CityFAQ from '@/components/CityFAQ'
 import { prefixWithLocale } from '@/lib/i18n/routing'
 import { t, tmpl } from '@/lib/i18n/t'
 import type { CityPageConfig } from '@/lib/cities/types'
 import { getAbsoluteUrl } from '@/lib/seo/metadata'
+import { buildCityPageItemList } from '@/lib/seo/item-list'
 
 interface CityPageTemplateProps {
   cafes: Cafe[]
   config: CityPageConfig
+  /** When filtered list is thin (< MIN_RESULTS_THIN), show this extra list with sectionTitle */
+  extraCafes?: Cafe[]
+  extraCafesSectionTitle?: string
 }
 
-export default function CityPageTemplate({ cafes, config }: CityPageTemplateProps) {
+export default function CityPageTemplate({ cafes, config, extraCafes, extraCafesSectionTitle }: CityPageTemplateProps) {
   // Runtime guard: ensure cafes is always an array
   const safeCafes = Array.isArray(cafes) ? cafes : []
   
@@ -216,6 +221,18 @@ export default function CityPageTemplate({ cafes, config }: CityPageTemplateProp
           </section>
         )}
 
+        {/* Extra "More great cafés in {city}" section when main list is thin (intent pages) */}
+        {extraCafes && extraCafes.length > 0 && extraCafesSectionTitle && (
+          <section className="mb-12">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">{extraCafesSectionTitle}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {extraCafes.map((cafe) => (
+                <CafeCard key={cafe.id} cafe={cafe} locale={locale} dict={dict} />
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Submit CTA Section */}
         <section className="mt-12">
           <div className="bg-gradient-to-r from-primary-50 to-primary-100 rounded-lg border border-primary-200 p-6 md:p-8 text-center">
@@ -253,6 +270,16 @@ export default function CityPageTemplate({ cafes, config }: CityPageTemplateProp
               }}
             />
           </>
+        )}
+
+        {/* ItemList Structured Data (JSON-LD) – cafes on this list page, capped at 50 */}
+        {safeCafes.length > 0 && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(buildCityPageItemList(safeCafes, locale, getAbsoluteUrl(fullPagePath))),
+            }}
+          />
         )}
       </main>
     </div>

@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: 'Café Directory - Find Laptop-Friendly Workspaces',
   description: 'Discover the best cafés for working with your laptop',
   icons: {
-    icon: '/logo.svg',
+    icon: '/favicon.svg',
   },
 }
 

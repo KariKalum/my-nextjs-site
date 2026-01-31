@@ -17,6 +17,7 @@ const FEATURE_ICONS: Record<string, string> = {
   outlets: '🔌',
   quiet: '🔇',
   'time-limit': '⏰',
+  'work-hubs': '💼',
 }
 
 const FEATURE_H1_KEYS: Record<string, string> = {
@@ -24,6 +25,7 @@ const FEATURE_H1_KEYS: Record<string, string> = {
   outlets: 'find.h1Outlets',
   quiet: 'find.h1Quiet',
   'time-limit': 'find.h1TimeLimit',
+  'work-hubs': 'find.h1WorkHubs',
 }
 
 const FEATURE_DESCRIPTION_KEYS: Record<string, string> = {
@@ -31,6 +33,7 @@ const FEATURE_DESCRIPTION_KEYS: Record<string, string> = {
   outlets: 'find.descriptionOutlets',
   quiet: 'find.descriptionQuiet',
   'time-limit': 'find.descriptionTimeLimit',
+  'work-hubs': 'find.descriptionWorkHubs',
 }
 
 const FEATURE_LABEL_KEYS: Record<string, string> = {
@@ -38,6 +41,7 @@ const FEATURE_LABEL_KEYS: Record<string, string> = {
   outlets: 'find.outletsLabel',
   quiet: 'find.quietLabel',
   'time-limit': 'find.timeLimitLabel',
+  'work-hubs': 'find.workHubsLabel',
 }
 
 const FEATURE_NEAR_ME_KEYS: Record<string, string> = {
@@ -45,9 +49,10 @@ const FEATURE_NEAR_ME_KEYS: Record<string, string> = {
   outlets: 'find.nearMeOutlets',
   quiet: 'find.nearMeQuiet',
   'time-limit': 'find.nearMeTimeLimit',
+  'work-hubs': 'find.nearMeWorkHubs',
 }
 
-const FEATURE_SLUGS = ['wifi', 'outlets', 'quiet', 'time-limit'] as const
+const FEATURE_SLUGS = ['wifi', 'outlets', 'quiet', 'time-limit', 'work-hubs'] as const
 const RELATED_CITY_SLUGS = ['berlin', 'munich', 'hamburg', 'cologne', 'frankfurt'] as const
 const INITIAL_CARDS = 8
 const SHOW_MORE_STEP = 8
@@ -660,7 +665,7 @@ export default function FeaturePageTemplate({ feature, dict, locale }: FeaturePa
                 {RELATED_CITY_SLUGS.map((citySlug) => (
                   <li key={citySlug}>
                     <Link
-                      href={prefixWithLocale(`/cities/${citySlug}`, locale)}
+                      href={prefixWithLocale(feature === 'work-hubs' ? `/cities/${citySlug}/work` : `/cities/${citySlug}`, locale)}
                       className="text-primary-600 hover:text-primary-700 font-medium"
                     >
                       {citySlug.charAt(0).toUpperCase() + citySlug.slice(1)}
