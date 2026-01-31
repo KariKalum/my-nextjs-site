@@ -259,7 +259,7 @@ export default function CafeDetail({ cafe }: CafeDetailProps) {
               <div className="space-y-2">
                 {cafe.ai_laptop_policy && (
                   <div className="flex items-center text-sm text-gray-700">
-                    <span className="mr-2">💼</span>
+                    <span className="mr-2">💻</span>
                     {cafe.ai_laptop_policy}
                   </div>
                 )}

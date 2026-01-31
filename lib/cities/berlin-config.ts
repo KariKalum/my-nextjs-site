@@ -11,6 +11,20 @@ import { t, tmpl } from '@/lib/i18n/t'
 /**
  * Build Berlin city page configuration
  */
+// Geographic center coordinates for Berlin and its districts
+const BERLIN_MAP_CENTERS: Record<string, { lat: number; lng: number }> = {
+  // Main Berlin city center
+  berlin: { lat: 52.5200, lng: 13.4050 },
+  // Districts
+  mitte: { lat: 52.5200, lng: 13.4050 },
+  kreuzberg: { lat: 52.4970, lng: 13.4030 },
+  charlottenburg: { lat: 52.5163, lng: 13.3040 },
+  neukoelln: { lat: 52.4812, lng: 13.4350 },
+  'prenzlauer-berg': { lat: 52.5388, lng: 13.4244 },
+  friedrichshain: { lat: 52.5170, lng: 13.4540 },
+  hbf: { lat: 52.5251, lng: 13.3694 }, // Berlin Hauptbahnhof
+}
+
 export function buildBerlinCityConfig(
   locale: Locale,
   dict: Dictionary,
@@ -20,6 +34,11 @@ export function buildBerlinCityConfig(
   const isDistrict = Boolean(districtSlug && districtDisplayName)
   const citySlug = 'berlin'
   const cityDisplayName = 'Berlin'
+  
+  // Get map center for the district or city
+  const mapCenter = districtSlug
+    ? BERLIN_MAP_CENTERS[districtSlug] || BERLIN_MAP_CENTERS.berlin
+    : BERLIN_MAP_CENTERS.berlin
   
   // H1 title
   const h1Title = isDistrict
@@ -182,6 +201,7 @@ export function buildBerlinCityConfig(
     showNicheSection,
     nicheSectionTitle,
     nicheSectionDescription,
+    mapCenter,
     dict,
   }
 }

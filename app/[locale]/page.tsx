@@ -71,7 +71,7 @@ export default function Home({
               <LanguageSwitcher />
               {/* Desktop: secondary button with tooltip */}
               <a
-                href="https://www.buymeacoffee.com"
+                href="https://www.buymeacoffee.com/uncialabs"
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Yes, we know. Ironic."
@@ -82,7 +82,7 @@ export default function Home({
               </a>
               {/* Mobile: two-line micro text, no tooltip */}
               <a
-                href="https://www.buymeacoffee.com"
+                href="https://www.buymeacoffee.com/uncialabs"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Buy me a coffee. Yes, we know. Ironic."

@@ -156,7 +156,10 @@
     "cafes": "Cafés",
     "cafeFound": "Café gefunden",
     "cafesFound": "Cafés gefunden",
-    "search": "Suchen"
+    "search": "Suchen",
+    "showMore": "Mehr anzeigen",
+    "showLess": "Weniger anzeigen",
+    "more": "weitere"
   },
   "cities": {
     "browseByCity": "Nach Stadt durchsuchen",
@@ -172,7 +175,7 @@
     "allCities": "Alle Städte",
     "laptopFriendlyIn": "Laptopfreundliche Cafés in",
     "berlinH1": "Cafés zum Arbeiten in Berlin (mit WLAN & Steckdosen)",
-    "berlinDistricts": "Berliner Bezirke",
+    "berlinDistricts": "Berlin | Verwandte",
     "exploreOtherCities": "Andere Städte entdecken",
     "viewAllCities": "Alle Städte anzeigen",
     "showingCount": "{count} von {total} Cafés angezeigt",
@@ -180,6 +183,7 @@
     "showAll": "Alle Cafés in {city} anzeigen",
     "showTop10": "Nur Top 10 anzeigen",
     "related": "Verwandt",
+    "cafesOnMap": "Cafés auf der Karte",
     "relatedWifi": "Café mit WLAN",
     "relatedOutlets": "Café mit Steckdosen",
     "relatedQuiet": "Ruhiges Café"
@@ -220,6 +224,9 @@
     "sectionLaptopFriendly": "Laptopfreundlich",
     "insightsNotAvailable": "Laptopfreundliche Einblicke noch nicht verfügbar.",
     "whyScoutThinks": "Warum Scout Brew das denkt",
+    "aiSummary": "KI-Zusammenfassung",
+    "aiInferenceNotes": "Inference-Hinweise",
+    "workProof": "Arbeitsnachweis",
     "exploreMore": "Mehr entdecken",
     "moreCafesIn": "Weitere Cafés in",
     "nearby": "In der Nähe"

@@ -341,17 +341,14 @@ export default function Hero({ dict, onSearchChange }: HeroProps) {
           <div className="flex flex-wrap justify-center gap-2 mb-6">
             <span className="text-sm text-gray-500 mr-1">{t(dict, 'home.hero.popular')}</span>
             {['Berlin', 'Hamburg', 'Munich', 'Cologne', 'Frankfurt'].map((city) => (
-              <button
+              <Link
                 key={city}
-                type="button"
-                onClick={() => {
-                  setSearchQuery(city)
-                  router.push(`/${locale}/cities/${city.toLowerCase()}`)
-                }}
+                href={`/${locale}/cities/${city.toLowerCase()}`}
+                prefetch
                 className="px-4 py-1.5 text-sm text-gray-700 bg-white border border-gray-300 rounded-full hover:border-primary-400 hover:text-primary-600 hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
               >
                 {city}
-              </button>
+              </Link>
             ))}
           </div>
 

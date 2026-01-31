@@ -3,7 +3,6 @@
 import { useState, FormEvent, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import CommunityNotice from '@/components/CommunityNotice'
 import { t } from '@/lib/i18n/t'
 import type { Dictionary } from '@/lib/i18n/getDictionary'
 import type { Locale } from '@/lib/i18n/config'
@@ -181,8 +180,6 @@ export default function SubmitPageForm({ dict, locale }: SubmitPageFormProps) {
           </p>
         </div>
       </header>
-
-      <CommunityNotice dict={dict} />
 
       <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 lg:p-8">

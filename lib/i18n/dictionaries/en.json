@@ -156,7 +156,10 @@
     "cafes": "cafés",
     "cafeFound": "café found",
     "cafesFound": "cafés found",
-    "search": "Search"
+    "search": "Search",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "more": "more"
   },
   "cities": {
     "browseByCity": "Browse by City",
@@ -172,7 +175,7 @@
     "allCities": "All Cities",
     "laptopFriendlyIn": "Laptop-friendly cafés in",
     "berlinH1": "Best Cafés to Work From in Berlin (WiFi & Power Outlets)",
-    "berlinDistricts": "Berlin Districts",
+    "berlinDistricts": "Berlin | Related",
     "exploreOtherCities": "Explore Other Cities",
     "viewAllCities": "View All Cities",
     "showingCount": "Showing {count} of {total} cafés",
@@ -180,6 +183,7 @@
     "showAll": "Show all cafés in {city}",
     "showTop10": "Show top 10 only",
     "related": "Related",
+    "cafesOnMap": "Cafés on Map",
     "relatedWifi": "Cafés with Wi-Fi",
     "relatedOutlets": "Cafés with power outlets",
     "relatedQuiet": "Quiet cafés"
@@ -220,6 +224,9 @@
     "sectionLaptopFriendly": "Laptop-friendly",
     "insightsNotAvailable": "Laptop-friendly insights not available yet.",
     "whyScoutThinks": "Why Scout Brew thinks so",
+    "aiSummary": "AI summary",
+    "aiInferenceNotes": "Inference notes",
+    "workProof": "Work proof",
     "exploreMore": "Explore more",
     "moreCafesIn": "More cafes in",
     "nearby": "Nearby"

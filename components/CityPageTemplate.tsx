@@ -5,11 +5,9 @@
 
 import Link from 'next/link'
 import type { Cafe } from '@/src/lib/supabase/types'
-import CommunityNotice from '@/components/CommunityNotice'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
-import CityCafeList from '@/components/CityCafeList'
+import CityMapSection from '@/components/CityMapSection'
 import CityFAQ from '@/components/CityFAQ'
-import SearchResults from '@/components/SearchResults'
 import { prefixWithLocale } from '@/lib/i18n/routing'
 import { t, tmpl } from '@/lib/i18n/t'
 import type { CityPageConfig } from '@/lib/cities/types'
@@ -40,6 +38,7 @@ export default function CityPageTemplate({ cafes, config }: CityPageTemplateProp
     showNicheSection,
     nicheSectionTitle,
     nicheSectionDescription,
+    mapCenter,
     dict,
   } = config
 
@@ -90,8 +89,6 @@ export default function CityPageTemplate({ cafes, config }: CityPageTemplateProp
         </div>
       </header>
 
-      <CommunityNotice dict={dict} />
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* SEO Intro Paragraph */}
         {introText && (
@@ -126,6 +123,9 @@ export default function CityPageTemplate({ cafes, config }: CityPageTemplateProp
             </div>
           </section>
         )}
+
+        {/* Map and Cafe Cards */}
+        <CityMapSection cafes={safeCafes} locale={locale} dict={dict} cityName={displayName} regionCenter={mapCenter} />
 
         {/* Related links section */}
         {relatedLinks && relatedLinks.length > 0 && (
@@ -214,20 +214,9 @@ export default function CityPageTemplate({ cafes, config }: CityPageTemplateProp
           </section>
         )}
 
-        {/* Cafe List */}
-        <SearchResults cafes={safeCafes} cityName={displayName} locale={locale} dict={dict}>
-          <CityCafeList cafes={safeCafes} cityName={displayName} locale={locale} dict={dict} />
-        </SearchResults>
-
         {/* Submit CTA Section */}
         <section className="mt-12">
           <div className="bg-gradient-to-r from-primary-50 to-primary-100 rounded-lg border border-primary-200 p-6 md:p-8 text-center">
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">
-              {t(dict, 'meta.submit.suggestCafe')}
-            </h2>
-            <p className="text-gray-700 mb-6 max-w-2xl mx-auto">
-              {t(dict, 'meta.submit.suggestionHelpsOthers')}
-            </p>
             <Link
               href={prefixWithLocale('/submit', locale)}
               className="inline-flex items-center px-6 py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-colors shadow-sm hover:shadow-md"

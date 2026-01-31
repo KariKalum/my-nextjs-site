@@ -3,7 +3,6 @@
 import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import type { Cafe } from '@/src/lib/supabase/types'
-import CommunityNotice from './CommunityNotice'
 import CafeStructuredData from './CafeStructuredData'
 import CafeFAQ from './CafeFAQ'
 import CafeMapEmbed from './CafeMapEmbed'
@@ -270,13 +269,38 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], approvedReviews 
     }
   }, [cafe.id, reviewKind, reviewRating, reviewText, reviewEmail])
 
-  const whyContent = [
+  /** Convert a value from cafes table (string, array of strings, or array of objects) to bullet-point strings */
+  function toBulletStrings(value: unknown): string[] {
+    if (value == null) return []
+    if (typeof value === 'string') {
+      const trimmed = value.trim()
+      if (!trimmed) return []
+      return trimmed.split(/\n+/).map((s) => s.trim()).filter(Boolean)
+    }
+    if (Array.isArray(value)) {
+      return value.flatMap((item) => {
+        if (typeof item === 'string') return item.trim() ? [item.trim()] : []
+        if (item != null && typeof item === 'object') {
+          const text = (item as { text?: string }).text ?? (item as { content?: string }).content ?? (item as { message?: string }).message
+          if (typeof text === 'string' && text.trim()) return [text.trim()]
+        }
+        const s = String(item)
+        return s && s !== '[object Object]' ? [s] : []
+      })
+    }
+    const s = String(value)
+    return s && s !== '[object Object]' ? [s] : []
+  }
+
+  const summaryBullets = toBulletStrings(cafe.ai_human_summary)
+  const notesBullets = toBulletStrings(cafe.ai_inference_notes)
+  const proofBullets = [
     cafe.ai_evidence,
     cafe.ai_reasons,
     cafe.ai_signals,
-  ].filter(Boolean).join('\n\n')
+  ].flatMap((v) => toBulletStrings(v))
 
-  const hasWhy = whyContent.length > 0
+  const hasWhy = summaryBullets.length > 0 || notesBullets.length > 0 || proofBullets.length > 0
 
   return (
     <>
@@ -311,8 +335,6 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], approvedReviews 
           </div>
         </nav>
 
-        <CommunityNotice dict={dict} />
-
         <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
           {/* 1) Header */}
           <header className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-sm">
@@ -320,17 +342,13 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], approvedReviews 
               {h1Title}
             </h1>
             <p className="text-gray-600 mb-3 break-words">{addressLine}</p>
-            <div className="mb-3">
-              {(cafe.is_verified ?? false) ? (
+            {(cafe.is_verified ?? false) && (
+              <div className="mb-3">
                 <span className="inline-flex items-center gap-1.5 text-sm font-medium text-green-700 bg-green-50 px-3 py-1.5 rounded-full">
                   ✅ {t(dict, 'cafeDetail.verifiedBy')}
                 </span>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 text-sm font-medium text-amber-700 bg-amber-50 px-3 py-1.5 rounded-full">
-                  🕵️ {t(dict, 'cafeDetail.aiCheckedBy')}
-                </span>
-              )}
-            </div>
+              </div>
+            )}
           </header>
 
           <section className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-sm">
@@ -358,33 +376,33 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], approvedReviews 
             })()}
           </section>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2">
             <a
               href={mapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-primary-600 text-white font-semibold shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary-600 text-white font-semibold shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
             >
               📍 {t(dict, 'cafeDetail.openInMaps')}
             </a>
             <button
               type="button"
               onClick={handleShare}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border-2 border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border-2 border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
             >
               🔗 {t(dict, 'cafeDetail.share')}
             </button>
             <button
               type="button"
               onClick={() => { setSuggestOpen((o) => !o); setSuggestMessage(null) }}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border-2 border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border-2 border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
             >
               ✏️ Suggest an edit
             </button>
             <button
               type="button"
               onClick={() => { setReviewOpen((o) => !o); setReviewMessage(null) }}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border-2 border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border-2 border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
             >
               ✍️ Write a review / Report
             </button>
@@ -669,7 +687,7 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], approvedReviews 
                       ) : null}
                       {policy ? (
                         <div>
-                          <dt className="text-sm text-gray-500">💼 {t(dict, 'cafeDetail.laptopPolicy')}</dt>
+                          <dt className="text-sm text-gray-500">💻 {t(dict, 'cafeDetail.laptopPolicy')}</dt>
                           <dd className="text-gray-900">{policy}</dd>
                         </div>
                       ) : null}
@@ -688,8 +706,37 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], approvedReviews 
                   <summary className="px-4 py-3 bg-gray-50 font-medium text-gray-900 cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset">
                     {t(dict, 'cafeDetail.whyScoutThinks')}
                   </summary>
-                  <div className="px-4 py-3 bg-white border-t border-gray-200 text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
-                    {whyContent}
+                  <div className="px-4 py-3 bg-white border-t border-gray-200 text-gray-700 text-sm leading-relaxed space-y-4">
+                    {summaryBullets.length > 0 && (
+                      <div>
+                        <div className="font-medium text-gray-900 mb-1">{t(dict, 'cafeDetail.aiSummary')}</div>
+                        <ul className="list-disc list-inside space-y-0.5">
+                          {summaryBullets.map((line, i) => (
+                            <li key={i}>{line}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {notesBullets.length > 0 && (
+                      <div>
+                        <div className="font-medium text-gray-900 mb-1">{t(dict, 'cafeDetail.aiInferenceNotes')}</div>
+                        <ul className="list-disc list-inside space-y-0.5">
+                          {notesBullets.map((line, i) => (
+                            <li key={i}>{line}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {proofBullets.length > 0 && (
+                      <div>
+                        <div className="font-medium text-gray-900 mb-1">{t(dict, 'cafeDetail.workProof')}</div>
+                        <ul className="list-disc list-inside space-y-0.5">
+                          {proofBullets.map((line, i) => (
+                            <li key={i}>{line}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 </details>
               )}

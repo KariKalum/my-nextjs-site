@@ -48,6 +48,9 @@ export interface CityPageConfig {
   nicheSectionTitle?: string
   nicheSectionDescription?: string
   
+  // Map center coordinates (for showing the region even with 0 cafes)
+  mapCenter?: { lat: number; lng: number }
+  
   // Dictionary for translations
   dict: Dictionary
 }

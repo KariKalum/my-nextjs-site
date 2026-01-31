@@ -31,3 +31,17 @@ export function sanitizeUrl(urlString: string | null | undefined): string | null
   }
   return isValidPublicUrl(urlString.trim()) ? urlString.trim() : null
 }
+
+/**
+ * Returns a display name for a URL (hostname without www.) for use as link text.
+ * @param urlString - The URL string (e.g. https://www.example.com/path)
+ * @returns The hostname with optional www. stripped, or the original string if parsing fails
+ */
+export function getWebsiteDisplayName(urlString: string): string {
+  try {
+    const url = new URL(urlString)
+    return url.hostname.replace(/^www\./i, '')
+  } catch {
+    return urlString
+  }
+}

@@ -2,7 +2,6 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/src/lib/supabase/server'
 import type { Cafe } from '@/src/lib/supabase/types'
-import CommunityNotice from '@/components/CommunityNotice'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { getLocaleFromParams, type Locale } from '@/lib/i18n/config'
 import { getDictionary } from '@/lib/i18n/getDictionary'
@@ -120,8 +119,6 @@ export default async function CitiesIndexPage({
           </div>
         </div>
       </header>
-
-      <CommunityNotice dict={dict} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <section className="mb-16">

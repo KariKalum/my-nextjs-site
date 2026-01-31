@@ -1,7 +1,9 @@
 'use client'
 
+import Link from 'next/link'
 import type { Cafe } from '@/src/lib/supabase/types'
 import { getCafeHref, hasValidCafeLink } from '@/lib/cafeRouting'
+import { getWebsiteDisplayName } from '@/lib/utils/url-validation'
 import { formatWorkScore } from '@/lib/utils/cafe-formatters'
 import { type Locale } from '@/lib/i18n/config'
 import { t } from '@/lib/i18n/t'
@@ -47,7 +49,8 @@ export default function CafeCard({ cafe, locale, dict }: CafeCardProps) {
     }
     const colorKey = Object.keys(colors).find(key => levelLower.includes(key)) as keyof typeof colors
     return (
-      <span className={`px-2 py-1 text-xs font-medium rounded-full ${colorKey ? colors[colorKey] : 'bg-gray-100 text-gray-800'}`}>
+      <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${colorKey ? colors[colorKey] : 'bg-gray-100 text-gray-800'}`}>
+        <span aria-hidden>🔊</span>
         {level}
       </span>
     )
@@ -60,7 +63,16 @@ export default function CafeCard({ cafe, locale, dict }: CafeCardProps) {
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
             <h3 className="text-xl font-semibold text-gray-900 mb-1">
-              {cafe.name}
+              {hasValidCafeLink(cafe) ? (
+                <Link
+                  href={getCafeHref(cafe, locale)}
+                  className="hover:text-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 rounded"
+                >
+                  {cafe.name}
+                </Link>
+              ) : (
+                <span>{cafe.name}</span>
+              )}
             </h3>
             <p className="text-sm text-gray-600">
               {cafe.address}, {cafe.city}{cafe.state ? `, ${cafe.state}` : ''}
@@ -130,7 +142,7 @@ export default function CafeCard({ cafe, locale, dict }: CafeCardProps) {
             )}
             {cafe.ai_laptop_policy && (
               <div className="flex items-center space-x-1 text-sm text-gray-700">
-                <span>💼</span>
+                <span>💻</span>
                 <span>{cafe.ai_laptop_policy}</span>
               </div>
             )}
@@ -147,7 +159,7 @@ export default function CafeCard({ cafe, locale, dict }: CafeCardProps) {
                 rel="noopener noreferrer"
                 className="text-primary-600 hover:text-primary-700 font-medium"
               >
-                {t(d, 'common.website')}
+                {getWebsiteDisplayName(cafe.website)}
               </a>
             )}
             {cafe.phone && (
