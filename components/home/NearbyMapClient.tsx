@@ -3,31 +3,43 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { getCafeHref } from '@/lib/cafeRouting'
+import { getCafeHref, hasValidCafeLink } from '@/lib/cafeRouting'
+import { formatWorkScore } from '@/lib/utils/cafe-formatters'
+import { getWebsiteDisplayName } from '@/lib/utils/url-validation'
 import { t } from '@/lib/i18n/t'
 import type { Dictionary } from '@/lib/i18n/getDictionary'
 import type { Locale } from '@/lib/i18n/config'
 import { prefixWithLocale } from '@/lib/i18n/routing'
 
+type NearbyApiCafe = {
+  id: string
+  place_id: string | null
+  name: string
+  address?: string | null
+  city?: string | null
+  state?: string | null
+  description?: string | null
+  lat: number | null
+  lng: number | null
+  distance: number
+  workScore?: number | null
+  isWorkFriendly?: boolean | null
+  isVerified?: boolean | null
+  googleRating?: number | null
+  googleRatingsTotal?: number | null
+  aiWifiQuality?: string | null
+  aiPowerOutlets?: string | null
+  aiNoiseLevel?: string | null
+  aiLaptopPolicy?: string | null
+  website?: string | null
+  phone?: string | null
+  createdAt?: string | null
+}
+
 type NearbyApiResponse = {
   center: { lat: number; lng: number }
   radius: number
-  cafes: Array<{
-    id: string
-    place_id: string | null
-    name: string
-    lat: number | null
-    lng: number | null
-    distance: number
-    workScore?: number | null
-    wifi?: { available: boolean; speedRating?: number | null }
-    outlets?: { available: boolean; rating?: number | null }
-    noise?: string | null
-    timeLimit?: number | null
-    rating?: number | null
-    coffeeQuality?: 'unknown' | 'low' | 'medium' | 'high'
-    createdAt: string | null
-  }>
+  cafes: NearbyApiCafe[]
 }
 
 type CafeForMap = {
@@ -37,14 +49,21 @@ type CafeForMap = {
   lat: number
   lng: number
   workScore?: number | null
-  wifi?: { available: boolean; speedRating?: number | null }
-  outlets?: { available: boolean; rating?: number | null }
-  noise?: string | null
-  timeLimit?: number | null
-  rating?: number | null
-  coffeeQuality?: 'unknown' | 'low' | 'medium' | 'high'
   distance?: number
+  address?: string | null
   city?: string | null
+  state?: string | null
+  description?: string | null
+  isWorkFriendly?: boolean | null
+  isVerified?: boolean | null
+  googleRating?: number | null
+  googleRatingsTotal?: number | null
+  aiWifiQuality?: string | null
+  aiPowerOutlets?: string | null
+  aiNoiseLevel?: string | null
+  aiLaptopPolicy?: string | null
+  website?: string | null
+  phone?: string | null
   createdAt?: string | null
 }
 
@@ -55,6 +74,18 @@ import { BERLIN_CENTER as BERLIN_CENTER_CONST, RADIUS_STEPS, MIN_RESULTS_THRESHO
 
 const BERLIN_CENTER = BERLIN_CENTER_CONST
 const BERLIN_RADIUS = DEFAULT_RADIUS_M
+
+/** Create LatLngBounds from center + radius (meters). Used to track last-fetched area. */
+function boundsFromCenterRadius(lat: number, lng: number, radiusM: number): google.maps.LatLngBounds {
+  const degPerMeterLat = 1 / 111320
+  const degPerMeterLng = 1 / (111320 * Math.cos((lat * Math.PI) / 180))
+  const dLat = (radiusM * degPerMeterLat)
+  const dLng = (radiusM * degPerMeterLng)
+  return new google.maps.LatLngBounds(
+    { lat: lat - dLat, lng: lng - dLng },
+    { lat: lat + dLat, lng: lng + dLng }
+  )
+}
 
 export default function NearbyMapClient({
   dict,
@@ -91,8 +122,12 @@ export default function NearbyMapClient({
   })
   const [sortBy, setSortBy] = useState<'distance' | 'workscore' | 'laptopFriendly' | 'recentlyAdded'>('distance')
   const [locationHint, setLocationHint] = useState<string | null>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const boundsUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const isUpdatingFromBoundsRef = useRef(false)
+  const lastFetchBoundsRef = useRef<google.maps.LatLngBounds | null>(null)
+  const lastFetchZoomRef = useRef<number | null>(null)
+  const ignoreBoundsUntilRef = useRef<number>(0)
 
   // Initialize filters from URL params on mount
   useEffect(() => {
@@ -137,14 +172,14 @@ export default function NearbyMapClient({
     if (!mapRef.current || !window.google?.maps) return
 
     const map = new window.google.maps.Map(mapRef.current, {
-      center,
-      zoom: 12,
+      center: BERLIN_CENTER,
+      zoom: 13,
       mapTypeControl: false,
-      fullscreenControl: true,
+      fullscreenControl: false,
       streetViewControl: false,
     })
     mapInstanceRef.current = map
-  }, [center])
+  }, [])
 
   // --- Helpers ---
   const clearMarkers = () => {
@@ -155,51 +190,68 @@ export default function NearbyMapClient({
   }
 
   const renderInfoContent = (cafe: CafeForMap) => {
-    const wifiLabel = cafe.wifi?.available
-      ? `Wi-Fi${cafe.wifi.speedRating ? ` ${cafe.wifi.speedRating}/5` : ''}`
-      : '—'
-    const outletsLabel = cafe.outlets?.available
-      ? `Outlets${cafe.outlets.rating ? ` ${cafe.outlets.rating}/5` : ''}`
-      : '—'
-    const noiseLabel = cafe.noise ? cafe.noise : '—'
-    const timeLabel = cafe.timeLimit ? `${cafe.timeLimit} min` : t(dict, 'home.map.noLimit')
-    const distanceText = cafe.distance ? `${(cafe.distance / 1000).toFixed(2)} km` : ''
     const cafeHref = getCafeHref({ place_id: cafe.place_id, id: cafe.id }, locale)
-    const viewDetailsLink = t(dict, 'home.map.viewDetailsLink')
+    const hasLink = hasValidCafeLink(cafe)
+    const addressLine = [cafe.address, cafe.city, cafe.state].filter(Boolean).join(', ')
+    const distanceText = cafe.distance != null ? `${(cafe.distance / 1000).toFixed(1)} ${t(dict, 'home.map.kmAway')}` : ''
+    const wsFormatted = formatWorkScore(cafe.workScore)
+
+    const ratingStars = (rating: number) => {
+      const full = Math.floor(rating)
+      const hasHalf = rating % 1 >= 0.5
+      const empty = 5 - full - (hasHalf ? 1 : 0)
+      let html = ''
+      for (let i = 0; i < full; i++) html += '<span style="color:#eab308">★</span>'
+      if (hasHalf) html += '<span style="color:#eab308">☆</span>'
+      for (let i = 0; i < empty; i++) html += '<span style="color:#d1d5db">★</span>'
+      return html + `<span style="margin-left:8px;font-size:13px;color:#4b5563">${rating.toFixed(1)}</span>`
+    }
+
+    const noiseBadgeStyle = (level: string) => {
+      const l = level.toLowerCase()
+      if (l.includes('quiet')) return 'background:#dcfce7;color:#166534'
+      if (l.includes('moderate')) return 'background:#fef9c3;color:#854d0e'
+      if (l.includes('loud')) return 'background:#fee2e2;color:#991b1b'
+      if (l.includes('variable')) return 'background:#dbeafe;color:#1e40af'
+      return 'background:#f3f4f6;color:#1f2937'
+    }
+
+    const features: string[] = []
+    if (cafe.isWorkFriendly) features.push(`<span style="display:inline-flex;align-items:center;gap:4px;font-size:14px;color:#374151">✅ ${t(dict, 'common.workFriendly')}</span>`)
+    if (cafe.aiWifiQuality) features.push(`<span style="display:inline-flex;align-items:center;gap:4px;font-size:14px;color:#374151">📶 ${escapeHtml(cafe.aiWifiQuality)}</span>`)
+    if (cafe.aiPowerOutlets) features.push(`<span style="display:inline-flex;align-items:center;gap:4px;font-size:14px;color:#374151">🔌 ${escapeHtml(cafe.aiPowerOutlets)}</span>`)
+    if (cafe.aiNoiseLevel) features.push(`<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:500;border-radius:9999px;padding:2px 8px;${noiseBadgeStyle(cafe.aiNoiseLevel)}">🔊 ${escapeHtml(cafe.aiNoiseLevel)}</span>`)
+    if (cafe.aiLaptopPolicy) features.push(`<span style="display:inline-flex;align-items:center;gap:4px;font-size:14px;color:#374151">💻 ${escapeHtml(cafe.aiLaptopPolicy)}</span>`)
 
     return `
-      <div style="font-family: system-ui, -apple-system, sans-serif; padding: 0; min-width: 240px;">
-        <div style="padding: 16px;">
-          <h3 style="margin: 0 0 10px 0; font-size: 18px; font-weight: 600; color: #111827; line-height: 1.3;">
-            ${escapeHtml(cafe.name)}
-          </h3>
-          ${distanceText ? `<p style="margin: 0 0 12px 0; font-size: 13px; color: #6b7280;">${escapeHtml(distanceText)}</p>` : ''}
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; font-size: 13px;">
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="color: #2563eb; font-weight: 500;">Wi‑Fi:</span>
-              <span style="color: ${cafe.wifi?.available ? '#059669' : '#9ca3af'};">${escapeHtml(wifiLabel)}</span>
+      <div style="font-family:system-ui,-apple-system,sans-serif;background:#fff;border-radius:8px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.1);min-width:320px;max-width:380px;">
+        <div style="padding:24px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+            <div style="flex:1;">
+              <h3 style="margin:0 0 4px 0;font-size:20px;font-weight:600;color:#111827;line-height:1.3;">
+                ${hasLink ? `<a href="${escapeHtml(cafeHref)}" style="color:inherit;text-decoration:none" target="_blank" rel="noopener noreferrer">${escapeHtml(cafe.name)}</a>` : escapeHtml(cafe.name)}
+              </h3>
+              ${addressLine ? `<p style="margin:0 0 4px 0;font-size:14px;color:#4b5563;">${escapeHtml(addressLine)}</p>` : ''}
+              ${distanceText ? `<p style="margin:0;font-size:12px;color:#6b7280;">${escapeHtml(distanceText)}</p>` : ''}
             </div>
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="color: #7c3aed; font-weight: 500;">Outlets:</span>
-              <span style="color: ${cafe.outlets?.available ? '#059669' : '#9ca3af'};">${escapeHtml(outletsLabel)}</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="color: #d97706; font-weight: 500;">Noise:</span>
-              <span style="color: ${cafe.noise ? '#374151' : '#9ca3af'}; text-transform: capitalize;">${escapeHtml(noiseLabel)}</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="color: #dc2626; font-weight: 500;">Time:</span>
-              <span style="color: ${cafe.timeLimit ? '#dc2626' : '#059669'};">${escapeHtml(timeLabel)}</span>
-            </div>
+            ${cafe.isVerified ? '<span style="margin-left:8px;color:#2563eb" title="' + escapeHtml(t(dict, 'cafeCard.verified')) + '">✓</span>' : ''}
           </div>
-          <a 
-            href="${escapeHtml(cafeHref)}" 
-            style="display: inline-flex; align-items: center; justify-content: center; margin-top: 4px; padding: 8px 16px; font-size: 14px; font-weight: 500; color: #ffffff; background-color: #2563eb; border-radius: 6px; text-decoration: none; transition: background-color 0.2s;"
-            onmouseover="this.style.backgroundColor='#1d4ed8'"
-            onmouseout="this.style.backgroundColor='#2563eb'"
-          >
-            ${escapeHtml(viewDetailsLink)}
-          </a>
+          ${cafe.description ? `<p style="font-size:14px;color:#374151;margin:0 0 16px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${escapeHtml(cafe.description)}</p>` : ''}
+          ${(cafe.googleRating || cafe.workScore) ? `
+            <div style="margin-bottom:16px;">
+              ${cafe.googleRating ? `<div style="display:flex;align-items:center;">${ratingStars(cafe.googleRating)}</div>` : ''}
+              ${wsFormatted ? `<div style="margin-top:8px;"><span style="font-size:14px;font-weight:500;color:#2563eb">${escapeHtml(t(dict, 'common.workScore'))} ${escapeHtml(wsFormatted)}</span></div>` : ''}
+              ${cafe.googleRatingsTotal && cafe.googleRatingsTotal > 0 ? `<p style="margin:4px 0 0 0;font-size:12px;color:#6b7280">${cafe.googleRatingsTotal} ${cafe.googleRatingsTotal === 1 ? escapeHtml(t(dict, 'common.review')) : escapeHtml(t(dict, 'common.reviews'))}</p>` : ''}
+            </div>
+          ` : ''}
+          ${features.length ? `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">${features.join('')}</div>` : ''}
+          <div style="padding-top:16px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+            <div style="display:flex;gap:16px;font-size:14px;">
+              ${cafe.website ? `<a href="${escapeHtml(cafe.website)}" target="_blank" rel="noopener noreferrer" style="color:#2563eb;font-weight:500;text-decoration:none">${escapeHtml(getWebsiteDisplayName(cafe.website))}</a>` : ''}
+              ${cafe.phone ? `<a href="tel:${escapeHtml(cafe.phone)}" style="color:#4b5563;text-decoration:none">${escapeHtml(cafe.phone)}</a>` : ''}
+            </div>
+            ${hasLink ? `<a href="${escapeHtml(cafeHref)}" target="_blank" rel="noopener noreferrer" style="font-size:14px;font-weight:500;color:#2563eb;text-decoration:none">${escapeHtml(t(dict, 'common.viewDetailsLink'))}</a>` : `<span style="font-size:14px;color:#9ca3af">${escapeHtml(t(dict, 'common.unavailable'))}</span>`}
+          </div>
         </div>
       </div>
     `
@@ -227,17 +279,17 @@ export default function NearbyMapClient({
         position,
         map,
         title: cafe.name,
-        animation: google.maps.Animation.DROP,
       })
 
       const infoWindow = new google.maps.InfoWindow({
         content: renderInfoContent(cafe),
-        maxWidth: 300,
+        maxWidth: 400,
       })
 
       marker.addListener('click', () => {
         infoWindowsRef.current.forEach((iw) => iw.close())
         infoWindow.open(map, marker)
+        ignoreBoundsUntilRef.current = Date.now() + 1500
       })
 
       markersRef.current.push(marker)
@@ -274,13 +326,21 @@ export default function NearbyMapClient({
             lat: c.lat!,
             lng: c.lng!,
             workScore: c.workScore ?? null,
-            wifi: c.wifi,
-            outlets: c.outlets,
-            noise: c.noise,
-            timeLimit: c.timeLimit,
-            rating: c.rating,
-            coffeeQuality: c.coffeeQuality,
             distance: c.distance,
+            address: c.address,
+            city: c.city,
+            state: c.state,
+            description: c.description,
+            isWorkFriendly: c.isWorkFriendly,
+            isVerified: c.isVerified,
+            googleRating: c.googleRating,
+            googleRatingsTotal: c.googleRatingsTotal,
+            aiWifiQuality: c.aiWifiQuality,
+            aiPowerOutlets: c.aiPowerOutlets,
+            aiNoiseLevel: c.aiNoiseLevel,
+            aiLaptopPolicy: c.aiLaptopPolicy,
+            website: c.website,
+            phone: c.phone,
             createdAt: c.createdAt,
           }))
 
@@ -326,22 +386,31 @@ export default function NearbyMapClient({
             lat: c.lat!,
             lng: c.lng!,
             workScore: c.workScore ?? null,
-            wifi: c.wifi,
-            outlets: c.outlets,
-            noise: c.noise,
-            timeLimit: c.timeLimit,
-            rating: c.rating,
-            coffeeQuality: c.coffeeQuality,
             distance: c.distance,
+            address: c.address,
+            city: c.city,
+            state: c.state,
+            description: c.description,
+            isWorkFriendly: c.isWorkFriendly,
+            isVerified: c.isVerified,
+            googleRating: c.googleRating,
+            googleRatingsTotal: c.googleRatingsTotal,
+            aiWifiQuality: c.aiWifiQuality,
+            aiPowerOutlets: c.aiPowerOutlets,
+            aiNoiseLevel: c.aiNoiseLevel,
+            aiLaptopPolicy: c.aiLaptopPolicy,
+            website: c.website,
+            phone: c.phone,
             createdAt: c.createdAt,
           }))
 
         setCafes(mapped)
+        lastFetchBoundsRef.current = bounds
+        lastFetchZoomRef.current = mapInstanceRef.current?.getZoom() ?? null
         const map = mapInstanceRef.current
         if (map) {
           isUpdatingFromBoundsRef.current = true
           placeMarkers(map, mapped)
-          // Reset flag after a short delay
           setTimeout(() => {
             isUpdatingFromBoundsRef.current = false
           }, 100)
@@ -388,12 +457,12 @@ export default function NearbyMapClient({
 
   // After map is ready, fetch Berlin cafes (initial load)
   useEffect(() => {
-    if (mapStatus === 'ready' && mapInstanceRef.current) {
-      // Temporarily disable bounds updates during initial load
+    if (mapStatus === 'ready' && mapInstanceRef.current && window.google?.maps) {
       isUpdatingFromBoundsRef.current = true
       setHasMapMoved(false)
+      lastFetchBoundsRef.current = boundsFromCenterRadius(BERLIN_CENTER.lat, BERLIN_CENTER.lng, BERLIN_RADIUS)
+      lastFetchZoomRef.current = mapInstanceRef.current.getZoom() ?? 13
       fetchNearby(BERLIN_CENTER.lat, BERLIN_CENTER.lng, BERLIN_RADIUS).finally(() => {
-        // Re-enable bounds updates after initial load completes
         setTimeout(() => {
           isUpdatingFromBoundsRef.current = false
         }, 1000)
@@ -421,20 +490,29 @@ export default function NearbyMapClient({
 
     // Add bounds listener
     map.addListener('bounds_changed', () => {
-      // Don't trigger if we're programmatically updating
       if (isUpdatingFromBoundsRef.current) return
+      if (Date.now() < ignoreBoundsUntilRef.current) return
 
       const bounds = map.getBounds()
       if (!bounds) return
 
-      // Clear existing timeout
       if (boundsUpdateTimeoutRef.current) {
         clearTimeout(boundsUpdateTimeoutRef.current)
       }
 
       if (autoUpdate) {
-        // Automatic mode: debounce and update
         boundsUpdateTimeoutRef.current = setTimeout(() => {
+          if (Date.now() < ignoreBoundsUntilRef.current) return
+          const lastBounds = lastFetchBoundsRef.current
+          const lastZoom = lastFetchZoomRef.current
+          const center = bounds.getCenter()
+          const zoom = map.getZoom() ?? 13
+          const centerStillInBounds = lastBounds && lastBounds.contains(center)
+          const zoomChangedSignificantly = lastZoom != null && Math.abs(zoom - lastZoom) > 1
+          if (centerStillInBounds && !zoomChangedSignificantly) {
+            setHasMapMoved(false)
+            return
+          }
           fetchByBounds(bounds)
           setHasMapMoved(false)
         }, 500)
@@ -455,6 +533,22 @@ export default function NearbyMapClient({
     }
   }, [mapStatus, autoUpdate, fetchByBounds])
 
+  const handleFullscreen = useCallback(() => {
+    const el = mapRef.current
+    if (!el) return
+    if (!document.fullscreenElement) {
+      el.requestFullscreen?.().then(() => setIsFullscreen(true))
+    } else {
+      document.exitFullscreen?.().then(() => setIsFullscreen(false))
+    }
+  }, [])
+
+  useEffect(() => {
+    const onFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement)
+    document.addEventListener('fullscreenchange', onFullscreenChange)
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange)
+  }, [])
+
   const handleUseLocation = () => {
     setError(null)
     setLocationHint(null)
@@ -471,6 +565,7 @@ export default function NearbyMapClient({
       async (pos) => {
         const { latitude, longitude } = pos.coords
         let lastCafes: CafeForMap[] = []
+        let lastRadiusUsed = RADIUS_STEPS[RADIUS_STEPS.length - 1]
         for (const r of RADIUS_STEPS) {
           const res = await fetch(`/api/cafes/nearby?lat=${latitude}&lng=${longitude}&radius=${r}`)
           if (!res.ok) break
@@ -484,22 +579,33 @@ export default function NearbyMapClient({
               lat: c.lat!,
               lng: c.lng!,
               workScore: c.workScore ?? null,
-              wifi: c.wifi,
-              outlets: c.outlets,
-              noise: c.noise,
-              timeLimit: c.timeLimit,
-              rating: c.rating,
-              coffeeQuality: c.coffeeQuality,
               distance: c.distance,
+              address: c.address,
+              city: c.city,
+              state: c.state,
+              description: c.description,
+              isWorkFriendly: c.isWorkFriendly,
+              isVerified: c.isVerified,
+              googleRating: c.googleRating,
+              googleRatingsTotal: c.googleRatingsTotal,
+              aiWifiQuality: c.aiWifiQuality,
+              aiPowerOutlets: c.aiPowerOutlets,
+              aiNoiseLevel: c.aiNoiseLevel,
+              aiLaptopPolicy: c.aiLaptopPolicy,
+              website: c.website,
+              phone: c.phone,
               createdAt: c.createdAt,
             }))
           lastCafes = mapped
+          lastRadiusUsed = r
           setCafes(mapped)
           setCenter({ lat: latitude, lng: longitude })
           setDataStatus('success')
           if (mapped.length >= MIN_RESULTS_THRESHOLD) break
         }
         setIsUserLocation(true)
+        lastFetchBoundsRef.current = boundsFromCenterRadius(latitude, longitude, lastRadiusUsed)
+        lastFetchZoomRef.current = mapInstanceRef.current?.getZoom() ?? null
         const map = mapInstanceRef.current
         if (map) {
           map.panTo({ lat: latitude, lng: longitude })
@@ -559,47 +665,23 @@ export default function NearbyMapClient({
     router.replace(newUrl, { scroll: false })
   }, [searchParams, router])
 
-  // Compute laptop-friendly score
+  // Compute laptop-friendly score from AI fields and work score
   const computeLaptopFriendlyScore = useCallback((cafe: CafeForMap): number => {
-    let score = 0
+    let score = (cafe.workScore ?? 0) * 10 // work_score 0-10 -> 0-100 base
 
-    // Wi-Fi availability and speed (max 25 points)
-    if (cafe.wifi?.available) {
-      score += 10
-      if (cafe.wifi.speedRating) {
-        score += (cafe.wifi.speedRating / 5) * 15 // Up to 15 more points based on speed
-      }
-    }
+    const hasWifi = cafe.aiWifiQuality && cafe.aiWifiQuality.trim().toLowerCase() !== 'unknown'
+    const hasOutlets = cafe.aiPowerOutlets && cafe.aiPowerOutlets.trim().toLowerCase() !== 'unknown'
 
-    // Power outlets availability and rating (max 25 points)
-    if (cafe.outlets?.available) {
-      score += 10
-      if (cafe.outlets.rating) {
-        score += (cafe.outlets.rating / 5) * 15 // Up to 15 more points based on rating
-      }
-    }
+    if (hasWifi) score += 15
+    if (hasOutlets) score += 15
 
-    // Noise level (max 25 points)
-    if (cafe.noise === 'quiet') {
-      score += 25
-    } else if (cafe.noise === 'moderate') {
-      score += 15
-    } else if (cafe.noise === 'loud') {
-      score += 5
-    }
+    const noise = (cafe.aiNoiseLevel || '').toLowerCase()
+    if (noise.includes('quiet')) score += 15
+    else if (noise.includes('moderate')) score += 10
+    else if (noise.includes('loud')) score += 3
 
-    // Time limit (max 25 points)
-    if (!cafe.timeLimit || cafe.timeLimit === null) {
-      score += 25 // No time limit is best
-    } else if (cafe.timeLimit >= 180) {
-      score += 20 // 3+ hours is good
-    } else if (cafe.timeLimit >= 120) {
-      score += 15 // 2+ hours is acceptable
-    } else if (cafe.timeLimit >= 60) {
-      score += 10 // 1+ hour is okay
-    } else {
-      score += 5 // Less than 1 hour
-    }
+    const policy = (cafe.aiLaptopPolicy || '').toLowerCase()
+    if (policy.includes('no limit') || policy.includes('unlimited') || policy.includes('kein limit')) score += 10
 
     return score
   }, [])
@@ -610,13 +692,16 @@ export default function NearbyMapClient({
 
     // Apply filters
     if (filters.outlets) {
-      filtered = filtered.filter((c) => c.outlets?.available)
+      filtered = filtered.filter((c) => c.aiPowerOutlets && c.aiPowerOutlets.trim().toLowerCase() !== 'unknown')
     }
     if (filters.noTimeLimit) {
-      filtered = filtered.filter((c) => !c.timeLimit || c.timeLimit === null)
+      filtered = filtered.filter((c) => {
+        const policy = (c.aiLaptopPolicy || '').toLowerCase()
+        return policy.includes('no limit') || policy.includes('unlimited') || policy.includes('kein limit')
+      })
     }
     if (filters.quiet) {
-      filtered = filtered.filter((c) => c.noise === 'quiet')
+      filtered = filtered.filter((c) => (c.aiNoiseLevel || '').toLowerCase().includes('quiet'))
     }
     if (filters.workscore7Plus) {
       filtered = filtered.filter((c) => (c.workScore ?? 0) > 7)
@@ -812,30 +897,25 @@ export default function NearbyMapClient({
               </div>
             )}
 
-            <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
-              <button
-                onClick={() => {
-                  setAutoUpdate(!autoUpdate)
-                  setHasMapMoved(false)
-                  setPendingBounds(null)
-                }}
-                className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg shadow-sm text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
-                title={autoUpdate ? t(dict, 'home.map.autoTitle') : t(dict, 'home.map.manualTitle')}
-              >
-                {autoUpdate ? t(dict, 'home.map.auto') : t(dict, 'home.map.manual')}
-              </button>
+            <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
               <button
                 type="button"
                 onClick={handleUseLocation}
                 disabled={dataStatus === 'loading' || mapStatus === 'loading'}
-                className="p-2 bg-white border border-gray-300 rounded-lg shadow-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-2 bg-white border border-gray-300 rounded-lg shadow-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg leading-none"
                 aria-label={t(dict, 'home.map.centerOnMyLocation')}
                 title={t(dict, 'home.map.centerOnMyLocation')}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5" aria-hidden>
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41M19.07 4.93l-1.41 1.41M6.34 17.66l-1.41 1.41" />
-                </svg>
+                <span aria-hidden>🧭</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleFullscreen}
+                className="p-2 bg-white border border-gray-300 rounded-lg shadow-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors text-base leading-none"
+                aria-label={isFullscreen ? t(dict, 'home.map.fullscreenExit') : t(dict, 'home.map.fullscreenToggle')}
+                title={isFullscreen ? t(dict, 'home.map.fullscreenExit') : t(dict, 'home.map.fullscreenToggle')}
+              >
+                <span aria-hidden>{isFullscreen ? '⛶' : '⛶'}</span>
               </button>
             </div>
 
@@ -926,53 +1006,54 @@ export default function NearbyMapClient({
               {/* Scrollable results list */}
               <div className="flex-1 overflow-y-auto space-y-4 pr-2 -mr-2">
                 {filteredCafes.slice(0, 6).map((cafe) => (
-                  <div
+                  <Link
                     key={cafe.id}
-                    className="border border-gray-200 rounded-lg p-4 bg-white hover:border-gray-300 transition-colors"
+                    href={getCafeHref({ place_id: cafe.place_id, id: cafe.id }, locale)}
+                    className="block border border-gray-200 rounded-lg p-4 bg-white hover:border-gray-300 hover:shadow-sm transition-all group"
+                    aria-label={`${cafe.name} - ${t(dict, 'common.viewDetailsLink')}`}
                   >
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="font-semibold text-gray-900">{cafe.name}</p>
-                  <p className="text-sm text-gray-600">
-                    {cafe.distance
-                      ? `${(cafe.distance / 1000).toFixed(2)} ${t(dict, 'home.map.kmAway')}`
-                      : ''}
-                  </p>
-                </div>
-                <Link
-                  href={getCafeHref({ place_id: cafe.place_id, id: cafe.id }, locale)}
-                  className="text-sm text-primary-600 hover:text-primary-700 font-medium"
-                >
-                  {t(dict, 'home.map.viewDetails')}
-                </Link>
-              </div>
-              <div className="flex flex-wrap gap-2 text-xs text-gray-700 mt-2">
-                {cafe.wifi?.available && (
-                  <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md">
-                    Wi-Fi{cafe.wifi.speedRating ? ` ${cafe.wifi.speedRating}/5` : ''}
-                  </span>
-                )}
-                {cafe.outlets?.available && (
-                  <span className="px-2 py-1 bg-purple-50 text-purple-700 rounded-md">
-                    Outlets{cafe.outlets.rating ? ` ${cafe.outlets.rating}/5` : ''}
-                  </span>
-                )}
-                {cafe.noise && (
-                  <span className="px-2 py-1 bg-amber-50 text-amber-700 rounded-md capitalize">
-                    {cafe.noise} noise
-                  </span>
-                )}
-                {cafe.timeLimit ? (
-                  <span className="px-2 py-1 bg-red-50 text-red-700 rounded-md">
-                    {cafe.timeLimit} {t(dict, 'home.map.minLimit')}
-                  </span>
-                ) : (
-                  <span className="px-2 py-1 bg-green-50 text-green-700 rounded-md">
-                    {t(dict, 'home.map.noLimit')}
-                  </span>
-                )}
-                  </div>
-                </div>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-900 group-hover:text-primary-600 truncate">{cafe.name}</p>
+                        {cafe.address && (
+                          <p className="text-xs text-gray-500 truncate mt-0.5">{cafe.address}</p>
+                        )}
+                        <p className="text-sm text-gray-600 mt-1">
+                          {cafe.distance != null
+                            ? `${(cafe.distance / 1000).toFixed(2)} ${t(dict, 'home.map.kmAway')}`
+                            : ''}
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-gray-400 group-hover:text-primary-600 transition-colors" aria-hidden>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                          <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.06l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                        </svg>
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-2 text-xs mt-2">
+                      {(cafe.workScore != null && cafe.workScore >= 0) && (
+                        <span className="px-2 py-1 bg-primary-50 text-primary-700 rounded-md font-medium">
+                          {formatWorkScore(cafe.workScore)}
+                        </span>
+                      )}
+                      {cafe.aiWifiQuality && cafe.aiWifiQuality.toLowerCase() !== 'unknown' && (
+                        <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md">
+                          📶 {cafe.aiWifiQuality}
+                        </span>
+                      )}
+                      {cafe.aiPowerOutlets && cafe.aiPowerOutlets.toLowerCase() !== 'unknown' && (
+                        <span className="px-2 py-1 bg-purple-50 text-purple-700 rounded-md">🔌 {cafe.aiPowerOutlets}</span>
+                      )}
+                      {cafe.aiNoiseLevel && (
+                        <span className="px-2 py-1 bg-amber-50 text-amber-700 rounded-md capitalize">🔊 {cafe.aiNoiseLevel}</span>
+                      )}
+                      {cafe.aiLaptopPolicy && (cafe.aiLaptopPolicy.toLowerCase().includes('no limit') || cafe.aiLaptopPolicy.toLowerCase().includes('unlimited') || cafe.aiLaptopPolicy.toLowerCase().includes('kein limit')) ? (
+                        <span className="px-2 py-1 bg-green-50 text-green-700 rounded-md">{t(dict, 'home.map.noLimit')}</span>
+                      ) : cafe.aiLaptopPolicy ? (
+                        <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md">💻 {cafe.aiLaptopPolicy}</span>
+                      ) : null}
+                    </div>
+                  </Link>
                 ))}
               </div>
             </div>

@@ -8,13 +8,26 @@ type CafeRecord = {
   id: string
   place_id: string | null
   name: string
+  address: string | null
   city: string | null
+  state: string | null
+  description: string | null
   latitude: number | null
   longitude: number | null
   work_score: number | null
   ai_score: number | null
+  is_work_friendly: boolean | null
   is_active: boolean
+  is_verified: boolean | null
   created_at: string | null
+  google_rating: number | null
+  google_ratings_total: number | null
+  ai_wifi_quality: string | null
+  ai_power_outlets: string | null
+  ai_noise_level: string | null
+  ai_laptop_policy: string | null
+  website: string | null
+  phone: string | null
 }
 
 const EARTH_RADIUS_M = 6371000 // meters
@@ -155,7 +168,7 @@ export async function GET(req: Request) {
     const { data, error } = await supabase
       .from('cafes')
       .select(
-        'id, place_id, name, city, latitude, longitude, work_score, ai_score, is_active, created_at'
+        'id, place_id, name, address, city, state, description, latitude, longitude, work_score, ai_score, is_work_friendly, is_active, is_verified, created_at, google_rating, google_ratings_total, ai_wifi_quality, ai_power_outlets, ai_noise_level, ai_laptop_policy, website, phone'
       )
       .eq('is_active', true)
       .not('latitude', 'is', null)
@@ -196,7 +209,7 @@ export async function GET(req: Request) {
         return distance <= radius
       })
       .sort((a, b) => a.distance - b.distance)
-      .slice(0, 50)
+      .slice(0, neLatStr && neLngStr && swLatStr && swLngStr ? 500 : 50)
 
     const responseBody = {
       center: { lat, lng },
@@ -205,10 +218,24 @@ export async function GET(req: Request) {
         id: cafe.id,
         place_id: cafe.place_id,
         name: cafe.name,
+        address: cafe.address,
+        city: cafe.city,
+        state: cafe.state,
+        description: cafe.description,
         lat: cafe.latitude,
         lng: cafe.longitude,
         distance,
         workScore: cafe.work_score ?? cafe.ai_score,
+        isWorkFriendly: cafe.is_work_friendly,
+        isVerified: cafe.is_verified,
+        googleRating: cafe.google_rating,
+        googleRatingsTotal: cafe.google_ratings_total,
+        aiWifiQuality: cafe.ai_wifi_quality,
+        aiPowerOutlets: cafe.ai_power_outlets,
+        aiNoiseLevel: cafe.ai_noise_level,
+        aiLaptopPolicy: cafe.ai_laptop_policy,
+        website: cafe.website,
+        phone: cafe.phone,
         createdAt: cafe.created_at,
       })),
     }

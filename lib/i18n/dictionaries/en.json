@@ -101,6 +101,8 @@
       "noTimeLimit": "No time limit",
       "workscore7Plus": "Workscore 7+",
       "centerOnMyLocation": "Center map on my location",
+      "fullscreenToggle": "Toggle fullscreen view",
+      "fullscreenExit": "Exit fullscreen",
       "locationDenied": "Location unavailable.",
       "panZoomHint": "Pan and zoom.",
       "clear": "Clear",

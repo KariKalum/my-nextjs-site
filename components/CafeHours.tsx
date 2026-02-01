@@ -40,7 +40,24 @@ function parseHours(hours: any): {
     return { type: 'empty', data: null }
   }
 
-  // Helper to format weekday object into array
+  // Google Places API format: { weekday_text: ["Monday: 9:00 AM – 6:00 PM", ...] }
+  const formatWeekdayText = (obj: any): { day: string; hours: string }[] | null => {
+    const arr = obj?.weekday_text
+    if (!Array.isArray(arr)) return null
+    const formatted = arr
+      .map((line: unknown) => {
+        if (typeof line !== 'string') return null
+        const colonIdx = line.indexOf(':')
+        if (colonIdx < 0) return null
+        const day = line.slice(0, colonIdx).trim()
+        const hours = line.slice(colonIdx + 1).trim()
+        return day && hours ? { day, hours } : null
+      })
+      .filter((x): x is { day: string; hours: string } => x != null)
+    return formatted.length > 0 ? formatted : null
+  }
+
+  // Helper to format weekday object into array (monday, tuesday, ... keys)
   const formatWeekdays = (obj: any): { day: string; hours: string }[] | null => {
     const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
     const dayLabels = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -59,10 +76,10 @@ function parseHours(hours: any): {
 
   // If it's an object (not array), treat as JSON with weekdays
   if (typeof hours === 'object' && !Array.isArray(hours)) {
+    const weekdayText = formatWeekdayText(hours)
+    if (weekdayText) return { type: 'json', data: weekdayText }
     const formatted = formatWeekdays(hours)
-    if (formatted) {
-      return { type: 'json', data: formatted }
-    }
+    if (formatted) return { type: 'json', data: formatted }
     return { type: 'empty', data: null }
   }
 
@@ -77,10 +94,10 @@ function parseHours(hours: any): {
     try {
       const parsed = JSON.parse(trimmed)
       if (typeof parsed === 'object' && !Array.isArray(parsed)) {
+        const weekdayText = formatWeekdayText(parsed)
+        if (weekdayText) return { type: 'json', data: weekdayText }
         const formatted = formatWeekdays(parsed)
-        if (formatted) {
-          return { type: 'json', data: formatted }
-        }
+        if (formatted) return { type: 'json', data: formatted }
       }
     } catch {
       // Not valid JSON, treat as plain string

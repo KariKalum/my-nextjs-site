@@ -101,6 +101,8 @@
       "noTimeLimit": "Keine Zeitbegrenzung",
       "workscore7Plus": "Workscore 7+",
       "centerOnMyLocation": "Karte auf meinen Standort zentrieren",
+      "fullscreenToggle": "Vollbild ein-/ausschalten",
+      "fullscreenExit": "Vollbild beenden",
       "locationDenied": "Standort nicht verfügbar.",
       "panZoomHint": "Karte verschieben und zoomen.",
       "clear": "Zurücksetzen",
