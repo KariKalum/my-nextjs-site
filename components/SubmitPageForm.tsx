@@ -160,7 +160,7 @@ export default function SubmitPageForm({ dict, locale }: SubmitPageFormProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-6">
           <nav aria-label="Breadcrumb" className="mb-3 sm:mb-4">
             <Link
               href={prefixWithLocale('/', locale)}
@@ -181,7 +181,7 @@ export default function SubmitPageForm({ dict, locale }: SubmitPageFormProps) {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <main className="max-w-2xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 lg:p-8">
           {success && (
             <div

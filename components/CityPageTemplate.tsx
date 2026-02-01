@@ -60,19 +60,19 @@ export default function CityPageTemplate({ cafes, config, extraCafes, extraCafes
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 md:py-4">
+          <div className="flex items-center justify-between gap-2 mb-2 md:mb-3 min-w-0">
+            <div className="flex items-center gap-1.5 md:gap-2 flex-wrap min-w-0">
               <Link
                 href={prefixWithLocale('/', locale)}
-                className="text-primary-600 hover:text-primary-700 font-medium text-sm"
+                className="text-primary-600 hover:text-primary-700 font-medium text-xs md:text-sm"
               >
                 {t(dict, 'city.home')}
               </Link>
               <span className="text-gray-400" aria-hidden>›</span>
               <Link
                 href={prefixWithLocale('/cities', locale)}
-                className="text-primary-600 hover:text-primary-700 font-medium text-sm"
+                className="text-primary-600 hover:text-primary-700 font-medium text-xs md:text-sm"
               >
                 {t(dict, 'city.allCities')}
               </Link>
@@ -81,7 +81,7 @@ export default function CityPageTemplate({ cafes, config, extraCafes, extraCafes
                   <span className="text-gray-400" aria-hidden>›</span>
                   <Link
                     href={prefixWithLocale(`/cities/${citySlug}`, locale)}
-                    className="text-primary-600 hover:text-primary-700 font-medium text-sm"
+                    className="text-primary-600 hover:text-primary-700 font-medium text-xs md:text-sm"
                   >
                     {cityDisplayName}
                   </Link>
@@ -90,18 +90,18 @@ export default function CityPageTemplate({ cafes, config, extraCafes, extraCafes
             </div>
             <LanguageSwitcher />
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">{h1Title}</h1>
-          <p className="mt-2 text-lg text-gray-600">
+          <h1 className="text-2xl md:text-4xl font-bold text-gray-900">{h1Title}</h1>
+          <p className="mt-1.5 md:mt-2 text-base md:text-lg text-gray-600">
             {safeCafes.length} {safeCafes.length === 1 ? t(dict, 'common.cafeFound') : t(dict, 'common.cafesFound')}
           </p>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 md:py-12">
         {/* SEO Intro Paragraph */}
         {introText && (
           <section className="mb-12">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 md:p-8">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-8">
               <p className="text-gray-700 leading-relaxed text-base md:text-lg">{introText}</p>
               {trustParagraph && (
                 <p className="text-gray-700 leading-relaxed text-base md:text-lg mt-4">
@@ -157,7 +157,7 @@ export default function CityPageTemplate({ cafes, config, extraCafes, extraCafes
 
         {/* What you'll find section */}
         <section className="mb-12">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 md:p-8">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               {t(dict, 'meta.city.whatYoullFind.title')}
             </h2>
@@ -189,7 +189,7 @@ export default function CityPageTemplate({ cafes, config, extraCafes, extraCafes
         {/* Optional niche section */}
         {showNicheSection && cafes.length >= 10 && nicheSectionTitle && nicheSectionDescription && (
           <section className="mb-12">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 md:p-8">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-8">
               <h2 className="text-xl font-semibold text-gray-900 mb-3">{nicheSectionTitle}</h2>
               <p className="text-gray-700 leading-relaxed">{nicheSectionDescription}</p>
             </div>
@@ -301,7 +301,7 @@ function CityFAQWithItems({
 }) {
   return (
     <section className="mt-12">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 md:p-8">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-8">
         <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-5">
           {t(dict, 'meta.city.faq.title')}
         </h2>

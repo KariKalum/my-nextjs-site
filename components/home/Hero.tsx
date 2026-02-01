@@ -239,10 +239,10 @@ export default function Hero({ dict, onSearchChange }: HeroProps) {
   }
 
   return (
-    <section className="bg-gradient-to-br from-primary-50 via-white to-primary-50 pt-10 md:pt-16 pb-12 md:pb-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="bg-gradient-to-br from-primary-50 via-white to-primary-50 pt-8 md:pt-16 pb-10 md:pb-16">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 leading-tight">
+          <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 md:mb-4 leading-tight">
             <span className="sr-only">{t(dict, 'home.hero.title')}</span>
             <span aria-hidden="true">
               {t(dict, 'home.hero.titleLine1')}
@@ -252,7 +252,7 @@ export default function Hero({ dict, onSearchChange }: HeroProps) {
               {t(dict, 'home.hero.titleLine3')}
             </span>
           </h1>
-          <p className="text-lg md:text-xl font-normal text-gray-600 mb-6">
+          <p className="text-base md:text-xl font-normal text-gray-600 mb-5 md:mb-6">
             {t(dict, 'home.hero.subtitle')}
           </p>
 
@@ -274,7 +274,7 @@ export default function Hero({ dict, onSearchChange }: HeroProps) {
                     }}
                     onBlur={handleInputBlur}
                     placeholder={t(dict, 'home.hero.placeholder')}
-                    className="w-full px-6 pr-14 py-4 md:py-5 text-base border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900"
+                    className="w-full px-4 md:px-6 pr-14 py-3.5 md:py-5 text-base border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900"
                   />
                   <button
                     type="button"
@@ -347,7 +347,7 @@ export default function Hero({ dict, onSearchChange }: HeroProps) {
                 </div>
                 <button
                   type="submit"
-                  className="w-full sm:w-auto px-6 py-4 md:py-5 text-base bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors touch-manipulation"
+                  className="w-full sm:w-auto px-5 md:px-6 py-3.5 md:py-5 text-base bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors touch-manipulation"
                 >
                   {t(dict, 'home.hero.searchButton')}
                 </button>
@@ -356,14 +356,14 @@ export default function Hero({ dict, onSearchChange }: HeroProps) {
           </form>
 
           {/* Popular Searches */}
-          <div className="flex flex-wrap justify-center gap-2 mb-6">
-            <span className="text-sm text-gray-500 mr-1">{t(dict, 'home.hero.popular')}</span>
+          <div className="flex flex-wrap justify-center gap-1.5 md:gap-2 mb-5 md:mb-6">
+            <span className="text-xs md:text-sm text-gray-500 mr-0.5 md:mr-1">{t(dict, 'home.hero.popular')}</span>
             {['Berlin', 'Hamburg', 'Munich', 'Cologne', 'Frankfurt'].map((city) => (
               <Link
                 key={city}
                 href={`/${locale}/cities/${city.toLowerCase()}`}
                 prefetch
-                className="px-4 py-1.5 text-sm text-gray-700 bg-white border border-gray-300 rounded-full hover:border-primary-400 hover:text-primary-600 hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+                className="px-3 py-1 md:px-4 md:py-1.5 text-xs md:text-sm text-gray-700 bg-white border border-gray-300 rounded-full hover:border-primary-400 hover:text-primary-600 hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
               >
                 {city}
               </Link>

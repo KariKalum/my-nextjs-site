@@ -40,9 +40,9 @@ export default function ValueProps({ dict }: { dict: Dictionary }) {
 
   return (
     <Section spacing="md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="mb-6">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
             {t(dict, 'home.valueProps.title')}
           </h2>
           <p className="text-gray-600">
@@ -57,19 +57,19 @@ export default function ValueProps({ dict }: { dict: Dictionary }) {
             </Link>
           </p>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-8">
           {props.map((prop, index) => (
             <Link
               key={index}
               href={prop.href}
-              className="text-center p-4 md:p-6 rounded-lg border border-gray-200 hover:shadow-md hover:border-primary-300 transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+              className="text-center p-3 md:p-6 rounded-lg border border-gray-200 hover:shadow-md hover:border-primary-300 transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
               aria-label={`Find cafés with ${t(dict, prop.titleKey).toLowerCase()}`}
             >
-              <div className="text-4xl mb-3 md:mb-4">{prop.icon}</div>
-              <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors">
+              <div className="text-3xl md:text-4xl mb-2 md:mb-4">{prop.icon}</div>
+              <h3 className="text-base md:text-xl font-semibold text-gray-900 mb-1.5 md:mb-2 group-hover:text-primary-600 transition-colors">
                 {t(dict, prop.titleKey)}
               </h3>
-              <p className="text-gray-600 text-xs md:text-sm">
+              <p className="text-gray-600 text-sm">
                 {t(dict, prop.descKey)}
               </p>
             </Link>

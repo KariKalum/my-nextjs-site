@@ -73,7 +73,7 @@ export default function CafeDetail({ cafe }: CafeDetailProps) {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 md:py-4">
           <Link 
             href={homeHref}
             className="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium mb-2"
@@ -86,13 +86,13 @@ export default function CafeDetail({ cafe }: CafeDetailProps) {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5 md:py-8">
         {/* Café Header */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 mb-4 md:mb-6">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
+                <h1 className="text-2xl md:text-4xl font-bold text-gray-900">
                   {cafe.name}
                 </h1>
                 {cafe.is_verified && (
@@ -168,13 +168,13 @@ export default function CafeDetail({ cafe }: CafeDetailProps) {
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Map */}
             {cafe.latitude && cafe.longitude && (
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-4 border-b border-gray-200">
+                <div className="p-3 md:p-4 border-b border-gray-200">
                   <h2 className="text-xl font-semibold text-gray-900">Location</h2>
                 </div>
                 <CafeMap
@@ -191,8 +191,8 @@ export default function CafeDetail({ cafe }: CafeDetailProps) {
 
             {/* Business Hours */}
             {formattedHours && formattedHours.length > 0 && (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Hours</h2>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
+                <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">Hours</h2>
                 <dl className="space-y-2">
                   {formattedHours.map((item: any) => (
                     <div key={item.day} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
@@ -206,8 +206,8 @@ export default function CafeDetail({ cafe }: CafeDetailProps) {
 
             {/* Policies */}
             {cafe.ai_laptop_policy && (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Policies</h2>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
+                <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">Policies</h2>
                 <dl className="space-y-3">
                   {cafe.ai_laptop_policy && (
                     <div>
@@ -223,8 +223,8 @@ export default function CafeDetail({ cafe }: CafeDetailProps) {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Quick Info */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Info</h2>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">Quick Info</h2>
               <dl className="space-y-3">
                 {cafe.ai_wifi_quality && (
                   <div>
@@ -254,8 +254,8 @@ export default function CafeDetail({ cafe }: CafeDetailProps) {
             </div>
 
             {/* Amenities */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Amenities</h2>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">Amenities</h2>
               <div className="space-y-2">
                 {cafe.ai_laptop_policy && (
                   <div className="flex items-center text-sm text-gray-700">

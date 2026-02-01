@@ -118,7 +118,7 @@ export default function CityMapSection({ cafes, locale, dict, cityName, regionCe
           <NearbyCafesMap
             center={mapCenter}
             cafes={cafesForMap}
-            className="h-80 md:h-96"
+            className="h-64 md:h-96"
             zoom={regionZoom}
             preserveRegionZoom={preserveRegionZoom}
             onBoundsChange={handleBoundsChange}
@@ -138,7 +138,7 @@ export default function CityMapSection({ cafes, locale, dict, cityName, regionCe
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
               {displayedCafes.map((cafe) => (
                 <CafeCard key={cafe.id} cafe={cafe} locale={locale} dict={dict} />
               ))}

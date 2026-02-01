@@ -22,12 +22,12 @@ export default function Section({
 
   const spacingClass =
     spacing === 'none'
-      ? 'py-6'
+      ? 'py-4 md:py-6'
       : spacing === 'sm'
-      ? 'py-8'
+      ? 'py-6 md:py-8'
       : spacing === 'md'
-      ? 'py-10 md:py-12'
-      : 'py-16 md:py-20'
+      ? 'py-8 md:py-12'
+      : 'py-12 md:py-20'
 
   return (
     <section id={id} className={`${spacingClass} ${bgClass} ${className}`}>

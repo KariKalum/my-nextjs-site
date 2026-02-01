@@ -112,7 +112,7 @@ export default async function CitiesIndexPage({
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 md:py-4">
           <div className="flex items-center justify-between">
             <div>
               <Link
@@ -121,7 +121,7 @@ export default async function CitiesIndexPage({
               >
                 {t(dict, 'common.backToDirectory')}
               </Link>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
+              <h1 className="text-2xl md:text-4xl font-bold text-gray-900">
                 {t(dict, 'cities.browseByCity')}
               </h1>
               <p className="mt-2 text-lg text-gray-600">
@@ -133,7 +133,7 @@ export default async function CitiesIndexPage({
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 md:py-12">
         <section className="mb-16">
           <div className="text-center mb-8">
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
@@ -143,7 +143,7 @@ export default async function CitiesIndexPage({
               {t(dict, 'cities.exploreMajor')}
             </p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
             {majorCitiesWithCounts.map((city) => (
               <Link
                 key={city.slug}
@@ -189,7 +189,7 @@ export default async function CitiesIndexPage({
                   <Link
                     key={city}
                     href={prefixWithLocale(`/cities/${slug}`, locale)}
-                    className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-primary-300 transition-all flex items-center justify-between"
+                    className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 hover:shadow-md hover:border-primary-300 transition-all flex items-center justify-between"
                   >
                     <span className="font-semibold text-gray-900 text-lg">{city}</span>
                     <span className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full font-medium">

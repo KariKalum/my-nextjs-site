@@ -27,7 +27,8 @@ export default function LanguageSwitcher() {
       aria-label={`Current language: ${currentLabel}. Switch to ${label}`}
       title={`Switch to ${label}`}
     >
-      <span className="tabular-nums">EN ⇄ DE</span>
+      <span className="md:hidden tabular-nums">{currentLocale.toUpperCase()}</span>
+      <span className="hidden md:inline tabular-nums">EN ⇄ DE</span>
     </button>
   )
 }

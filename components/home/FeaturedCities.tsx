@@ -28,9 +28,9 @@ export default async function FeaturedCities({
     <>
       {displayCities.length > 0 && (
         <Section spacing="md">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
             <div className="mb-6">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
                 {t(dict, 'home.featured.title')}
               </h2>
               <p className="text-gray-600">
@@ -42,7 +42,7 @@ export default async function FeaturedCities({
                 <Link
                   key={city.slug}
                   href={prefixWithLocale(`/cities/${city.slug}`, locale)}
-                  className="bg-white rounded-lg p-4 md:p-6 text-center border border-gray-200 hover:shadow-lg hover:border-primary-300 transition-all group"
+                  className="bg-white rounded-lg p-3 md:p-6 text-center border border-gray-200 hover:shadow-lg hover:border-primary-300 transition-all group"
                 >
                   <div className="relative w-full aspect-video mb-3 rounded overflow-hidden bg-gray-100">
                     <Image

@@ -64,49 +64,37 @@ export default function Home({
     <main className="min-h-screen">
       {/* Header */}
       <header className="bg-white shadow-sm border-b sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[var(--header-row-height)] flex items-center">
-          <div className="flex items-center justify-between gap-4 w-full h-full">
-            <div className="flex-shrink-0 h-full flex items-center">
-              <Logo />
-            </div>
-            <div className="flex items-center gap-3 md:gap-4">
-              <Link
-                href={prefixWithLocale('/how-it-works', locale)}
-                className="text-sm text-gray-600 hover:text-gray-900 font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 rounded"
-              >
-                How this works?
-              </Link>
-              <LanguageSwitcher />
-              {/* Desktop: secondary button with tooltip */}
-              <a
-                href="https://www.buymeacoffee.com/uncialabs"
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Yes, we know. Ironic."
-                aria-label="Buy me a coffee. Yes, we know. Ironic."
-                className="hidden md:inline-flex items-center px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 border border-gray-200 rounded-md hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 transition-colors"
-              >
-                ☕ Buy me a coffee
-              </a>
-              {/* Mobile: two-line micro text, no tooltip */}
-              <a
-                href="https://www.buymeacoffee.com/uncialabs"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Buy me a coffee. Yes, we know. Ironic."
-                className="md:hidden flex flex-col items-end text-right leading-tight focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 rounded"
-              >
-                <span className="text-xs text-gray-600">☕ Buy me a coffee</span>
-                <span className="text-[10px] text-gray-400">Yes, we know. Ironic.</span>
-              </a>
-            </div>
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 flex flex-row h-[var(--header-row-height)] items-center w-full">
+          <div className="flex-1 md:flex-initial min-w-0 flex justify-center md:justify-start">
+            <Logo />
+          </div>
+          <div className="flex-1 md:flex-initial md:ml-auto flex justify-end items-center gap-2 md:gap-4 flex-shrink-0">
+            <Link
+              href={prefixWithLocale('/how-it-works', locale)}
+              className="text-xs md:text-sm text-gray-600 hover:text-gray-900 font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 rounded whitespace-nowrap"
+              aria-label="How this works?"
+            >
+              <span className="md:hidden">?</span>
+              <span className="hidden md:inline">How this works?</span>
+            </Link>
+            <LanguageSwitcher />
+            <a
+              href="https://www.buymeacoffee.com/uncialabs"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Buy me a coffee"
+              className="inline-flex items-center justify-center text-xl md:text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 rounded transition-colors md:px-3 md:py-1.5 md:text-gray-600 md:hover:text-gray-800 md:border md:border-gray-200 md:hover:bg-gray-50"
+            >
+              <span className="md:hidden">🍵</span>
+              <span className="hidden md:inline">☕ Buy me a coffee</span>
+            </a>
           </div>
         </div>
       </header>
 
       {/* Error Message */}
       {searchParams?.error === 'unauthorized' && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 md:pt-6">
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <p className="text-sm text-red-800">
               <strong>{t(dict, 'home.error.unauthorizedTitle')}</strong>{' '}

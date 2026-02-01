@@ -15,7 +15,7 @@ export default function HomepageFAQ({ dict }: { dict: Dictionary }) {
 
   return (
     <Section spacing="md" backgroundColor="gray">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto px-3 sm:px-6 lg:px-8">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-5 text-center">
           {t(dict, 'home.faq.title')}
         </h2>
@@ -25,9 +25,9 @@ export default function HomepageFAQ({ dict }: { dict: Dictionary }) {
               key={index}
               className="group rounded-lg border border-gray-200 bg-white overflow-hidden transition-colors hover:border-gray-300"
             >
-              <summary className="px-4 py-3 bg-gray-50 font-medium text-gray-900 cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset list-none [&::-webkit-details-marker]:hidden">
+              <summary className="px-3 md:px-4 py-2.5 md:py-3 bg-gray-50 font-medium text-gray-900 cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset list-none [&::-webkit-details-marker]:hidden">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="flex-1 text-left">{t(dict, faq.q)}</span>
+                  <span className="flex-1 text-left text-sm md:text-base">{t(dict, faq.q)}</span>
                   <span
                     className="text-gray-400 text-sm transition-transform duration-200 group-open:rotate-180 flex-shrink-0"
                     aria-hidden="true"

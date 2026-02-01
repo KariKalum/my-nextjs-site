@@ -58,11 +58,11 @@ export default function CafeCard({ cafe, locale, dict }: CafeCardProps) {
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow overflow-hidden">
-      <div className="p-6">
+      <div className="p-4 md:p-6">
         {/* Header */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
-            <h3 className="text-xl font-semibold text-gray-900 mb-1">
+            <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-1">
               {hasValidCafeLink(cafe) ? (
                 <Link
                   href={getCafeHref(cafe, locale)}
@@ -150,8 +150,8 @@ export default function CafeCard({ cafe, locale, dict }: CafeCardProps) {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-          <div className="flex space-x-4 text-sm">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-0 pt-3 md:pt-4 border-t border-gray-200">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
             {cafe.website && (
               <a
                 href={cafe.website}
@@ -174,7 +174,7 @@ export default function CafeCard({ cafe, locale, dict }: CafeCardProps) {
           {hasValidCafeLink(cafe) ? (
             <a
               href={getCafeHref(cafe, locale)}
-              className="text-sm font-medium text-primary-600 hover:text-primary-700"
+              className="text-sm font-medium text-primary-600 hover:text-primary-700 self-start md:self-auto"
             >
               {t(d, 'common.viewDetailsLink')}
             </a>

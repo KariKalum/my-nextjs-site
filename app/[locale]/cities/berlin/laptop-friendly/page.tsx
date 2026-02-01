@@ -3,6 +3,8 @@
  * Explicit route so it is not captured by [district] (which would 404 for district="laptop-friendly").
  */
 
+export const dynamic = 'force-dynamic'
+
 import { getLocaleFromParams, type Locale } from '@/lib/i18n/config'
 import { getDictionary } from '@/lib/i18n/getDictionary'
 import { t, tmpl } from '@/lib/i18n/t'

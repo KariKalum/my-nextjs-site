@@ -38,10 +38,10 @@ export default function Logo() {
           <img
             src="/logo 3.svg"
             alt="Café Directory"
-            className="w-[375px] h-full object-contain block pt-px pb-px px-0 m-0"
+            className="w-[375px] max-w-[176px] md:max-w-none h-full object-contain block pt-px pb-px px-0 m-0"
             width={192}
             height={56}
-            style={{ minWidth: '120px' }}
+            style={{ minWidth: '132px' }}
             onError={handleImageError}
             onLoad={handleLoadComplete}
           />
