@@ -241,11 +241,13 @@ export function buildCityConfig(
     if (h1Title.includes('{city}')) h1Title = tmpl(h1Title, { city: displayName })
     if (h1Title.includes('{district}')) h1Title = tmpl(h1Title, { district: districtDisplayName })
 
+    const bestOfPrefix = cafeCount >= 10 ? (locale === 'de' ? `Die ${cafeCount}+ besten ` : `Best ${cafeCount}+ `) : (locale === 'de' ? 'Die besten ' : 'Best ')
     seoTitle = intentFallback(
       dict,
       'meta.city.intent.work.seoTitle',
       `Cafés to Work From in ${displayName} – WiFi, Power Outlets & Laptop-Friendly | ${siteName}`
     )
+    if (seoTitle.includes('{bestOfPrefix}')) seoTitle = tmpl(seoTitle, { bestOfPrefix, city: displayName, siteName })
     if (seoTitle.includes('{city}')) seoTitle = tmpl(seoTitle, { city: displayName, siteName })
     if (seoTitle.includes('{district}')) seoTitle = tmpl(seoTitle, { district: districtDisplayName, siteName })
 
@@ -267,11 +269,13 @@ export function buildCityConfig(
     if (h1Title.includes('{city}')) h1Title = tmpl(h1Title, { city: displayName })
     if (h1Title.includes('{district}')) h1Title = tmpl(h1Title, { district: districtDisplayName })
 
+    const bestOfPrefix = cafeCount >= 10 ? (locale === 'de' ? `Die ${cafeCount}+ besten ` : `Best ${cafeCount}+ `) : (locale === 'de' ? 'Die besten ' : 'Best ')
     seoTitle = intentFallback(
       dict,
       'meta.city.intent.laptopFriendly.seoTitle',
       `Laptop-Friendly Cafés in ${displayName} – WiFi & Power Outlets | ${siteName}`
     )
+    if (seoTitle.includes('{bestOfPrefix}')) seoTitle = tmpl(seoTitle, { bestOfPrefix, city: displayName, siteName })
     if (seoTitle.includes('{city}')) seoTitle = tmpl(seoTitle, { city: displayName, siteName })
     if (seoTitle.includes('{district}')) seoTitle = tmpl(seoTitle, { district: districtDisplayName, siteName })
 

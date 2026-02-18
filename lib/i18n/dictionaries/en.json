@@ -9,11 +9,11 @@
       "unauthorizedText": "You do not have admin privileges. Only authorized administrators can access the admin dashboard."
     },
     "hero": {
-      "title": "Find the best laptop-friendly cafés & cafés to work from in Germany",
-      "titleLine1": "Find the best laptop-friendly",
-      "titleLine2": "cafés & cafés to work from",
+      "title": "Best Working Cafés & Coworking Cafés in Germany",
+      "titleLine1": "Best Working Cafés",
+      "titleLine2": "& Coworking Spaces",
       "titleLine3": "in Germany",
-      "subtitle": "Discover work-friendly cafés and coworking cafés with fast Wi-Fi, power outlets, and quiet spaces perfect for remote work and studying.",
+      "subtitle": "Discover the top laptop-friendly cafés and coworking cafés in Germany with fast Wi-Fi, power outlets, and quiet spaces perfect for remote work.",
       "placeholder": "Search by city or café (e.g. Berlin, café with Wi-Fi, coworking café)",
       "useLocationLabel": "Use my location",
       "locationDenied": "Location access denied.",
@@ -434,7 +434,7 @@
       "introCologne": "Cologne boasts a thriving café culture perfect for laptop users. Explore cafés in the Altstadt, Belgisches Viertel, and beyond, each offering fast internet, power outlets, and comfortable spaces for remote work and studying.",
       "introFrankfurt": "Frankfurt, Germany's financial hub, is home to numerous laptop-friendly cafés catering to professionals and remote workers. Find excellent WiFi, quiet workspaces, and modern amenities throughout the city center and surrounding neighborhoods.",
       "introLeipzig": "Leipzig's growing tech scene is matched by its excellent selection of laptop-friendly cafés. Discover workspaces in the city center and trendy neighborhoods with fast WiFi, power outlets, and inspiring environments for remote work and creativity.",
-      "introGeneric": "Discover the best laptop-friendly cafés and cafés to work from in {city}. Whether you're a remote worker, freelancer, or student, find cafés with fast Wi-Fi, power outlets, and quiet spaces perfect for productivity.",
+      "introGeneric": "Discover the best working cafés and coworking-friendly spaces in {city}. Whether you're a remote worker, freelancer, or digital nomad, find cafés with high-speed Wi-Fi, power outlets, and the perfect working atmosphere for productivity.",
       "whatYoullFind": {
         "title": "What you'll find",
         "item1": "Cafés with reliable Wi-Fi for video calls and remote work",
@@ -445,9 +445,9 @@
       },
       "intent": {
         "work": {
-          "h1Title": "Best Cafés to Work From in {city} (WiFi & Power Outlets)",
-          "seoTitle": "Cafés to Work From in {city} – WiFi, Power Outlets & Laptop-Friendly | {siteName}",
-          "seoDescription": "Find the best cafés to work from in {city} with reliable WiFi, power outlets, and laptop-friendly spaces. Perfect for remote work, studying, and meetings."
+          "h1Title": "Best Working Cafés in {city} (Coworking & WiFi)",
+          "seoTitle": "{bestOfPrefix}Working Cafés in {city} – Coworking, WiFi & Laptop-Friendly | {siteName}",
+          "seoDescription": "Find the best cafés for working in {city} with reliable WiFi, power outlets, and coworking-friendly spaces. Perfect for remote work, studying, and meetings."
         },
         "laptopFriendly": {
           "h1Title": "Laptop-Friendly Cafés in {city}",

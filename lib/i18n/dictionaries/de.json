@@ -9,11 +9,11 @@
       "unauthorizedText": "Sie haben keine Admin-Rechte. Nur autorisierte Administratoren können auf das Admin-Dashboard zugreifen."
     },
     "hero": {
-      "title": "Die besten Cafés zum Arbeiten & laptopfreundlichen Cafés in Deutschland finden",
-      "titleLine1": "Die besten laptopfreundlichen",
-      "titleLine2": "Cafés & Cafés zum Arbeiten",
+      "title": "Die besten Arbeits-Cafés & Coworking-Cafés in Deutschland finden",
+      "titleLine1": "Die besten Arbeits-Cafés",
+      "titleLine2": "& Coworking-Spaces",
       "titleLine3": "in Deutschland finden",
-      "subtitle": "Entdecken Sie Cafés zum Arbeiten und Coworking-Cafés mit schnellem WLAN, Steckdosen und ruhigen Plätzen – perfekt für Remote-Arbeit und Lernen.",
+      "subtitle": "Entdecken Sie die besten laptopfreundlichen Cafés und Coworking-Cafés in Deutschland mit schnellem WLAN, Steckdosen und ruhigen Plätzen – perfekt für Remote-Arbeit.",
       "placeholder": "Nach Stadt oder Café suchen (z. B. Berlin, Café mit WLAN, Café zum Arbeiten)",
       "useLocationLabel": "Meinen Standort nutzen",
       "locationDenied": "Standortzugriff verweigert.",
@@ -434,7 +434,7 @@
       "introCologne": "Köln hat eine lebendige Café-Kultur für Laptop-Nutzer. Altstadt, Belgisches Viertel und mehr – mit schnellem Internet, Steckdosen und gemütlichen Plätzen zum Arbeiten und Lernen.",
       "introFrankfurt": "Frankfurt, Deutschlands Finanzzentrum, hat zahlreiche laptopfreundliche Cafés für Berufstätige und Remote-Arbeiter. Gutes WLAN, ruhige Arbeitsplätze und moderne Ausstattung in der Innenstadt und den umliegenden Vierteln.",
       "introLeipzig": "Leipzigs wachsende Tech-Szene trifft auf eine große Auswahl laptopfreundlicher Cafés. Arbeiten Sie in der Innenstadt und in trendigen Vierteln – mit schnellem WLAN, Steckdosen und inspirierender Umgebung.",
-      "introGeneric": "Entdecken Sie die besten Cafés zum Arbeiten und laptopfreundlichen Cafés in {city}. Ob Remote-Arbeiter, Freelancer oder Student – finden Sie Cafés mit schnellem WLAN, Steckdosen und ruhigen Plätzen, perfekt für produktives Arbeiten.",
+      "introGeneric": "Entdecken Sie die besten Arbeits-Cafés und Coworking-freundlichen Plätze in {city}. Ob Remote-Arbeiter, Freelancer oder digitaler Nomade – finden Sie Cafés mit schnellem WLAN, Steckdosen und der perfekten Arbeitsatmosphäre für produktives Arbeiten.",
       "whatYoullFind": {
         "title": "Was Sie finden werden",
         "item1": "Cafés mit zuverlässigem WLAN für Videocalls und Remote-Arbeit",
@@ -445,9 +445,9 @@
       },
       "intent": {
         "work": {
-          "h1Title": "Cafés zum Arbeiten in {city} (WLAN & Steckdosen)",
-          "seoTitle": "Cafés zum Arbeiten in {city} – WLAN, Steckdosen & Laptopfreundlich | {siteName}",
-          "seoDescription": "Die besten Cafés zum Arbeiten in {city} finden – mit zuverlässigem WLAN, Steckdosen und laptopfreundlichen Räumen. Perfekt für Remote-Arbeit, Lernen und Meetings."
+          "h1Title": "Die besten Coworking-Cafés in {city} (WLAN & Steckdosen)",
+          "seoTitle": "{bestOfPrefix}Arbeits-Cafés in {city} – Coworking, WLAN & Laptopfreundlich | {siteName}",
+          "seoDescription": "Die besten Arbeits-Cafés und Coworking-Spaces in {city} finden – mit zuverlässigem WLAN, Steckdosen und laptopfreundlichen Räumen. Perfekt für Remote-Arbeit."
         },
         "laptopFriendly": {
           "h1Title": "Laptopfreundliche Cafés in {city}",

@@ -21,6 +21,10 @@ const FEATURE_MAP: Record<string, Intent> = {
     'ohne-zeitlimit': 'time-limit',
     'work': 'work',
     'arbeiten': 'work',
+    'working-cafe': 'work',
+    'working-cafes': 'work',
+    'coworking': 'work',
+    'coworking-cafes': 'work',
     'laptop-friendly': 'laptop-friendly',
     'laptopfreundlich': 'laptop-friendly',
 }
