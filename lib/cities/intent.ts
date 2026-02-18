@@ -6,7 +6,7 @@
 import type { Cafe } from '@/src/lib/supabase/types'
 
 /** Intent variant for SEO landing pages; undefined = default (no extra filter). */
-export type Intent = 'work' | 'laptop-friendly' | undefined
+export type Intent = 'work' | 'laptop-friendly' | 'wifi' | 'outlets' | 'quiet' | 'time-limit' | undefined
 
 // ---------------------------------------------------------------------------
 // Thresholds (tunable; keep conservative to avoid empty results)
@@ -80,6 +80,28 @@ export function filterCafesByIntent(cafes: Cafe[], intent: Intent): Cafe[] {
       if (!cafe || typeof cafe !== 'object') return false
       if (hasLaptopPolicy(cafe)) return true
       return hasWifi(cafe) && hasOutlets(cafe) && workScoreAtLeast(cafe, WORK_SCORE_THRESHOLD_LAPTOP)
+    })
+  }
+
+  if (intent === 'wifi') {
+    return cafes.filter((cafe) => hasWifi(cafe))
+  }
+
+  if (intent === 'outlets') {
+    return cafes.filter((cafe) => hasOutlets(cafe))
+  }
+
+  if (intent === 'quiet') {
+    return cafes.filter((cafe) => {
+      const v = cafe.ai_noise_level
+      return typeof v === 'string' && (v.toLowerCase() === 'quiet' || v.toLowerCase() === 'moderate')
+    })
+  }
+
+  if (intent === 'time-limit') {
+    return cafes.filter((cafe) => {
+      const v = cafe.ai_laptop_policy
+      return typeof v === 'string' && (v.toLowerCase() === 'unlimited' || v.toLowerCase() === 'no limit')
     })
   }
 

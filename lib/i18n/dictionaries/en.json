@@ -240,7 +240,7 @@
   "find": {
     "featureNotFound": "Feature not found",
     "featureNotFoundDesc": "The requested feature page does not exist.",
-      "backToHomepage": "Back to homepage",
+    "backToHomepage": "Back to homepage",
     "backToDirectory": "Back to Directory",
     "useMyLocation": "Use my location",
     "requestingLocation": "Requesting location...",
@@ -270,7 +270,7 @@
     "noCafesFound": "No cafés found",
     "noCafesMatchingFeature": "We couldn't find any cafés matching this feature in your area.",
     "increaseSearchRadius": "Increase search radius",
-      "browseAllCities": "See cities",
+    "browseAllCities": "See cities",
     "kmAway": "km away",
     "viewDetailsLink": "View details",
     "wifiTitle": "Find cafés with fast Wi-Fi",
@@ -442,6 +442,38 @@
         "item3": "Quiet cafés ideal for focused work and studying",
         "item4": "Time-limit friendly spaces where you can work as long as you need",
         "item5": "Comfortable seating and work-friendly atmospheres"
+      },
+      "intent": {
+        "work": {
+          "h1Title": "Best Cafés to Work From in {city} (WiFi & Power Outlets)",
+          "seoTitle": "Cafés to Work From in {city} – WiFi, Power Outlets & Laptop-Friendly | {siteName}",
+          "seoDescription": "Find the best cafés to work from in {city} with reliable WiFi, power outlets, and laptop-friendly spaces. Perfect for remote work, studying, and meetings."
+        },
+        "laptopFriendly": {
+          "h1Title": "Laptop-Friendly Cafés in {city}",
+          "seoTitle": "Laptop-Friendly Cafés in {city} – WiFi & Power Outlets | {siteName}",
+          "seoDescription": "Find laptop-friendly cafés in {city} with WiFi, power outlets, and work-friendly policies. Ideal for remote work and studying."
+        },
+        "wifi": {
+          "h1Title": "Cafés with Good WiFi in {city}",
+          "seoTitle": "Best Cafés with WiFi in {city} for Working | {siteName}",
+          "seoDescription": "Find laptop-friendly cafés in {city} with fast, stable WiFi. Perfect for video calls, remote work, and studying."
+        },
+        "outlets": {
+          "h1Title": "Cafés with Power Outlets in {city}",
+          "seoTitle": "Best Cafés with Power Outlets in {city} for Working | {siteName}",
+          "seoDescription": "Find laptop-friendly spots in {city} with power outlets. We list cafés where you can charge your devices and stay productive."
+        },
+        "quiet": {
+          "h1Title": "Quiet Cafés to Work In {city}",
+          "seoTitle": "Best Quiet Cafés in {city} for Deep Work | {siteName}",
+          "seoDescription": "Looking for a quiet place to work in {city}? Discover cafés with a relaxed atmosphere, perfect for focus and concentration."
+        },
+        "time-limit": {
+          "h1Title": "Cafés with No Time Limit in {city}",
+          "seoTitle": "Best Cafés with No Time Restrictions in {city} | {siteName}",
+          "seoDescription": "Work as long as you want. We highlight cafés in {city} with no time limits, so you can stay productive all day long."
+        }
       },
       "nicheSection": {
         "title": "Specialty Workspaces",

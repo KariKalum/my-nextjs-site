@@ -325,7 +325,9 @@ export async function generateMetadata({
     dict,
     cafe.is_work_friendly === true ? 'meta.cafe.titleWorkFriendly' : 'meta.cafe.titleCoworking'
   )
-  const title = `${cafe.name} — ${label} in ${city}`
+  const title = locale === 'de'
+    ? `${cafe.name} — Reviews & Eignung zum Arbeiten in ${city}`
+    : `${cafe.name} — Reviews & Work-Friendliness in ${city}`
   const fullTitle = `${title} | ${siteName}`
   const description = buildLocalizedCafeDescription(cafe, dict)
   const canonicalUrl = getAbsoluteUrl(getCafeHref(cafe, locale))

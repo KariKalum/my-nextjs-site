@@ -8,9 +8,9 @@ import CafeFAQ from './CafeFAQ'
 import CafeMapEmbed from './CafeMapEmbed'
 import CafeHours from './CafeHours'
 import { getAbsoluteUrl } from '@/lib/seo/metadata'
-import { 
+import {
   formatAddress,
-  stripWebsiteDomain, 
+  stripWebsiteDomain,
   getMapsUrl,
   buildCafeH1Title,
   cleanDescription
@@ -304,7 +304,7 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], approvedReviews 
 
   return (
     <>
-      <CafeStructuredData cafe={cafe} cafeUrl={cafeUrl} />
+      <CafeStructuredData cafe={cafe} cafeUrl={cafeUrl} approvedReviews={approvedReviews} />
 
       <div className="min-h-screen bg-gray-50">
         <nav className="bg-white border-b border-gray-200" aria-label="Breadcrumb">
@@ -357,13 +357,13 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], approvedReviews 
               const descriptionText = cafe.descriptionText || ''
               const cleanedText = descriptionText.trim()
                 ? cleanDescription(
-                    descriptionText,
-                    cafe.city,
-                    cafe.state,
-                    cafe.zip_code,
-                    cafe.country,
-                    cafe.address
-                  )
+                  descriptionText,
+                  cafe.city,
+                  cafe.state,
+                  cafe.zip_code,
+                  cafe.country,
+                  cafe.address
+                )
                 : null
               if (!cleanedText || cleanedText.trim() === '') {
                 return <p className="text-gray-500 text-sm">{t(dict, 'cafeDetail.noDescriptionYet')}</p>
@@ -475,11 +475,10 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], approvedReviews 
                     key={k}
                     type="button"
                     onClick={() => setReviewKind(k)}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg ${
-                      reviewKind === k
+                    className={`px-4 py-2 text-sm font-medium rounded-lg ${reviewKind === k
                         ? 'bg-primary-600 text-white'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
+                      }`}
                   >
                     {k === 'review' ? 'Review' : k === 'quick_feedback' ? 'Quick feedback' : 'Report'}
                   </button>
@@ -697,10 +696,10 @@ export default function CafeDetailSEO({ cafe, nearbyCafes = [], approvedReviews 
                 return null
               })()}
               {!formatWorkScore(cafe.work_score) && cafe.is_work_friendly == null && !normalizeConfidence(cafe.ai_confidence) &&
-               !normalizeUnknownToNotEnoughDataYet(cafe.ai_wifi_quality) && !normalizeUnknownToNotEnoughDataYet(cafe.ai_power_outlets) && 
-               !normalizeUnknownToNotEnoughDataYet(cafe.ai_noise_level) && !normalizeUnknownToNotEnoughDataYet(cafe.ai_laptop_policy) && !hasWhy && (
-                <p className="text-gray-500 text-sm">{t(dict, 'cafeDetail.insightsNotAvailable')}</p>
-              )}
+                !normalizeUnknownToNotEnoughDataYet(cafe.ai_wifi_quality) && !normalizeUnknownToNotEnoughDataYet(cafe.ai_power_outlets) &&
+                !normalizeUnknownToNotEnoughDataYet(cafe.ai_noise_level) && !normalizeUnknownToNotEnoughDataYet(cafe.ai_laptop_policy) && !hasWhy && (
+                  <p className="text-gray-500 text-sm">{t(dict, 'cafeDetail.insightsNotAvailable')}</p>
+                )}
               {hasWhy && (
                 <details className="mt-4 rounded-lg border border-gray-200 overflow-hidden">
                   <summary className="px-4 py-3 bg-gray-50 font-medium text-gray-900 cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset">

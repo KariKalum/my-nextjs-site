@@ -63,6 +63,67 @@ const CITY_DISPLAY_NAMES: Record<string, { de: string; en: string; dbName: strin
   berlin: { de: 'Berlin', en: 'Berlin', dbName: 'Berlin' },
 }
 
+/** Districts for major cities to capture local search intent */
+export const CITY_DISTRICT_MAP: Record<string, Record<string, string>> = {
+  berlin: {
+    mitte: 'Mitte',
+    kreuzberg: 'Kreuzberg',
+    charlottenburg: 'Charlottenburg',
+    neukoelln: 'Neukölln',
+    'prenzlauer-berg': 'Prenzlauer Berg',
+    friedrichshain: 'Friedrichshain',
+    hbf: 'Hauptbahnhof',
+  },
+  muenchen: {
+    maxvorstadt: 'Maxvorstadt',
+    schwabing: 'Schwabing',
+    haidhausen: 'Haidhausen',
+    sendling: 'Sendling',
+    giesing: 'Giesing',
+    ludwigsvorstadt: 'Ludwigsvorstadt',
+    isarsvorstadt: 'Isarsvorstadt',
+  },
+  munchen: {
+    maxvorstadt: 'Maxvorstadt',
+    schwabing: 'Schwabing',
+    haidhausen: 'Haidhausen',
+    sendling: 'Sendling',
+    giesing: 'Giesing',
+    ludwigsvorstadt: 'Ludwigsvorstadt',
+    isarsvorstadt: 'Isarsvorstadt',
+  },
+  munich: {
+    maxvorstadt: 'Maxvorstadt',
+    schwabing: 'Schwabing',
+    haidhausen: 'Haidhausen',
+    sendling: 'Sendling',
+    giesing: 'Giesing',
+    ludwigsvorstadt: 'Ludwigsvorstadt',
+    isarsvorstadt: 'Isarsvorstadt',
+  },
+  hamburg: {
+    altona: 'Altona',
+    eimsbuettel: 'Eimsbüttel',
+    'st-pauli': 'St. Pauli',
+    winterhude: 'Winterhude',
+    'st-georg': 'St. Georg',
+    ottensen: 'Ottensen',
+  },
+  koeln: {
+    ehrenfeld: 'Ehrenfeld',
+    nippes: 'Nippes',
+    suedstadt: 'Südstadt',
+    'belgisches-viertel': 'Belgisches Viertel',
+  },
+  cologne: {
+    ehrenfeld: 'Ehrenfeld',
+    nippes: 'Nippes',
+    suedstadt: 'Südstadt',
+    'belgisches-viertel': 'Belgisches Viertel',
+  },
+}
+
+
 /** Map centers for city pages (same template as Berlin; map centers when no cafes or for region) */
 const CITY_MAP_CENTERS: Record<string, { lat: number; lng: number }> = {
   berlin: { lat: 52.52, lng: 13.405 },
@@ -123,7 +184,7 @@ export function getCityDisplayName(citySlug: string, locale: Locale): string {
   if (city) {
     return locale === 'de' ? city.de : city.en
   }
-  
+
   // Fallback: convert slug to display name
   return citySlug
     .split('-')
@@ -139,7 +200,7 @@ export function getCityDbName(citySlug: string): string {
   if (city) {
     return city.dbName
   }
-  
+
   // Fallback: use display name
   return citySlug
     .split('-')
@@ -156,10 +217,14 @@ export function buildCityConfig(
   dict: Dictionary,
   citySlug: string,
   cafeCount: number,
-  intent?: Intent
+  intent?: Intent,
+  districtSlug?: string,
+  districtDisplayName?: string
 ): CityPageConfig {
   const cityDisplayName = getCityDisplayName(citySlug, locale)
   const siteName = t(dict, 'meta.siteName')
+  const isDistrict = Boolean(districtSlug && districtDisplayName)
+  const displayName = isDistrict ? districtDisplayName : cityDisplayName
 
   let h1Title: string
   let seoTitle: string
@@ -170,58 +235,93 @@ export function buildCityConfig(
       dict,
       'meta.city.intent.work.h1Title',
       locale === 'de'
-        ? `Cafés zum Arbeiten in ${cityDisplayName} (WLAN & Steckdosen)`
-        : `Best Cafés to Work From in ${cityDisplayName} (WiFi & Power Outlets)`
+        ? `Cafés zum Arbeiten in ${displayName} (WLAN & Steckdosen)`
+        : `Best Cafés to Work From in ${displayName} (WiFi & Power Outlets)`
     )
-    if (h1Title.includes('{city}')) h1Title = tmpl(h1Title, { city: cityDisplayName })
+    if (h1Title.includes('{city}')) h1Title = tmpl(h1Title, { city: displayName })
+    if (h1Title.includes('{district}')) h1Title = tmpl(h1Title, { district: districtDisplayName })
+
     seoTitle = intentFallback(
       dict,
       'meta.city.intent.work.seoTitle',
-      `Cafés to Work From in ${cityDisplayName} – WiFi, Power Outlets & Laptop-Friendly | ${siteName}`
+      `Cafés to Work From in ${displayName} – WiFi, Power Outlets & Laptop-Friendly | ${siteName}`
     )
-    if (seoTitle.includes('{city}')) seoTitle = tmpl(seoTitle, { city: cityDisplayName, siteName })
+    if (seoTitle.includes('{city}')) seoTitle = tmpl(seoTitle, { city: displayName, siteName })
+    if (seoTitle.includes('{district}')) seoTitle = tmpl(seoTitle, { district: districtDisplayName, siteName })
+
     seoDescription = intentFallback(
       dict,
       'meta.city.intent.work.seoDescription',
-      `Find the best cafés to work from in ${cityDisplayName} with reliable WiFi, power outlets, and laptop-friendly spaces. Perfect for remote work, studying, and meetings.`
+      `Find the best cafés to work from in ${displayName} with reliable WiFi, power outlets, and laptop-friendly spaces. Perfect for remote work, studying, and meetings.`
     )
-    if (seoDescription.includes('{city}')) seoDescription = tmpl(seoDescription, { city: cityDisplayName })
+    if (seoDescription.includes('{city}')) seoDescription = tmpl(seoDescription, { city: displayName })
+    if (seoDescription.includes('{district}')) seoDescription = tmpl(seoDescription, { district: districtDisplayName })
   } else if (intent === 'laptop-friendly') {
     h1Title = intentFallback(
       dict,
       'meta.city.intent.laptopFriendly.h1Title',
       locale === 'de'
-        ? `Laptopfreundliche Cafés in ${cityDisplayName}`
-        : `Laptop-Friendly Cafés in ${cityDisplayName}`
+        ? `Laptopfreundliche Cafés in ${displayName}`
+        : `Laptop-Friendly Cafés in ${displayName}`
     )
-    if (h1Title.includes('{city}')) h1Title = tmpl(h1Title, { city: cityDisplayName })
+    if (h1Title.includes('{city}')) h1Title = tmpl(h1Title, { city: displayName })
+    if (h1Title.includes('{district}')) h1Title = tmpl(h1Title, { district: districtDisplayName })
+
     seoTitle = intentFallback(
       dict,
       'meta.city.intent.laptopFriendly.seoTitle',
-      `Laptop-Friendly Cafés in ${cityDisplayName} – WiFi & Power Outlets | ${siteName}`
+      `Laptop-Friendly Cafés in ${displayName} – WiFi & Power Outlets | ${siteName}`
     )
-    if (seoTitle.includes('{city}')) seoTitle = tmpl(seoTitle, { city: cityDisplayName, siteName })
+    if (seoTitle.includes('{city}')) seoTitle = tmpl(seoTitle, { city: displayName, siteName })
+    if (seoTitle.includes('{district}')) seoTitle = tmpl(seoTitle, { district: districtDisplayName, siteName })
+
     seoDescription = intentFallback(
       dict,
       'meta.city.intent.laptopFriendly.seoDescription',
-      `Find laptop-friendly cafés in ${cityDisplayName} with WiFi, power outlets, and work-friendly policies. Ideal for remote work and studying.`
+      `Find laptop-friendly cafés in ${displayName} with WiFi, power outlets, and work-friendly policies. Ideal for remote work and studying.`
     )
-    if (seoDescription.includes('{city}')) seoDescription = tmpl(seoDescription, { city: cityDisplayName })
+    if (seoDescription.includes('{city}')) seoDescription = tmpl(seoDescription, { city: displayName })
+    if (seoDescription.includes('{district}')) seoDescription = tmpl(seoDescription, { district: districtDisplayName })
+  } else if (intent === 'wifi') {
+    h1Title = locale === 'de' ? `Cafés mit gutem WLAN in ${displayName}` : `Cafés with Good WiFi in ${displayName}`
+    seoTitle = locale === 'de'
+      ? `Die ${cafeCount >= 5 ? cafeCount + '+ ' : ''}besten Cafés mit WLAN in ${displayName} zum Arbeiten | ${siteName}`
+      : `Best Cafés with WiFi in ${displayName} for Working | ${siteName}`
+    seoDescription = locale === 'de'
+      ? `Finde laptopfreundliche Cafés in ${displayName} mit schnellem und stabilem WLAN. Ideal für Videocalls, Remote-Arbeit und Studium.`
+      : `Find laptop-friendly cafés in ${displayName} with fast, stable WiFi. Perfect for video calls, remote work, and studying.`
+  } else if (intent === 'outlets') {
+    h1Title = locale === 'de' ? `Cafés mit Steckdosen in ${displayName}` : `Cafés with Power Outlets in ${displayName}`
+    seoTitle = locale === 'de'
+      ? `Die besten Cafés mit Steckdosen in ${displayName} zum Arbeiten | ${siteName}`
+      : `Best Cafés with Power Outlets in ${displayName} for Working | ${siteName}`
+    seoDescription = locale === 'de'
+      ? `Laptop-Arbeitsplätze in ${displayName} mit Steckdosen finden. Wir listen Cafés, in denen du deinen Laptop aufladen und produktiv arbeiten kannst.`
+      : `Find laptop-friendly spots in ${displayName} with power outlets. We list cafés where you can charge your devices and stay productive.`
+  } else if (intent === 'quiet') {
+    h1Title = locale === 'de' ? `Ruhige Cafés zum Arbeiten in ${displayName}` : `Quiet Cafés to Work In ${displayName}`
+    seoTitle = locale === 'de'
+      ? `Die besten ruhigen Cafés in ${displayName} für konzentriertes Arbeiten | ${siteName}`
+      : `Best Quiet Cafés in ${displayName} for Deep Work | ${siteName}`
+    seoDescription = locale === 'de'
+      ? `Suchst du einen ruhigen Ort zum Arbeiten in ${displayName}? Entdecke Cafés mit entspannter Atmosphäre, perfekt für Fokus und Konzentration.`
+      : `Looking for a quiet place to work in ${displayName}? Discover cafés with a relaxed atmosphere, perfect for focus and concentration.`
   } else {
+    const bestOfPrefix = cafeCount >= 10 ? (locale === 'de' ? `Die ${cafeCount}+ besten ` : `Best ${cafeCount}+ `) : (locale === 'de' ? 'Die besten ' : 'Best ')
     h1Title =
       locale === 'de'
-        ? `Cafés zum Arbeiten in ${cityDisplayName} (mit WLAN & Steckdosen)`
-        : `Best Cafés to Work From in ${cityDisplayName} (WiFi & Power Outlets)`
+        ? `Cafés zum Arbeiten in ${displayName} (mit WLAN & Steckdosen)`
+        : `Best Cafés to Work From in ${displayName} (WiFi & Power Outlets)`
     seoTitle =
       locale === 'de'
-        ? `Cafés zum Arbeiten in ${cityDisplayName} – WLAN, Steckdosen & Laptopfreundlich | ${siteName}`
-        : `Cafés to Work From in ${cityDisplayName} – WiFi, Power Outlets & Laptop-Friendly | ${siteName}`
+        ? `${bestOfPrefix}Cafés zum Arbeiten in ${displayName} – WLAN, Steckdosen & Laptopfreundlich | ${siteName}`
+        : `${bestOfPrefix}Cafés to Work From in ${displayName} – WiFi, Power Outlets & Laptop-Friendly | ${siteName}`
     seoDescription =
       locale === 'de'
-        ? `Die besten Cafés zum Arbeiten in ${cityDisplayName} finden – mit zuverlässigem WLAN, Steckdosen und laptopfreundlichen Räumen. Perfekt für Remote-Arbeit, Lernen und Meetings.`
-        : `Find the best cafés to work from in ${cityDisplayName} with reliable WiFi, power outlets, and laptop-friendly spaces. Perfect for remote work, studying, and meetings.`
+        ? `Die besten Cafés zum Arbeiten in ${displayName} finden – mit zuverlässigem WLAN, Steckdosen und laptopfreundlichen Räumen. Perfekt für Remote-Arbeit, Lernen und Meetings.`
+        : `Find the best cafés to work from in ${displayName} with reliable WiFi, power outlets, and laptop-friendly spaces. Perfect for remote work, studying, and meetings.`
   }
-  
+
   // Intro text - try to get city-specific intro, fallback to generic
   // Map slugs to intro keys (handle special cases)
   const introKeyMap: Record<string, string> = {
@@ -231,32 +331,32 @@ export function buildCityConfig(
     frankfurt: 'meta.city.introFrankfurt',
     leipzig: 'meta.city.introLeipzig',
   }
-  
+
   const introKey = introKeyMap[citySlug.toLowerCase()]
   let introText: string | undefined
-  
+
   if (introKey) {
     const intro = t(dict, introKey)
     introText = intro !== introKey ? intro : undefined
   }
-  
+
   if (!introText) {
     introText = tmpl(t(dict, 'meta.city.introGeneric'), { city: cityDisplayName })
   }
-  
+
   // Trust paragraph (only show if cafes exist)
   // Runtime guard: ensure cafeCount is a valid number
   const safeCafeCount = typeof cafeCount === 'number' && cafeCount >= 0 ? cafeCount : 0
   const trustParagraph =
     safeCafeCount > 0
       ? (() => {
-          const countText = safeCafeCount >= 10 ? `${safeCafeCount}+` : String(safeCafeCount)
-          return locale === 'de'
-            ? `Unser ${cityDisplayName}-Café-Verzeichnis bietet ${countText} geprüfte Cafés zum Arbeiten, die jeweils sorgfältig auf WLAN-Qualität, Steckdosen-Verfügbarkeit und arbeitsfreundliche Atmosphäre überprüft wurden. Perfekt für Remote-Arbeiter, Studierende und alle, die produktiv arbeiten möchten.`
-            : `Our ${cityDisplayName} café directory features ${countText} verified laptop-friendly cafés, each carefully reviewed for WiFi quality, power outlet availability, and work-friendly atmosphere. Perfect for remote workers, students, and anyone looking to be productive.`
-        })()
+        const countText = safeCafeCount >= 10 ? `${safeCafeCount}+` : String(safeCafeCount)
+        return locale === 'de'
+          ? `Unser ${cityDisplayName}-Café-Verzeichnis bietet ${countText} geprüfte Cafés zum Arbeiten, die jeweils sorgfältig auf WLAN-Qualität, Steckdosen-Verfügbarkeit und arbeitsfreundliche Atmosphäre überprüft wurden. Perfekt für Remote-Arbeiter, Studierende und alle, die produktiv arbeiten möchten.`
+          : `Our ${cityDisplayName} café directory features ${countText} verified laptop-friendly cafés, each carefully reviewed for WiFi quality, power outlet availability, and work-friendly atmosphere. Perfect for remote workers, students, and anyone looking to be productive.`
+      })()
       : undefined
-  
+
   // FAQ items (adapted to city name)
   const faqItems: CityPageFAQ[] = [
     {
@@ -280,26 +380,26 @@ export function buildCityConfig(
       answer: tmpl(t(dict, 'meta.city.faq.a5'), { city: cityDisplayName }),
     },
   ]
-  
+
   // Related links; when intent is set, include /find/work-hubs + link back to base city; when base page, add Work + Laptop-friendly chips
   const relatedLinks = [
     ...(intent === 'work' || intent === 'laptop-friendly'
       ? [
-          { href: `/cities/${citySlug}`, label: tmpl(t(dict, 'city.allCafesInCity'), { city: cityDisplayName }) },
-          { href: '/find/wifi', label: t(dict, 'city.relatedWifi') },
-          { href: '/find/outlets', label: t(dict, 'city.relatedOutlets') },
-          { href: '/find/quiet', label: t(dict, 'city.relatedQuiet') },
-          { href: '/find/work-hubs', label: intentFallback(dict, 'city.relatedWorkHubs', 'Work hubs') },
-        ]
+        { href: `/cities/${citySlug}`, label: tmpl(t(dict, 'city.allCafesInCity'), { city: cityDisplayName }) },
+        { href: '/find/wifi', label: t(dict, 'city.relatedWifi') },
+        { href: '/find/outlets', label: t(dict, 'city.relatedOutlets') },
+        { href: '/find/quiet', label: t(dict, 'city.relatedQuiet') },
+        { href: '/find/work-hubs', label: intentFallback(dict, 'city.relatedWorkHubs', 'Work hubs') },
+      ]
       : [
-          { href: '/find/wifi', label: t(dict, 'city.relatedWifi') },
-          { href: '/find/outlets', label: t(dict, 'city.relatedOutlets') },
-          { href: '/find/quiet', label: t(dict, 'city.relatedQuiet') },
-          { href: `/cities/${citySlug}/work`, label: intentFallback(dict, 'city.relatedWork', 'Work') },
-          { href: `/cities/${citySlug}/laptop-friendly`, label: intentFallback(dict, 'city.relatedLaptopFriendly', 'Laptop-friendly') },
-        ]),
+        { href: '/find/wifi', label: t(dict, 'city.relatedWifi') },
+        { href: '/find/outlets', label: t(dict, 'city.relatedOutlets') },
+        { href: '/find/quiet', label: t(dict, 'city.relatedQuiet') },
+        { href: `/cities/${citySlug}/work`, label: intentFallback(dict, 'city.relatedWork', 'Work') },
+        { href: `/cities/${citySlug}/laptop-friendly`, label: intentFallback(dict, 'city.relatedLaptopFriendly', 'Laptop-friendly') },
+      ]),
   ]
-  
+
   // Other cities links (localized)
   const otherCityLinks = [
     { href: '/cities/berlin', label: locale === 'de' ? 'Berlin' : 'Berlin' },
@@ -310,7 +410,7 @@ export function buildCityConfig(
     { href: '/cities/leipzig', label: 'Leipzig' },
     { href: '/cities/duesseldorf', label: 'Düsseldorf' },
   ]
-  
+
   // Niche section
   const showNicheSection = cafeCount >= 10
   const nicheSectionTitle = showNicheSection ? t(dict, 'meta.city.nicheSection.title') : undefined
@@ -393,11 +493,13 @@ export function getCityPageConfig(
   dict: Dictionary,
   citySlug: string,
   cafeCount: number,
-  intent?: Intent
+  intent?: Intent,
+  districtSlug?: string,
+  districtDisplayName?: string
 ): CityPageConfig {
   const slug = citySlug.toLowerCase()
   if (slug === 'berlin') {
-    return buildBerlinCityConfig(locale, dict, undefined, undefined, intent, cafeCount)
+    return buildBerlinCityConfig(locale, dict, districtSlug, districtDisplayName, intent, cafeCount)
   }
-  return buildCityConfig(locale, dict, citySlug, cafeCount, intent)
+  return buildCityConfig(locale, dict, citySlug, cafeCount, intent, districtSlug, districtDisplayName)
 }

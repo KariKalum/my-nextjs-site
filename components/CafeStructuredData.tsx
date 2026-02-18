@@ -2,13 +2,15 @@
 
 import type { Cafe } from '@/src/lib/supabase/types'
 import { getAbsoluteUrl } from '@/lib/seo/metadata'
+import type { ApprovedReview } from './CafeDetailSEO'
 
 interface CafeStructuredDataProps {
   cafe: Cafe
   cafeUrl: string
+  approvedReviews?: ApprovedReview[]
 }
 
-export default function CafeStructuredData({ cafe, cafeUrl }: CafeStructuredDataProps) {
+export default function CafeStructuredData({ cafe, cafeUrl, approvedReviews = [] }: CafeStructuredDataProps) {
   // Build address object
   const address: any = {
     '@type': 'PostalAddress',
@@ -63,19 +65,19 @@ export default function CafeStructuredData({ cafe, cafeUrl }: CafeStructuredData
   }
 
   // Build price range from price_level
-  const priceRange = cafe.price_level 
-    ? `${'$'.repeat(Math.min(cafe.price_level, 4))}` 
+  const priceRange = cafe.price_level
+    ? `${'$'.repeat(Math.min(cafe.price_level, 4))}`
     : undefined
 
   // Build aggregate rating
-  const aggregateRating = cafe.google_rating && cafe.google_ratings_total 
+  const aggregateRating = cafe.google_rating && cafe.google_ratings_total
     ? {
-        '@type': 'AggregateRating',
-        ratingValue: cafe.google_rating,
-        reviewCount: cafe.google_ratings_total,
-        bestRating: '5',
-        worstRating: '1',
-      }
+      '@type': 'AggregateRating',
+      ratingValue: cafe.google_rating,
+      reviewCount: cafe.google_ratings_total,
+      bestRating: '5',
+      worstRating: '1',
+    }
     : undefined
 
   // Build sameAs array
@@ -85,13 +87,36 @@ export default function CafeStructuredData({ cafe, cafeUrl }: CafeStructuredData
 
   // Build reviews from google_reviews if available
   const reviews: any[] = []
+
+  // 1) Add native reviews first
+  if (Array.isArray(approvedReviews)) {
+    approvedReviews.forEach((r) => {
+      reviews.push({
+        '@type': 'Review',
+        reviewBody: r.review_text || '',
+        reviewRating: r.rating ? {
+          '@type': 'Rating',
+          ratingValue: r.rating,
+          bestRating: '5',
+          worstRating: '1',
+        } : undefined,
+        author: {
+          '@type': 'Person',
+          name: 'Anonymous Scouter',
+        },
+        datePublished: r.created_at,
+      })
+    })
+  }
+
+  // 2) Add Google reviews
   if (cafe.google_reviews && Array.isArray(cafe.google_reviews)) {
     cafe.google_reviews.slice(0, 3).forEach((review: any) => {
       if (review) {
         const reviewObj: any = {
           '@type': 'Review',
-          reviewBody: typeof review.text === 'string' 
-            ? review.text.substring(0, 500) 
+          reviewBody: typeof review.text === 'string'
+            ? review.text.substring(0, 500)
             : review.reviewBody || '',
         }
 
@@ -115,7 +140,6 @@ export default function CafeStructuredData({ cafe, cafeUrl }: CafeStructuredData
           reviewObj.datePublished = new Date(review.time * 1000).toISOString()
         }
 
-        // Only add if we have at least reviewBody
         if (reviewObj.reviewBody) {
           reviews.push(reviewObj)
         }
@@ -134,13 +158,13 @@ export default function CafeStructuredData({ cafe, cafeUrl }: CafeStructuredData
     email: cafe.email || undefined,
     address,
     geo,
-    openingHoursSpecification: openingHoursSpecification.length > 0 
-      ? openingHoursSpecification 
+    openingHoursSpecification: openingHoursSpecification.length > 0
+      ? openingHoursSpecification
       : undefined,
     priceRange,
     aggregateRating,
     sameAs: sameAs.length > 0 ? sameAs : undefined,
-    review: reviews.length > 0 ? reviews : undefined,
+    review: reviews.length > 0 ? reviews.slice(0, 5) : undefined,
   }
 
   // Remove undefined values

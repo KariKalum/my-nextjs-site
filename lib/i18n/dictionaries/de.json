@@ -240,7 +240,7 @@
   "find": {
     "featureNotFound": "Funktion nicht gefunden",
     "featureNotFoundDesc": "Die angeforderte Funktionsseite existiert nicht.",
-      "backToHomepage": "Zurück zur Startseite",
+    "backToHomepage": "Zurück zur Startseite",
     "backToDirectory": "Zurück zum Verzeichnis",
     "useMyLocation": "Meinen Standort nutzen",
     "requestingLocation": "Standort wird abgefragt…",
@@ -270,7 +270,7 @@
     "noCafesFound": "Keine Cafés gefunden",
     "noCafesMatchingFeature": "Wir konnten keine Cafés mit dieser Funktion in Ihrer Nähe finden.",
     "increaseSearchRadius": "Suchradius vergrößern",
-      "browseAllCities": "Städte anzeigen",
+    "browseAllCities": "Städte anzeigen",
     "kmAway": "km entfernt",
     "viewDetailsLink": "Details anzeigen",
     "wifiTitle": "Cafés mit schnellem WLAN finden",
@@ -442,6 +442,38 @@
         "item3": "Ruhige Cafés ideal für konzentriertes Arbeiten und Lernen",
         "item4": "Cafés ohne Zeitlimit, in denen Sie so lange arbeiten können, wie Sie möchten",
         "item5": "Gemütliche Sitzplätze und arbeitsfreundliche Atmosphären"
+      },
+      "intent": {
+        "work": {
+          "h1Title": "Cafés zum Arbeiten in {city} (WLAN & Steckdosen)",
+          "seoTitle": "Cafés zum Arbeiten in {city} – WLAN, Steckdosen & Laptopfreundlich | {siteName}",
+          "seoDescription": "Die besten Cafés zum Arbeiten in {city} finden – mit zuverlässigem WLAN, Steckdosen und laptopfreundlichen Räumen. Perfekt für Remote-Arbeit, Lernen und Meetings."
+        },
+        "laptopFriendly": {
+          "h1Title": "Laptopfreundliche Cafés in {city}",
+          "seoTitle": "Laptopfreundliche Cafés in {city} – WLAN & Steckdosen | {siteName}",
+          "seoDescription": "Finden Sie laptopfreundliche Cafés in {city} mit WLAN, Steckdosen und arbeitsfreundlichen Richtlinien. Ideal für Remote-Arbeit und Studium."
+        },
+        "wifi": {
+          "h1Title": "Cafés mit gutem WLAN in {city}",
+          "seoTitle": "Die besten Cafés mit WLAN in {city} zum Arbeiten | {siteName}",
+          "seoDescription": "Finde laptopfreundliche Cafés in {city} mit schnellem und stabilem WLAN. Ideal für Videocalls, Remote-Arbeit und Studium."
+        },
+        "outlets": {
+          "h1Title": "Cafés mit Steckdosen in {city}",
+          "seoTitle": "Die besten Cafés mit Steckdosen in {city} zum Arbeiten | {siteName}",
+          "seoDescription": "Laptop-Arbeitsplätze in {city} mit Steckdosen finden. Wir listen Cafés, in denen du deinen Laptop aufladen und produktiv arbeiten kannst."
+        },
+        "quiet": {
+          "h1Title": "Ruhige Cafés zum Arbeiten in {city}",
+          "seoTitle": "Die besten ruhigen Cafés in {city} für konzentriertes Arbeiten | {siteName}",
+          "seoDescription": "Suchst du einen ruhigen Ort zum Arbeiten in {city}? Entdecke Cafés mit entspannter Atmosphäre, perfekt für Fokus und Konzentration."
+        },
+        "time-limit": {
+          "h1Title": "Cafés ohne Zeitlimit in {city}",
+          "seoTitle": "Die besten Cafés ohne Zeitbegrenzung in {city} für langes Arbeiten | {siteName}",
+          "seoDescription": "Arbeite so lange du willst. Wir heben Cafés in {city} ohne Zeitlimit hervor, damit du den ganzen Tag produktiv bleiben kannst."
+        }
       },
       "nicheSection": {
         "title": "Spezielle Arbeitsplätze",
