@@ -121,18 +121,25 @@ export function buildBerlinCityConfig(
     h1Title = isDistrict
       ? `${t(dict, 'city.laptopFriendlyIn')} ${districtDisplayName}, ${cityDisplayName}`
       : t(dict, 'city.berlinH1')
-    seoTitle = isDistrict && districtDisplayName
-      ? locale === 'de'
-        ? `Cafés zum Arbeiten in Berlin ${districtDisplayName} – WLAN & Steckdosen`
-        : `Cafés to Work From in Berlin ${districtDisplayName} – WiFi & Power Outlets`
-      : t(dict, 'meta.city.berlinTitle')
-    seoDescription = isDistrict && districtDisplayName
-      ? locale === 'de'
-        ? `Die besten Cafés zum Arbeiten in Berlin ${districtDisplayName} finden – mit zuverlässigem WLAN, Steckdosen und laptopfreundlichen Räumen. Perfekt für Remote-Arbeit und Lernen.`
-        : `Find the best cafés to work from in Berlin ${districtDisplayName} with reliable WiFi, power outlets, and laptop-friendly spaces. Perfect for remote work and studying.`
-      : t(dict, 'meta.city.berlinDescription')
+
+    // SEO Overrides for main Berlin page (DE locale)
+    if (!isDistrict && locale === 'de') {
+      seoTitle = 'Cafés zum Arbeiten in Berlin (2026) – 105 Orte mit WLAN & Steckdosen'
+      seoDescription = 'Die besten Cafés zum Arbeiten in Berlin ✓ Mit WLAN ✓ Viele Steckdosen ✓ Ruhige Atmosphäre. 105 geprüfte Orte in Mitte, Kreuzberg & Prenzlauer Berg.'
+    } else {
+      seoTitle = isDistrict && districtDisplayName
+        ? locale === 'de'
+          ? `Cafés zum Arbeiten in Berlin ${districtDisplayName} – WLAN & Steckdosen`
+          : `Cafés to Work From in Berlin ${districtDisplayName} – WiFi & Power Outlets`
+        : t(dict, 'meta.city.berlinTitle')
+      seoDescription = isDistrict && districtDisplayName
+        ? locale === 'de'
+          ? `Die besten Cafés zum Arbeiten in Berlin ${districtDisplayName} finden – mit zuverlässigem WLAN, Steckdosen und laptopfreundlichen Räumen. Perfekt für Remote-Arbeit und Lernen.`
+          : `Find the best cafés to work from in Berlin ${districtDisplayName} with reliable WiFi, power outlets, and laptop-friendly spaces. Perfect for remote work and studying.`
+        : t(dict, 'meta.city.berlinDescription')
+    }
   }
-  
+
   // Intro text
   let introText: string | undefined
   if (isDistrict && districtDisplayName) {
@@ -152,41 +159,65 @@ export function buildBerlinCityConfig(
   } else if (!isDistrict) {
     introText = t(dict, 'meta.city.introBerlin')
   }
-  
+
   // Trust paragraph (only for main city page); use actual count when provided
   const trustParagraph = !isDistrict
     ? tmpl(t(dict, 'meta.city.trustParagraph.berlin'), {
-        count: cafeCount !== undefined && cafeCount >= 0
-          ? (cafeCount >= 40 ? '40+' : String(cafeCount))
-          : '40+',
-      })
+      count: cafeCount !== undefined && cafeCount >= 0
+        ? (cafeCount >= 40 ? '40+' : String(cafeCount))
+        : '40+',
+    })
     : undefined
-  
+
   // FAQ items (Berlin-specific, adapted for districts)
-  const faqItems: CityPageFAQ[] = isDistrict && districtDisplayName
-    ? [
+  let faqItems: CityPageFAQ[]
+
+  if (isDistrict && districtDisplayName) {
+    faqItems = [
+      {
+        question: tmpl(t(dict, 'meta.city.district.faqQ1'), { district: districtDisplayName }),
+        answer: tmpl(t(dict, 'meta.city.district.faqA1'), { district: districtDisplayName }),
+      },
+      {
+        question: tmpl(t(dict, 'meta.city.district.faqQ2'), { district: districtDisplayName }),
+        answer: tmpl(t(dict, 'meta.city.district.faqA2'), { district: districtDisplayName }),
+      },
+      {
+        question: tmpl(t(dict, 'meta.city.district.faqQ3'), { district: districtDisplayName }),
+        answer: tmpl(t(dict, 'meta.city.district.faqA3'), { district: districtDisplayName }),
+      },
+      {
+        question: tmpl(t(dict, 'meta.city.district.faqQ4'), { district: districtDisplayName }),
+        answer: tmpl(t(dict, 'meta.city.district.faqA4'), { district: districtDisplayName }),
+      },
+      {
+        question: tmpl(t(dict, 'meta.city.district.faqQ5'), { district: districtDisplayName }),
+        answer: tmpl(t(dict, 'meta.city.district.faqA5'), { district: districtDisplayName }),
+      },
+    ]
+  } else {
+    // Berlin main page optimized FAQs (DE locale)
+    if (locale === 'de') {
+      faqItems = [
         {
-          question: tmpl(t(dict, 'meta.city.district.faqQ1'), { district: districtDisplayName }),
-          answer: tmpl(t(dict, 'meta.city.district.faqA1'), { district: districtDisplayName }),
+          question: 'Wo kann man in Berlin mit Laptop im Café arbeiten?',
+          answer: 'In Berlin gibt es über 100 Cafés mit WLAN und Steckdosen, die speziell für Remote-Arbeit und Studium geeignet sind. Besonders in Mitte, Kreuzberg und Neukölln finden Sie eine hohe Dichte an laptopfreundlichen Orten.',
         },
         {
-          question: tmpl(t(dict, 'meta.city.district.faqQ2'), { district: districtDisplayName }),
-          answer: tmpl(t(dict, 'meta.city.district.faqA2'), { district: districtDisplayName }),
+          question: 'Welche Cafés in Berlin haben viele Steckdosen?',
+          answer: 'Viele moderne Cafés wie das St. Oberholz, Espresso House oder spezialisierte Work-Cafés bieten zahlreiche Steckdosen an fast jedem Tisch. Wir markieren diese Orte in unserer Liste explizit.',
         },
         {
-          question: tmpl(t(dict, 'meta.city.district.faqQ3'), { district: districtDisplayName }),
-          answer: tmpl(t(dict, 'meta.city.district.faqA3'), { district: districtDisplayName }),
+          question: 'Gibt es ruhige Cafés zum Lernen in Berlin?',
+          answer: 'Ja, abseits der touristischen Hotspots gibt es viele ruhige Kiez-Cafés und Bibliotheks-Cafés, die eine ideale Atmosphäre für konzentriertes Lernen und Fokus bieten.',
         },
         {
-          question: tmpl(t(dict, 'meta.city.district.faqQ4'), { district: districtDisplayName }),
-          answer: tmpl(t(dict, 'meta.city.district.faqA4'), { district: districtDisplayName }),
-        },
-        {
-          question: tmpl(t(dict, 'meta.city.district.faqQ5'), { district: districtDisplayName }),
-          answer: tmpl(t(dict, 'meta.city.district.faqA5'), { district: districtDisplayName }),
+          question: 'Sind Work Cafés in Berlin kostenlos?',
+          answer: 'Die meisten Cafés in Berlin erlauben das Arbeiten am Laptop gegen eine faire Konsumation (z.B. ein Kaffee pro 2 Stunden). Es gibt jedoch auch Coworking-Cafés mit Zeit-Pauschalen.',
         },
       ]
-    : [
+    } else {
+      faqItems = [
         {
           question: t(dict, 'meta.city.berlinFaq.q1'),
           answer: t(dict, 'meta.city.berlinFaq.a1'),
@@ -208,80 +239,106 @@ export function buildBerlinCityConfig(
           answer: t(dict, 'meta.city.berlinFaq.a5'),
         },
       ]
-  
+    }
+  }
+
   // District links (only for main city page)
   const districtLinks = !isDistrict
     ? [
-        { href: '/cities/berlin/mitte', label: 'Mitte' },
-        { href: '/cities/berlin/kreuzberg', label: 'Kreuzberg' },
-        { href: '/cities/berlin/charlottenburg', label: 'Charlottenburg' },
-        { href: '/cities/berlin/neukoelln', label: 'Neukölln' },
-        { href: '/cities/berlin/prenzlauer-berg', label: 'Prenzlauer Berg' },
-        { href: '/cities/berlin/friedrichshain', label: 'Friedrichshain' },
-        { href: '/cities/berlin/hbf', label: 'HBF' },
-      ]
+      { href: '/cities/berlin/mitte', label: 'Mitte' },
+      { href: '/cities/berlin/kreuzberg', label: 'Kreuzberg' },
+      { href: '/cities/berlin/charlottenburg', label: 'Charlottenburg' },
+      { href: '/cities/berlin/neukoelln', label: 'Neukölln' },
+      { href: '/cities/berlin/prenzlauer-berg', label: 'Prenzlauer Berg' },
+      { href: '/cities/berlin/friedrichshain', label: 'Friedrichshain' },
+      { href: '/cities/berlin/hbf', label: 'HBF' },
+    ]
     : undefined
-  
+
   // Related links; when intent set include /find/work-hubs + link back to base; when base page add Work (+ Laptop-friendly for city only)
   const relatedLinks = [
     ...(intent === 'work' || intent === 'laptop-friendly'
       ? [
-          ...(isDistrict && districtSlug
-            ? [{ href: `/cities/berlin/${districtSlug}`, label: tmpl(t(dict, 'city.allCafesInDistrict'), { district: districtDisplayName ?? '' }) }]
-            : [{ href: '/cities/berlin', label: tmpl(t(dict, 'city.allCafesInCity'), { city: cityDisplayName }) }]),
-          { href: '/find/wifi', label: t(dict, 'city.relatedWifi') },
-          { href: '/find/outlets', label: t(dict, 'city.relatedOutlets') },
-          { href: '/find/quiet', label: t(dict, 'city.relatedQuiet') },
-          { href: '/find/work-hubs', label: intentFallback(dict, 'city.relatedWorkHubs', 'Work hubs') },
-        ]
+        ...(isDistrict && districtSlug
+          ? [{ href: `/cities/berlin/${districtSlug}`, label: tmpl(t(dict, 'city.allCafesInDistrict'), { district: districtDisplayName ?? '' }) }]
+          : [{ href: '/cities/berlin', label: locale === 'de' ? 'Cafés zum Arbeiten in Berlin' : tmpl(t(dict, 'city.allCafesInCity'), { city: cityDisplayName }) }]),
+        { href: '/find/wifi', label: t(dict, 'city.relatedWifi') },
+        { href: '/find/outlets', label: t(dict, 'city.relatedOutlets') },
+        { href: '/find/quiet', label: t(dict, 'city.relatedQuiet') },
+        { href: '/find/work-hubs', label: intentFallback(dict, 'city.relatedWorkHubs', 'Work hubs') },
+      ]
       : [
-          { href: '/find/wifi', label: t(dict, 'city.relatedWifi') },
-          { href: '/find/outlets', label: t(dict, 'city.relatedOutlets') },
-          { href: '/find/quiet', label: t(dict, 'city.relatedQuiet') },
-          ...(!isDistrict
-            ? [
-                { href: '/cities/berlin/work', label: intentFallback(dict, 'city.relatedWork', 'Work') },
-                { href: '/cities/berlin/laptop-friendly', label: intentFallback(dict, 'city.relatedLaptopFriendly', 'Laptop-friendly') },
-              ]
-            : districtSlug
-              ? [{ href: `/cities/berlin/${districtSlug}/work`, label: intentFallback(dict, 'city.relatedWork', 'Work') }]
-              : []),
-        ]),
+        { href: '/find/wifi', label: t(dict, 'city.relatedWifi') },
+        { href: '/find/outlets', label: t(dict, 'city.relatedOutlets') },
+        { href: '/find/quiet', label: t(dict, 'city.relatedQuiet') },
+        ...(!isDistrict
+          ? [
+            { href: '/cities/berlin/work', label: locale === 'de' ? 'Work Cafés mit WLAN in Berlin' : intentFallback(dict, 'city.relatedWork', 'Work') },
+            { href: '/cities/berlin/laptop-friendly', label: locale === 'de' ? 'Laptopfreundliche Cafés in Berlin' : intentFallback(dict, 'city.relatedLaptopFriendly', 'Laptop-friendly') },
+          ]
+          : districtSlug
+            ? [{ href: `/cities/berlin/${districtSlug}/work`, label: intentFallback(dict, 'city.relatedWork', 'Work') }]
+            : []),
+      ]),
   ]
-  
+
   // Other cities (only for main city page)
   const otherCityLinks = !isDistrict
     ? [
-        { href: '/cities/hamburg', label: 'Hamburg' },
-        { href: '/cities/muenchen', label: locale === 'de' ? 'München' : 'Munich' },
-        { href: '/cities/koeln', label: locale === 'de' ? 'Köln' : 'Cologne' },
-        { href: '/cities/frankfurt', label: 'Frankfurt' },
-        { href: '/cities/leipzig', label: 'Leipzig' },
-        { href: '/cities/duesseldorf', label: 'Düsseldorf' },
-      ]
+      { href: '/cities/hamburg', label: 'Hamburg' },
+      { href: '/cities/muenchen', label: locale === 'de' ? 'München' : 'Munich' },
+      { href: '/cities/koeln', label: locale === 'de' ? 'Köln' : 'Cologne' },
+      { href: '/cities/frankfurt', label: 'Frankfurt' },
+      { href: '/cities/leipzig', label: 'Leipzig' },
+      { href: '/cities/duesseldorf', label: 'Düsseldorf' },
+    ]
     : undefined
-  
+
   // District links (for district pages - link to Berlin and other districts)
   const districtLinksForDistrict = isDistrict
     ? [
-        { href: '/cities/berlin', label: cityDisplayName },
-        { href: '/cities/berlin/mitte', label: 'Mitte' },
-        { href: '/cities/berlin/kreuzberg', label: 'Kreuzberg' },
-        { href: '/cities/berlin/charlottenburg', label: 'Charlottenburg' },
-        { href: '/cities/berlin/neukoelln', label: 'Neukölln' },
-        { href: '/cities/berlin/prenzlauer-berg', label: 'Prenzlauer Berg' },
-        { href: '/cities/berlin/friedrichshain', label: 'Friedrichshain' },
-        { href: '/cities/berlin/hbf', label: 'HBF' },
-      ]
+      { href: '/cities/berlin', label: cityDisplayName },
+      { href: '/cities/berlin/mitte', label: 'Mitte' },
+      { href: '/cities/berlin/kreuzberg', label: 'Kreuzberg' },
+      { href: '/cities/berlin/charlottenburg', label: 'Charlottenburg' },
+      { href: '/cities/berlin/neukoelln', label: 'Neukölln' },
+      { href: '/cities/berlin/prenzlauer-berg', label: 'Prenzlauer Berg' },
+      { href: '/cities/berlin/friedrichshain', label: 'Friedrichshain' },
+      { href: '/cities/berlin/hbf', label: 'HBF' },
+    ]
     : undefined
-  
+
   // Niche section
   const showNicheSection = !isDistrict
   const nicheSectionTitle = showNicheSection ? t(dict, 'meta.city.nicheSection.title') : undefined
   const nicheSectionDescription = showNicheSection
     ? tmpl(t(dict, 'meta.city.nicheSection.description'), { city: cityDisplayName })
     : undefined
-  
+
+  // Extra Sections (Mainly for Berlin main page DE)
+  const extraSections = !isDistrict && locale === 'de'
+    ? [
+      {
+        title: 'Laptopfreundliche Cafés in Berlin',
+        content: 'Suchen Sie ein laptopfreundliches Café in Berlin mit stabilem WLAN und vielen Steckdosen? Hier finden Sie die besten Work-Cafés für Remote-Arbeit, Studium und Meetings. Unsere Liste umfasst über 100 verifizierte Orte, die ideal für digitales Arbeiten geeignet sind.',
+      },
+      {
+        title: 'Beliebteste Bezirke für Remote-Arbeit',
+        content: 'Berlin Mitte bietet viele ruhige Cafés mit WLAN und Steckdosen, ideal für Freelancer und Studenten. In Kreuzberg finden Sie eine lebendige Mischung aus Work-Cafés und kreativen Hubs. Prenzlauer Berg ist bekannt für seine entspannten, laptopfreundlichen Cafés mit exzellentem Kaffee.',
+      },
+      {
+        title: 'Café vs. Coworking Space in Berlin – Was ist besser?',
+        content: 'Während Coworking-Spaces eine professionelle Büro-Infrastruktur bieten, punkten Cafés mit einer inspirierenden Atmosphäre und geringeren Kosten. Für Fokus-Sessions von 2-4 Stunden sind Cafés oft die flexiblere und charmantere Wahl.',
+      },
+      {
+        title: 'Beliebteste Cafés zum Arbeiten in Berlin',
+        content: 'Basierend auf Nutzerbewertungen und Arbeitsfreundlichkeit gehören Orte wie das St. Oberholz (Mitte), Betahaus (Kreuzberg) und verschiedene kleine Kiez-Cafés zu den Top-Empfehlungen für effizientes Arbeiten.',
+      },
+    ]
+    : undefined
+
+  const lastUpdated = !isDistrict && locale === 'de' ? 'Februar 2026' : undefined
+
   return {
     locale,
     citySlug,
@@ -293,6 +350,8 @@ export function buildBerlinCityConfig(
     h1Title,
     introText,
     trustParagraph,
+    lastUpdated,
+    extraSections,
     faqItems,
     districtLinks: districtLinks || districtLinksForDistrict,
     relatedLinks,

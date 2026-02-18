@@ -21,42 +21,51 @@ export interface CityPageConfig {
   locale: Locale
   citySlug: string
   cityDisplayName: string
-  
+
   // Optional district support
   districtSlug?: string
   districtDisplayName?: string
-  
+
   // SEO
   seoTitle: string
   seoDescription: string
-  
+
   // Content
   h1Title: string
   introText?: string
   trustParagraph?: string
-  
+
   // FAQ
   faqItems?: CityPageFAQ[]
-  
+
   // Internal links
   districtLinks?: CityPageInternalLink[]
   /** Section title when showing district links (e.g. "Berlin districts"); when undefined, uses city.berlinDistricts */
   districtSectionTitle?: string
   relatedLinks?: CityPageInternalLink[]
   otherCityLinks?: CityPageInternalLink[]
-  
+
   // Optional sections
   showNicheSection?: boolean
   nicheSectionTitle?: string
   nicheSectionDescription?: string
-  
+
   // Map center coordinates (for showing the region even with 0 cafes)
   mapCenter?: { lat: number; lng: number }
   // Map zoom level (higher = more zoomed in; districts use ~18, city ~12)
   mapZoom?: number
   // When true, keep district center and zoom instead of fitting bounds to markers
   preserveRegionZoom?: boolean
-  
+
+  // Freshness
+  lastUpdated?: string
+
+  // Extra content sections
+  extraSections?: Array<{
+    title: string
+    content: string
+  }>
+
   // Dictionary for translations
   dict: Dictionary
 }

@@ -26,7 +26,7 @@ interface CityPageTemplateProps {
 export default function CityPageTemplate({ cafes, config, extraCafes, extraCafesSectionTitle }: CityPageTemplateProps) {
   // Runtime guard: ensure cafes is always an array
   const safeCafes = Array.isArray(cafes) ? cafes : []
-  
+
   const {
     locale,
     citySlug,
@@ -47,6 +47,8 @@ export default function CityPageTemplate({ cafes, config, extraCafes, extraCafes
     mapCenter,
     mapZoom,
     preserveRegionZoom,
+    lastUpdated,
+    extraSections,
     dict,
   } = config
 
@@ -94,6 +96,11 @@ export default function CityPageTemplate({ cafes, config, extraCafes, extraCafes
           <p className="mt-1.5 md:mt-2 text-base md:text-lg text-gray-600">
             {safeCafes.length} {safeCafes.length === 1 ? t(dict, 'common.cafeFound') : t(dict, 'common.cafesFound')}
           </p>
+          {lastUpdated && (
+            <p className="mt-1 text-sm text-gray-500 font-medium italic">
+              {locale === 'de' ? 'Zuletzt aktualisiert:' : 'Last Updated:'} {lastUpdated}
+            </p>
+          )}
         </div>
       </header>
 
@@ -111,6 +118,18 @@ export default function CityPageTemplate({ cafes, config, extraCafes, extraCafes
             </div>
           </section>
         )}
+
+        {/* Extra SEO Content Sections */}
+        {extraSections && extraSections.map((section, idx) => (
+          <section key={idx} className="mb-12">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">{section.title}</h2>
+              <div className="text-gray-700 leading-relaxed text-base whitespace-pre-line">
+                {section.content}
+              </div>
+            </div>
+          </section>
+        ))}
 
         {/* District Links (same template for any city with districts) */}
         {districtLinks && districtLinks.length > 0 && (
