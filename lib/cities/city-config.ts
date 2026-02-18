@@ -310,8 +310,8 @@ export function buildCityConfig(
     const bestOfPrefix = cafeCount >= 10 ? (locale === 'de' ? `Die ${cafeCount}+ besten ` : `Best ${cafeCount}+ `) : (locale === 'de' ? 'Die besten ' : 'Best ')
     h1Title =
       locale === 'de'
-        ? `Cafés zum Arbeiten in ${displayName} (mit WLAN & Steckdosen)`
-        : `Best Cafés to Work From in ${displayName} (WiFi & Power Outlets)`
+        ? `${bestOfPrefix}Cafés zum Arbeiten in ${displayName} (mit WLAN & Steckdosen)`
+        : `${bestOfPrefix}Cafés to Work From in ${displayName} (WiFi & Power Outlets)`
     seoTitle =
       locale === 'de'
         ? `${bestOfPrefix}Cafés zum Arbeiten in ${displayName} – WLAN, Steckdosen & Laptopfreundlich | ${siteName}`
