@@ -122,10 +122,15 @@ export function buildBerlinCityConfig(
       ? `${t(dict, 'city.laptopFriendlyIn')} ${districtDisplayName}, ${cityDisplayName}`
       : t(dict, 'city.berlinH1')
 
-    // SEO Overrides for main Berlin page (DE locale)
-    if (!isDistrict && locale === 'de') {
-      seoTitle = 'Cafés zum Arbeiten in Berlin (2026) – 105 Orte mit WLAN & Steckdosen'
-      seoDescription = 'Die besten Cafés zum Arbeiten in Berlin ✓ Mit WLAN ✓ Viele Steckdosen ✓ Ruhige Atmosphäre. 105 geprüfte Orte in Mitte, Kreuzberg & Prenzlauer Berg.'
+    // SEO Overrides for main Berlin page
+    if (!isDistrict) {
+      if (locale === 'de') {
+        seoTitle = 'Cafés zum Arbeiten in Berlin (2026) – 105 Orte mit WLAN & Steckdosen'
+        seoDescription = 'Die besten Cafés zum Arbeiten in Berlin ✓ Mit WLAN ✓ Viele Steckdosen ✓ Ruhige Atmosphäre. 105 geprüfte Orte in Mitte, Kreuzberg & Prenzlauer Berg.'
+      } else {
+        seoTitle = 'Cafés for Working in Berlin (2026) – 105 Spots with WiFi & Outlets'
+        seoDescription = 'Top cafés to work from in Berlin ✓ High-speed WiFi ✓ Plenty of power outlets ✓ Quiet atmosphere. 105 verified spots in Mitte, Kreuzberg & Prenzlauer Berg.'
+      }
     } else {
       seoTitle = isDistrict && districtDisplayName
         ? locale === 'de'
@@ -196,12 +201,12 @@ export function buildBerlinCityConfig(
       },
     ]
   } else {
-    // Berlin main page optimized FAQs (DE locale)
+    // Berlin main page optimized FAQs
     if (locale === 'de') {
       faqItems = [
         {
           question: 'Wo kann man in Berlin mit Laptop im Café arbeiten?',
-          answer: 'In Berlin gibt es über 100 Cafés mit WLAN und Steckdosen, die speziell für Remote-Arbeit und Studium geeignet sind. Besonders in Mitte, Kreuzberg und Neukölln finden Sie eine hohe Dichte an laptopfreundlichen Orten.',
+          answer: 'In Berlin gibt es über 100 Cafés mit WLAN und Steckdosen, die speziell für Remote-Arbeit und Studium geeignet sind. Besonders in Mitte, Kreuzberg und Neukölln finden Sie eine hohe dichte an laptopfreundlichen Orten.',
         },
         {
           question: 'Welche Cafés in Berlin haben viele Steckdosen?',
@@ -219,24 +224,20 @@ export function buildBerlinCityConfig(
     } else {
       faqItems = [
         {
-          question: t(dict, 'meta.city.berlinFaq.q1'),
-          answer: t(dict, 'meta.city.berlinFaq.a1'),
+          question: 'Where can I work from a café with a laptop in Berlin?',
+          answer: 'Berlin has over 100 cafés with WiFi and power outlets specifically suited for remote work and studying. You\'ll find a high density of laptop-friendly spots especially in Mitte, Kreuzberg, and Neukölln.',
         },
         {
-          question: t(dict, 'meta.city.berlinFaq.q2'),
-          answer: t(dict, 'meta.city.berlinFaq.a2'),
+          question: 'Which Berlin cafés have plenty of power outlets?',
+          answer: 'Many modern cafés like St. Oberholz, Espresso House, or specialized work cafés offer numerous outlets at almost every table. We explicitly mark these spots in our list.',
         },
         {
-          question: t(dict, 'meta.city.berlinFaq.q3'),
-          answer: t(dict, 'meta.city.berlinFaq.a3'),
+          question: 'Are there quiet cafés for studying in Berlin?',
+          answer: 'Yes, away from the tourist hotspots, there are many quiet neighborhood cafés and library cafés that offer an ideal atmosphere for concentrated study and focus.',
         },
         {
-          question: t(dict, 'meta.city.berlinFaq.q4'),
-          answer: t(dict, 'meta.city.berlinFaq.a4'),
-        },
-        {
-          question: t(dict, 'meta.city.berlinFaq.q5'),
-          answer: t(dict, 'meta.city.berlinFaq.a5'),
+          question: 'Are work cafés in Berlin free to use?',
+          answer: 'Most cafés in Berlin allow working on a laptop in exchange for fair consumption (e.g., one coffee every 2 hours). However, there are also coworking cafés with hourly or daily flat rates.',
         },
       ]
     }
@@ -261,7 +262,7 @@ export function buildBerlinCityConfig(
       ? [
         ...(isDistrict && districtSlug
           ? [{ href: `/cities/berlin/${districtSlug}`, label: tmpl(t(dict, 'city.allCafesInDistrict'), { district: districtDisplayName ?? '' }) }]
-          : [{ href: '/cities/berlin', label: locale === 'de' ? 'Cafés zum Arbeiten in Berlin' : tmpl(t(dict, 'city.allCafesInCity'), { city: cityDisplayName }) }]),
+          : [{ href: '/cities/berlin', label: locale === 'de' ? 'Cafés zum Arbeiten in Berlin' : 'Cafés for Working in Berlin' }]),
         { href: '/find/wifi', label: t(dict, 'city.relatedWifi') },
         { href: '/find/outlets', label: t(dict, 'city.relatedOutlets') },
         { href: '/find/quiet', label: t(dict, 'city.relatedQuiet') },
@@ -273,8 +274,8 @@ export function buildBerlinCityConfig(
         { href: '/find/quiet', label: t(dict, 'city.relatedQuiet') },
         ...(!isDistrict
           ? [
-            { href: '/cities/berlin/work', label: locale === 'de' ? 'Work Cafés mit WLAN in Berlin' : intentFallback(dict, 'city.relatedWork', 'Work') },
-            { href: '/cities/berlin/laptop-friendly', label: locale === 'de' ? 'Laptopfreundliche Cafés in Berlin' : intentFallback(dict, 'city.relatedLaptopFriendly', 'Laptop-friendly') },
+            { href: '/cities/berlin/work', label: locale === 'de' ? 'Work Cafés mit WLAN in Berlin' : 'Work Cafés with WiFi in Berlin' },
+            { href: '/cities/berlin/laptop-friendly', label: locale === 'de' ? 'Laptopfreundliche Cafés in Berlin' : 'Laptop-Friendly Cafés in Berlin' },
           ]
           : districtSlug
             ? [{ href: `/cities/berlin/${districtSlug}/work`, label: intentFallback(dict, 'city.relatedWork', 'Work') }]
@@ -315,29 +316,48 @@ export function buildBerlinCityConfig(
     ? tmpl(t(dict, 'meta.city.nicheSection.description'), { city: cityDisplayName })
     : undefined
 
-  // Extra Sections (Mainly for Berlin main page DE)
-  const extraSections = !isDistrict && locale === 'de'
-    ? [
-      {
-        title: 'Laptopfreundliche Cafés in Berlin',
-        content: 'Suchen Sie ein laptopfreundliches Café in Berlin mit stabilem WLAN und vielen Steckdosen? Hier finden Sie die besten Work-Cafés für Remote-Arbeit, Studium und Meetings. Unsere Liste umfasst über 100 verifizierte Orte, die ideal für digitales Arbeiten geeignet sind.',
-      },
-      {
-        title: 'Beliebteste Bezirke für Remote-Arbeit',
-        content: 'Berlin Mitte bietet viele ruhige Cafés mit WLAN und Steckdosen, ideal für Freelancer und Studenten. In Kreuzberg finden Sie eine lebendige Mischung aus Work-Cafés und kreativen Hubs. Prenzlauer Berg ist bekannt für seine entspannten, laptopfreundlichen Cafés mit exzellentem Kaffee.',
-      },
-      {
-        title: 'Café vs. Coworking Space in Berlin – Was ist besser?',
-        content: 'Während Coworking-Spaces eine professionelle Büro-Infrastruktur bieten, punkten Cafés mit einer inspirierenden Atmosphäre und geringeren Kosten. Für Fokus-Sessions von 2-4 Stunden sind Cafés oft die flexiblere und charmantere Wahl.',
-      },
-      {
-        title: 'Beliebteste Cafés zum Arbeiten in Berlin',
-        content: 'Basierend auf Nutzerbewertungen und Arbeitsfreundlichkeit gehören Orte wie das St. Oberholz (Mitte), Betahaus (Kreuzberg) und verschiedene kleine Kiez-Cafés zu den Top-Empfehlungen für effizientes Arbeiten.',
-      },
-    ]
+  // Extra Sections (Mainly for Berlin main page)
+  const extraSections = !isDistrict
+    ? locale === 'de'
+      ? [
+        {
+          title: 'Laptopfreundliche Cafés in Berlin',
+          content: 'Suchen Sie ein laptopfreundliches Café in Berlin mit stabilem WLAN und vielen Steckdosen? Hier finden Sie die besten Work-Cafés für Remote-Arbeit, Studium und Meetings. Unsere Liste umfasst über 100 verifizierte Orte, die ideal für digitales Arbeiten geeignet sind.',
+        },
+        {
+          title: 'Beliebteste Bezirke für Remote-Arbeit',
+          content: 'Berlin Mitte bietet viele ruhige Cafés mit WLAN und Steckdosen, ideal für Freelancer und Studenten. In Kreuzberg finden Sie eine lebendige Mischung aus Work-Cafés und kreativen Hubs. Prenzlauer Berg ist bekannt für seine entspannten, laptopfreundlichen Cafés mit exzellentem Kaffee.',
+        },
+        {
+          title: 'Café vs. Coworking Space in Berlin – Was ist besser?',
+          content: 'Während Coworking-Spaces eine professionelle Büro-Infrastruktur bieten, punkten Cafés mit einer inspirierenden Atmosphäre und geringeren Kosten. Für Fokus-Sessions von 2-4 Stunden sind Cafés oft die flexiblere und charmantere Wahl.',
+        },
+        {
+          title: 'Beliebteste Cafés zum Arbeiten in Berlin',
+          content: 'Basierend auf Nutzerbewertungen und Arbeitsfreundlichkeit gehören Orte wie das St. Oberholz (Mitte), Betahaus (Kreuzberg) und verschiedene kleine Kiez-Cafés zu den Top-Empfehlungen für effizientes Arbeiten.',
+        },
+      ]
+      : [
+        {
+          title: 'Laptop-Friendly Cafés in Berlin',
+          content: 'Looking for a laptop-friendly café in Berlin with stable WiFi and plenty of power outlets? Here you\'ll find the best work cafés for remote work, studying, and meetings. Our list includes over 100 verified spots ideal for digital work.',
+        },
+        {
+          title: 'Most Popular Districts for Remote Work',
+          content: 'Berlin Mitte offers many quiet cafés with WiFi and outlets, perfect for freelancers and students. In Kreuzberg, you\'ll find a lively mix of work cafés and creative hubs. Prenzlauer Berg is known for its relaxed, laptop-friendly cafés with excellent coffee.',
+        },
+        {
+          title: 'Café vs. Coworking Space in Berlin – Which is Better?',
+          content: 'While coworking spaces offer a professional office infrastructure, cafés score with an inspiring atmosphere and lower costs. For focus sessions of 2-4 hours, cafés are often the more flexible and charming choice.',
+        },
+        {
+          title: 'Most Popular Cafés to Work From in Berlin',
+          content: 'Based on user ratings and work-friendliness, places like St. Oberholz (Mitte), Betahaus (Kreuzberg), and various small neighborhood cafés are among the top recommendations for efficient working.',
+        },
+      ]
     : undefined
 
-  const lastUpdated = !isDistrict && locale === 'de' ? 'Februar 2026' : undefined
+  const lastUpdated = !isDistrict ? (locale === 'de' ? 'Februar 2026' : 'February 2026') : undefined
 
   return {
     locale,

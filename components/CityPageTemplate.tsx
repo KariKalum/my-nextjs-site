@@ -119,18 +119,6 @@ export default function CityPageTemplate({ cafes, config, extraCafes, extraCafes
           </section>
         )}
 
-        {/* Extra SEO Content Sections */}
-        {extraSections && extraSections.map((section, idx) => (
-          <section key={idx} className="mb-12">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">{section.title}</h2>
-              <div className="text-gray-700 leading-relaxed text-base whitespace-pre-line">
-                {section.content}
-              </div>
-            </div>
-          </section>
-        ))}
-
         {/* District Links (same template for any city with districts) */}
         {districtLinks && districtLinks.length > 0 && (
           <section className="mb-12">
@@ -204,6 +192,18 @@ export default function CityPageTemplate({ cafes, config, extraCafes, extraCafes
             </ul>
           </div>
         </section>
+
+        {/* Extra SEO Content Sections */}
+        {extraSections && extraSections.map((section, idx) => (
+          <section key={idx} className="mb-12">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">{section.title}</h2>
+              <div className="text-gray-700 leading-relaxed text-base whitespace-pre-line">
+                {section.content}
+              </div>
+            </div>
+          </section>
+        ))}
 
         {/* Optional niche section */}
         {showNicheSection && cafes.length >= 10 && nicheSectionTitle && nicheSectionDescription && (
